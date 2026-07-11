@@ -1,0 +1,52 @@
+# ==============================================================
+#  Herbalis : configuration generale
+#
+#  Toutes les durees acceptent les formats "30s", "8m", "1h30m"
+#  ou un nombre brut en secondes.
+#
+#  Les parametres propres a chaque drogue (durees de croissance,
+#  hydratation, effets, tolerance...) vivent dans drugs/<id>.yml.
+# ==============================================================
+
+croissance:
+  # Intervalle du tick global de croissance, en secondes.
+  # Une seule tache gere toutes les plantes chargees.
+  # (redemarrage requis si modifie)
+  tick-secondes: 1
+
+persistence:
+  # Intervalle de sauvegarde automatique des plantes vers SQLite.
+  # Les pots, racks et profils joueurs sont ecrits immediatement.
+  # (redemarrage requis si modifie)
+  autosave: 5m
+
+effets-visuels:
+  # Coupe toutes les particules du plugin.
+  particules: true
+  # Coupe tous les sons du plugin.
+  sons: true
+
+hud:
+  # Action bar d'etat quand on regarde une plante, un pot ou un rack.
+  actif: true
+  # Portee du regard, en blocs.
+  portee: 5.0
+
+arrosoir:
+  # Nombre d'arrosages avant de devoir recharger l'arrosoir
+  # (clic droit sur un bloc d'eau pour recharger).
+  charges: 8
+
+plantes:
+  # Une plante cassee (coup, explosion, support detruit) rend sa graine.
+  drop-graine-si-cassee: true
+  # Les explosions tuent les plantes alentour.
+  explosion-detruit: true
+  # Rayon (en blocs) dans lequel une explosion tue les plantes.
+  rayon-explosion: 4.0
+
+manque:
+  # Intervalle aleatoire entre deux symptomes de manque
+  # pour un joueur en etat d'addiction.
+  symptome-min: 40s
+  symptome-max: 90s

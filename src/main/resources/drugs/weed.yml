@@ -1,0 +1,111 @@
+# ==============================================================
+#  Herbalis : definition de la weed
+#
+#  Ce fichier suffit a definir une drogue complete. Pour en
+#  ajouter une autre, dupliquez-le sous drugs/<id>.yml, ajustez
+#  les valeurs et fournissez les modeles correspondants dans le
+#  resource pack (plant_<id>_stage_1 a 4, <id>_seed, etc).
+# ==============================================================
+
+id: weed
+nom: Weed
+
+croissance:
+  # Duree de chaque stage (4 stages : pousse, jeune plant,
+  # plant mature, plant en fleur).
+  durees-stages: [8m, 8m, 8m, 8m]
+  # Niveau de lumiere minimum (0 a 15). En dessous, la
+  # croissance est figee et le HUD le signale.
+  lumiere-minimum: 12
+  # Nombre de tetes recoltees a 1 etoile / a 5 etoiles.
+  rendement-min: 2
+  rendement-max: 5
+
+hydratation:
+  # Points d'hydratation perdus par minute (jauge de 0 a 100).
+  perte-par-minute: 2.5
+  # Points rendus par arrosage.
+  restauration-arrosage: 40.0
+  # Sous ce seuil, la croissance est figee.
+  seuil-soif: 25.0
+  # Temps a sec (jauge a 0) avant jaunissement du plant.
+  delai-jaunissement: 4m
+  # Temps a sec avant la mort du plant (le pot reste).
+  delai-mort: 12m
+
+engrais:
+  # Acceleration du stage en cours (0.5 = 50 pour cent plus vite).
+  # Un seul engrais par stage.
+  acceleration: 0.5
+  # Contribution de l'engrais au score de qualite.
+  bonus-qualite: 0.25
+
+fenetre-recolte:
+  # Au stade final, duree de la fenetre de recolte optimale.
+  duree-optimale: 10m
+  # Apres la fenetre, la qualite decline lineairement sur cette duree.
+  duree-declin: 20m
+
+sechage:
+  # Duree de sechage complete d'une tete (temps reel, continue
+  # meme serveur eteint).
+  duree: 20m
+  # Nombre de tetes par rack.
+  capacite: 6
+
+effets:
+  # Montee progressive avant le plateau.
+  montee: 15s
+  # Duree du plateau a 1 etoile / a 5 etoiles.
+  high-min: 2m
+  high-max: 6m
+  # Duree de la descente, en fraction du plateau.
+  ratio-descente: 0.35
+  # Effets du plateau. "augmente-avec-qualite" ajoute +1
+  # d'amplificateur a partir de 4 etoiles.
+  effets-high:
+    - effet: minecraft:regeneration
+      amplificateur: 0
+      augmente-avec-qualite: true
+    - effet: minecraft:resistance
+      amplificateur: 0
+      augmente-avec-qualite: false
+    - effet: minecraft:saturation
+      amplificateur: 0
+      augmente-avec-qualite: false
+  # Effets de la descente. "une-seule-fois" ne s'applique
+  # qu'au debut de la phase (courte nausee).
+  effets-descente:
+    - effet: minecraft:slowness
+      amplificateur: 0
+      augmente-avec-qualite: false
+    - effet: minecraft:hunger
+      amplificateur: 0
+      augmente-avec-qualite: false
+    - effet: minecraft:nausea
+      amplificateur: 0
+      augmente-avec-qualite: false
+      une-seule-fois: true
+
+consommation:
+  # Abus : ce nombre de joints dans la fenetre declenche un blackout.
+  blackout-nombre: 3
+  blackout-fenetre: 5m
+  blackout-duree: 30s
+  # Tolerance (jauge 0 a 100) : gain par joint, perte par heure
+  # (temps reel, meme hors ligne), reduction maximale des effets.
+  tolerance-gain: 12.0
+  tolerance-perte-par-heure: 4.0
+  tolerance-reduction-max: 0.6
+  # Addiction (jauge 0 a 100) : au-dela du seuil, le manque
+  # frappe apres "delai-manque" sans consommer.
+  addiction-gain: 8.0
+  addiction-perte-par-heure: 1.5
+  addiction-seuil: 50.0
+  delai-manque: 45m
+
+poids-qualite:
+  # Ponderation du calcul de qualite (la somme doit faire 1).
+  hydratation: 0.45
+  engrais: 0.30
+  timing: 0.25

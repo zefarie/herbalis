@@ -1,0 +1,243 @@
+# ==============================================================
+#  Herbalis : tous les textes joueur, en MiniMessage.
+#
+#  Charte : vert #86efac -> #22c55e (primaire), ambre #fbbf24
+#  (qualite), rouge doux #f87171 (erreurs), gris #9ca3af
+#  (ambiance), separateurs #3f3f46.
+#
+#  <prefix> insere le prefixe defini ci-dessous.
+# ==============================================================
+
+general:
+  prefix: "<color:#4ade80>☘</color> <gradient:#86efac:#22c55e><b>Herbalis</b></gradient> <color:#3f3f46>│</color>"
+
+# --------------------------------------------------------------
+#  Items : noms et lores
+#  Placeholders : <drogue> (nom de la drogue), <etoiles> (qualite)
+# --------------------------------------------------------------
+
+items:
+  pot:
+    nom: "<gradient:#e8b64c:#b45309>Pot de culture</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Terre cuite, terreau riche,</color>"
+      - "<!i><color:#9ca3af>et beaucoup d'ambition.</color>"
+      - "<!i><i><color:#71717a>Tout commence ici.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  drying_rack:
+    nom: "<gradient:#e8b64c:#92400e>Rack de séchage</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Des ficelles, du bois brut.</color>"
+      - "<!i><color:#9ca3af>Le temps fait le reste.</color>"
+      - "<!i><i><color:#71717a>La patience a une odeur.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  watering_can:
+    nom: "<gradient:#7dd3fc:#0ea5e9>Arrosoir</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Se recharge sur un bloc d'eau.</color>"
+      - "<!i><i><color:#71717a>La vie coule a petites gouttes.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  fertilizer:
+    nom: "<gradient:#a3e635:#65a30d>Engrais naturel</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Un sachet qui sent la foret</color>"
+      - "<!i><color:#9ca3af>apres la pluie. Un par stage.</color>"
+      - "<!i><i><color:#71717a>Les plantes disent merci.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  rolling_paper:
+    nom: "<color:#e5e7eb>Feuille à rouler</color>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Fine, blanche, impatiente.</color>"
+      - "<!i><i><color:#71717a>Il ne manque plus que le contenu.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  pouch_empty:
+    nom: "<gradient:#d6b88a:#b8946a>Pochon vide</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Petit sac de papier kraft.</color>"
+      - "<!i><color:#9ca3af>Clic droit avec de la weed séchée</color>"
+      - "<!i><color:#9ca3af>dans l'inventaire pour le remplir.</color>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  seed:
+    nom: "<gradient:#86efac:#22c55e>Graine de <drogue></gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Clic droit sur un pot de culture</color>"
+      - "<!i><color:#9ca3af>pour la planter.</color>"
+      - "<!i><i><color:#71717a>Une promesse en miniature.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  bud_fresh:
+    nom: "<gradient:#86efac:#22c55e>Tête fraîche de <drogue></gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i>Qualité <etoiles>"
+      - "<!i><color:#9ca3af>Encore humide. A suspendre sur</color>"
+      - "<!i><color:#9ca3af>un rack de séchage.</color>"
+      - "<!i><i><color:#71717a>Ça sent la victoire... et la sève.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  dried:
+    nom: "<gradient:#b5cc6a:#6b8e23><drogue> séchée</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i>Qualité <etoiles>"
+      - "<!i><color:#9ca3af>Sèche et parfumée, prête à être</color>"
+      - "<!i><color:#9ca3af>conditionnée en pochon.</color>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  pouch:
+    nom: "<gradient:#d6b88a:#b8946a>Pochon de <drogue></gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i>Qualité <etoiles>"
+      - "<!i><color:#9ca3af>Avec une feuille à rouler,</color>"
+      - "<!i><color:#9ca3af>devient un joint (établi).</color>"
+      - "<!i><i><color:#71717a>Discret, enfin presque.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  joint:
+    nom: "<gradient:#f5f5f4:#a8a29e>Joint</gradient> <gradient:#86efac:#22c55e>de <drogue></gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i>Qualité <etoiles>"
+      - "<!i><color:#9ca3af>Maintenir clic droit pour fumer.</color>"
+      - "<!i><i><color:#71717a>Roulé serré, comme il faut.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+
+# --------------------------------------------------------------
+#  Qualite et HUD
+# --------------------------------------------------------------
+
+qualite:
+  etoile-pleine: "<color:#fbbf24>✦</color>"
+  etoile-vide: "<color:#4b5563>✧</color>"
+
+hud:
+  segment-plein: "<color:#4ade80>▰</color>"
+  segment-vide: "<color:#3f3f46>▱</color>"
+  plante: "<gradient:#86efac:#22c55e><b><nom></b></gradient> <color:#3f3f46>│</color> <segments> <color:#3f3f46>│</color> <hydratation> <color:#3f3f46>│</color> <etoiles><alerte>"
+  hydratation-haute: "<color:#7dd3fc>≋ <valeur>%</color>"
+  hydratation-moyenne: "<color:#fbbf24>≋ <valeur>%</color>"
+  hydratation-basse: "<color:#f87171>≋ <valeur>%</color>"
+  alerte-lumiere: " <color:#3f3f46>│</color> <color:#f87171>☀ manque de lumière</color>"
+  alerte-soif: " <color:#3f3f46>│</color> <color:#fbbf24>≋ à arroser</color>"
+  alerte-assoiffee: " <color:#3f3f46>│</color> <color:#f87171>✻ assoiffée !</color>"
+  alerte-recolte-optimale: " <color:#3f3f46>│</color> <color:#4ade80>✂ récolte optimale !</color>"
+  alerte-recolte-tardive: " <color:#3f3f46>│</color> <color:#fbbf24>✂ la qualité décline...</color>"
+  plante-morte: "<color:#78716c><b><nom></b></color> <color:#3f3f46>│</color> <color:#f87171>morte de soif</color> <color:#3f3f46>│</color> <color:#9ca3af>clic droit pour l'arracher</color>"
+  pot-vide: "<gradient:#e8b64c:#b45309><b>Pot de culture</b></gradient> <color:#3f3f46>│</color> <color:#9ca3af>plantez-y une graine</color>"
+  rack-vide: "<gradient:#e8b64c:#92400e><b>Rack de séchage</b></gradient> <color:#3f3f46>│</color> <color:#9ca3af>déposez des têtes fraîches</color>"
+  rack-sechage: "<gradient:#e8b64c:#92400e><b>Rack de séchage</b></gradient> <color:#3f3f46>│</color> <color:#fbbf24>⧗ séchage <pourcent>%</color> <color:#3f3f46>│</color> <color:#9ca3af><nombre> tête(s)</color>"
+  rack-pret: "<gradient:#e8b64c:#92400e><b>Rack de séchage</b></gradient> <color:#3f3f46>│</color> <color:#4ade80>✓ prêt !</color> <color:#3f3f46>│</color> <color:#9ca3af><nombre> tête(s) à récupérer</color>"
+
+# --------------------------------------------------------------
+#  Culture
+# --------------------------------------------------------------
+
+culture:
+  pot-pose: "<color:#4ade80>Pot posé.</color> <color:#9ca3af>Il attend sa graine.</color>"
+  graine-plantee: "<color:#4ade80>Graine de <drogue> plantée.</color> <color:#9ca3af>Arrose-la bien.</color>"
+  deja-plante: "<color:#f87171>Ce pot est déjà occupé.</color>"
+  pose-surface-invalide: "<color:#f87171>Il faut une surface plane et solide.</color>"
+  pose-place-occupee: "<color:#f87171>Il y a déjà quelque chose ici.</color>"
+  plante-arrachee: "<color:#fbbf24>Plante arrachée.</color>"
+  pot-casse: "<color:#fbbf24>Pot récupéré.</color>"
+  plante-morte-arrachee: "<color:#9ca3af>Tu arraches les restes secs de la plante...</color>"
+  pot-vide-info: "<color:#9ca3af>Ce pot est vide.</color>"
+  plante-morte-info: "<color:#f87171>Cette plante est morte.</color>"
+
+arrosage:
+  arrosee: "<color:#7dd3fc>≋ La terre boit à grandes gorgées.</color>"
+  deja-humide: "<color:#9ca3af>La terre est déjà bien humide.</color>"
+  deja-plein: "<color:#9ca3af>L'arrosoir est déjà plein.</color>"
+  rempli: "<color:#7dd3fc>≋ Arrosoir rempli.</color>"
+  arrosoir-vide: "<color:#f87171>Arrosoir vide. Recharge-le sur de l'eau.</color>"
+
+engrais:
+  applique: "<color:#a3e635>❁ L'engrais se mêle au terreau.</color>"
+  deja-applique: "<color:#9ca3af>Ce stage a déjà reçu son engrais.</color>"
+
+recolte:
+  optimale: "<color:#4ade80>✂ <nombre> tête(s) récoltée(s) au meilleur moment !</color> <etoiles>"
+  tardive: "<color:#fbbf24>✂ <nombre> tête(s) récoltée(s), un peu tard...</color> <etoiles>"
+
+# --------------------------------------------------------------
+#  Sechage et conditionnement
+# --------------------------------------------------------------
+
+sechage:
+  rack-pose: "<color:#4ade80>Rack de séchage installé.</color>"
+  tete-deposee: "<color:#4ade80>Tête suspendue</color> <color:#9ca3af>(<nombre>/<capacite>). Le temps travaille pour toi.</color>"
+  rack-plein: "<color:#f87171>Le rack est plein.</color>"
+  melange-interdit: "<color:#f87171>On ne mélange pas les récoltes sur un même rack.</color>"
+  recupere: "<color:#4ade80>✓ Weed séchée récupérée, elle croustille juste ce qu'il faut.</color>"
+  recupere-trop-tot: "<color:#fbbf24>Récupérée trop tôt... l'humidité a coûté de la qualité.</color>"
+  contenu-rendu: "<color:#fbbf24>Tu décroches les têtes, encore humides.</color>"
+  rack-casse: "<color:#fbbf24>Rack démonté.</color>"
+
+conditionnement:
+  rien-a-emballer: "<color:#f87171>Aucune weed séchée dans l'inventaire.</color>"
+  pochon-rempli: "<color:#4ade80>Pochon rempli.</color> <etoiles>"
+
+# --------------------------------------------------------------
+#  Consommation
+# --------------------------------------------------------------
+
+consommation:
+  allumage: "<i><color:#9ca3af>La braise crépite doucement...</color></i>"
+  montee-1: "<i><color:#9ca3af>Une chaleur douce se répand dans ta poitrine...</color></i>"
+  montee-2: "<i><color:#c4b5fd>Le monde commence à onduler doucement...</color></i>"
+  high-titre: "<color:#c4b5fd>✿</color>"
+  high-sous-titre: "<i><color:#d8b4fe>Tu te sens léger...</color></i>"
+  ambiance-high:
+    - "<i><color:#c4b5fd>Les couleurs semblent plus vives...</color></i>"
+    - "<i><color:#c4b5fd>Tout paraît plus lent, plus doux...</color></i>"
+    - "<i><color:#c4b5fd>Un sourire s'installe tout seul...</color></i>"
+    - "<i><color:#c4b5fd>Tes pensées flottent quelque part au-dessus de toi...</color></i>"
+    - "<i><color:#c4b5fd>Le temps s'étire comme du miel...</color></i>"
+  descente: "<i><color:#9ca3af>La descente s'amorce, ton corps se fait lourd...</color></i>"
+  ambiance-descente:
+    - "<i><color:#9ca3af>Ta tête bourdonne légèrement...</color></i>"
+    - "<i><color:#9ca3af>Une petite faim s'installe...</color></i>"
+    - "<i><color:#9ca3af>Tes paupières pèsent une tonne...</color></i>"
+  fin: "<i><color:#9ca3af>Les brumes se dissipent, tu reprends pied.</color></i>"
+
+blackout:
+  title: "<color:#3f3f46>✦</color>"
+  sous-titre: "<i><color:#52525b>tout devient noir...</color></i>"
+  reveil-titre: "<color:#9ca3af>✦</color>"
+  reveil-sous-titre: "<i><color:#9ca3af>tu reviens à toi...</color></i>"
+  reveil-message: "<prefix> <color:#9ca3af>Tu te réveilles au sol, la tête en vrac. Trop, c'était trop.</color>"
+
+manque:
+  debut: "<prefix> <color:#f87171>Le manque s'installe... il te faut ta dose, ou tenir bon.</color>"
+  fin: "<prefix> <color:#4ade80>Ton corps se libère du manque. Tu respires enfin.</color>"
+  ambiance:
+    - "<i><color:#9ca3af>Tes mains tremblent...</color></i>"
+    - "<i><color:#9ca3af>Ton coeur s'emballe sans raison...</color></i>"
+    - "<i><color:#9ca3af>Une sueur froide te parcourt le dos...</color></i>"
+    - "<i><color:#9ca3af>Tu n'arrives pas à penser à autre chose...</color></i>"
+    - "<i><color:#9ca3af>Chaque bruit te fait sursauter...</color></i>"
+
+# --------------------------------------------------------------
+#  Erreurs et commandes
+# --------------------------------------------------------------
+
+erreurs:
+  permission: "<prefix> <color:#f87171>Tu n'as pas la permission.</color>"
+  joueur-introuvable: "<prefix> <color:#f87171>Joueur introuvable : <joueur></color>"
+  item-inconnu: "<prefix> <color:#f87171>Item inconnu : <item></color>"
+  joueur-seulement: "<prefix> <color:#f87171>Commande réservée aux joueurs.</color>"
+
+commande:
+  usage: "<prefix> <color:#9ca3af>/herbalis give, info, tolerance ou reload</color>"
+  give-usage: "<prefix> <color:#9ca3af>/herbalis give (joueur) (item) [quantité] [qualité]</color>"
+  give-ok: "<prefix> <color:#4ade80><quantite>x <item> donné(s) à <joueur>.</color>"
+  info-aucune-cible: "<prefix> <color:#9ca3af>Regarde une plante, un pot ou un rack.</color>"
+  info-plante: "<prefix> <gradient:#86efac:#22c55e><b><drogue></b></gradient> <color:#9ca3af>stage <stage>/<stages> (<progression>%), hydratation <hydratation>% (moyenne <hydratation_moyenne>%), engrais <engrais>, état <etat>, potentiel</color> <etoiles>"
+  tolerance-usage: "<prefix> <color:#9ca3af>/herbalis tolerance (joueur) [reset]</color>"
+  tolerance-info: "<prefix> <color:#9ca3af><joueur> : tolérance</color> <color:#fbbf24><tolerance>/100</color><color:#9ca3af>, addiction</color> <color:#f87171><addiction>/100</color>"
+  tolerance-reset: "<prefix> <color:#4ade80>Profil de <joueur> remis à zéro.</color>"
+  reload-ok: "<prefix> <color:#4ade80>Configuration rechargée.</color>"
