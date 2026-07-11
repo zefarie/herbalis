@@ -1,0 +1,38 @@
+name: Herbalis
+version: '${version}'
+main: io.github.zefarie.herbalis.HerbalisPlugin
+api-version: '1.21'
+description: Culture, sechage et consommation de substances pour serveur roleplay
+author: zefarie
+website: https://github.com/zefarie
+
+libraries:
+  - org.xerial:sqlite-jdbc:3.53.2.0
+
+commands:
+  herbalis:
+    description: Commande principale de Herbalis
+    usage: /herbalis <give|info|tolerance|reload>
+    aliases: [herb]
+
+permissions:
+  herbalis.plant:
+    description: Autorise a poser des pots et planter des graines
+    default: true
+  herbalis.harvest:
+    description: Autorise a recolter, secher et conditionner
+    default: true
+  herbalis.consume:
+    description: Autorise a consommer les produits
+    default: true
+  herbalis.info:
+    description: Acces a /herbalis info (details de la plante regardee)
+    default: op
+  herbalis.admin:
+    description: Acces aux commandes d'administration de Herbalis
+    default: op
+    children:
+      herbalis.info: true
+      herbalis.plant: true
+      herbalis.harvest: true
+      herbalis.consume: true

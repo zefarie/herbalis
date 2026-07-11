@@ -1,0 +1,26 @@
+# Build
+build/
+.gradle/
+out/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+bin/
+
+# Python (outils de génération de textures)
+resourcepack/tools/.venv/
+__pycache__/
+*.pyc
+
+# Divers
+*.log
+.DS_Store
+
+# Fichiers locaux
+CLAUDE.md
+.claude/
