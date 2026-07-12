@@ -54,35 +54,46 @@ public final class CraftListener implements Listener {
 
     @EventHandler
     public void onPrepareCraft(PrepareItemCraftEvent event) {
-        ItemStack[] matrix = event.getInventory().getMatrix();
-        boolean hasHerbalisInput = false;
         ItemStack pouch = null;
-        for (ItemStack stack : matrix) {
+        ItemStack paper = null;
+        int herbalisInputs = 0;
+        int totalInputs = 0;
+        int otherInputs = 0;
+        for (ItemStack stack : event.getInventory().getMatrix()) {
+            if (stack == null || stack.isEmpty()) {
+                continue;
+            }
+            totalInputs++;
             Optional<HerbalisItemType> type = ItemKeys.typeOf(stack);
-            if (type.isPresent()) {
-                hasHerbalisInput = true;
-                if (type.get() == HerbalisItemType.POUCH) {
-                    pouch = stack;
+            if (type.isEmpty()) {
+                otherInputs++;
+                continue;
+            }
+            herbalisInputs++;
+            switch (type.get()) {
+                case POUCH -> pouch = stack;
+                case ROLLING_PAPER -> paper = stack;
+                default -> {
                 }
             }
         }
-        if (!hasHerbalisInput) {
+        if (herbalisInputs == 0) {
             return;
         }
 
-        ItemStack result = event.getInventory().getResult();
-        boolean resultIsJoint = ItemKeys.typeOf(result)
-                .filter(type -> type == HerbalisItemType.JOINT).isPresent();
-        if (resultIsJoint && pouch != null) {
-            // Le joint herite de la qualite du pochon utilise.
+        // Un pochon + une feuille, rien d'autre : joint, qualite heritee.
+        // Correspondance manuelle, plus robuste que l'ExactChoice de la
+        // recette enregistree (les items anciens gardent leur vieux lore).
+        if (totalInputs == 2 && pouch != null && paper != null && otherInputs == 0) {
             Quality quality = ItemKeys.qualityOf(pouch).orElse(Quality.of(1));
             Optional<DrugType> drug = ItemKeys.drugOf(pouch).flatMap(drugs::byId);
-            drug.ifPresent(d -> event.getInventory()
-                    .setResult(items.joint(d, quality)));
-            return;
+            if (drug.isPresent()) {
+                event.getInventory().setResult(items.joint(drug.get(), quality));
+                return;
+            }
         }
-        if (!resultIsJoint && result != null) {
-            // Pas question de transformer un pochon en carte ou en livre.
+        // Sinon, aucun item Herbalis ne participe a une recette vanilla.
+        if (event.getInventory().getResult() != null) {
             event.getInventory().setResult(null);
         }
     }
