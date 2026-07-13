@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
-"""Genere les textures 16x16 du resource pack Herbalis (pixel art).
+"""Genere les textures du resource pack Herbalis (pixel art).
 
-Palette coherente : verts naturels pour les plantes, terre cuite pour le
-pot, bois chaud pour le rack, kraft pour les pochons. Les PNG produits
-sont commites; un artiste peut les remplacer sans toucher aux models.
+- Items : 16x16 (coherence vanilla en inventaire).
+- Pot, rack, plantes : 32x32 (densite 2x, la ou le regard se pose).
+- Plantes : atlas de pieces (feuille, tige, bud) mappees par les models
+  sculptes de generate_models.py.
+- Font : glyphes 8x8 blancs, teintes par les balises de couleur.
+
+Les PNG produits sont commites; un artiste peut les remplacer sans
+toucher aux models (chemins et regions UV stables).
 
 Usage : .venv/bin/python generate_textures.py
 """
 
+import math
 import random
 from pathlib import Path
 
@@ -24,21 +30,29 @@ GREEN_DARK = (45, 90, 39, 255)
 GREEN_MID = (62, 123, 52, 255)
 GREEN = (92, 160, 76, 255)
 GREEN_LIGHT = (134, 192, 108, 255)
+GREEN_RAMP = [GREEN_DARK, GREEN_MID, GREEN, GREEN_LIGHT]
 STEM = (93, 124, 58, 255)
 STEM_DARK = (74, 99, 46, 255)
 BUD_LIGHT = (154, 181, 92, 255)
 BUD_MID = (122, 150, 72, 255)
+BUD_DARK = (96, 122, 58, 255)
 PISTIL = (217, 142, 59, 255)
 
-T = (0, 0, 0, 0)  # transparent
+T = (0, 0, 0, 0)
+WHITE = (255, 255, 255, 255)
 
 
 def clamp(v: float) -> int:
     return max(0, min(255, int(v)))
 
 
-def new16() -> Image.Image:
-    return Image.new("RGBA", (16, 16), T)
+def new(size: int) -> Image.Image:
+    return Image.new("RGBA", (size, size), T)
+
+
+def put(img: Image.Image, x: int, y: int, color: tuple) -> None:
+    if 0 <= x < img.width and 0 <= y < img.height:
+        img.putpixel((x, y), color)
 
 
 def save(img: Image.Image, rel: str) -> None:
@@ -48,103 +62,25 @@ def save(img: Image.Image, rel: str) -> None:
     print(f"  {path.relative_to(ROOT)}")
 
 
-def from_map(rows: list[str], palette: dict[str, tuple]) -> Image.Image:
-    img = new16()
-    for y, row in enumerate(rows[:16]):
-        row = row.ljust(16, ".")
-        for x, char in enumerate(row[:16]):
+def from_map(rows: list[str], palette: dict[str, tuple],
+             size: int = 16) -> Image.Image:
+    img = new(size)
+    for y, row in enumerate(rows[:size]):
+        row = row.ljust(size, ".")
+        for x, char in enumerate(row[:size]):
             if char != ".":
                 img.putpixel((x, y), palette[char])
     return img
 
 
 # ------------------------------------------------------------------
-# Plantes : tige + folioles procedurales
+# Remaps (variantes seche et morte)
 # ------------------------------------------------------------------
 
-def put(img: Image.Image, x: int, y: int, color: tuple) -> None:
-    if 0 <= x < 16 and 0 <= y < 16:
-        img.putpixel((x, y), color)
-
-
-GREEN_RAMP = [GREEN_DARK, GREEN_MID, GREEN, GREEN_LIGHT]
-
-
-def cluster(img, cx: int, cy: int, width: int, height: int,
-            rng: random.Random) -> None:
-    """Amas de feuillage dense : sombre dessous, clair dessus, bords
-    dechiquetes par dithering."""
-    half_h = max(1, height // 2)
-    for dy in range(-half_h, half_h + 1):
-        shrink = (abs(dy) / (half_h + 0.6)) ** 1.5
-        span = max(0, round((width / 2) * (1.0 - shrink)))
-        for dx in range(-span, span + 1):
-            if abs(dx) == span and rng.random() < 0.35:
-                continue  # bord irregulier
-            t = 0.55 - dy / (height + 0.5) + rng.uniform(-0.2, 0.2)
-            idx = max(0, min(len(GREEN_RAMP) - 1, int(t * len(GREEN_RAMP))))
-            put(img, cx + dx, cy + dy, GREEN_RAMP[idx])
-
-
-def leaf_tips(img, cx: int, cy: int, width: int, count: int,
-              rng: random.Random) -> None:
-    """Pointes de feuilles qui depassent de l'amas (silhouette dentee)."""
-    for _ in range(count):
-        side = rng.choice((-1, 1))
-        x = cx + side * (width // 2)
-        y = cy + rng.randint(-1, 1)
-        length = rng.randint(2, 3)
-        for step in range(length):
-            color = GREEN_RAMP[min(3, 1 + step)]
-            put(img, x + side * step, y - step // 2, color)
-
-
-def cola(img, cx: int, top_y: int, tall: int, rng: random.Random) -> None:
-    """Tete compacte au sommet (cola) : coeur dense et pistils orange."""
-    for dy in range(tall):
-        width = 1 if dy in (0, tall - 1) else 2
-        for dx in range(-width + 1, width):
-            color = BUD_LIGHT if (dx + dy + rng.randint(0, 1)) % 2 else BUD_MID
-            put(img, cx + dx, top_y + dy, color)
-    put(img, cx - 1, top_y + 1, PISTIL)
-    put(img, cx + 1, top_y + tall - 2, PISTIL)
-
-
-def plant(height: int, clusters: list[tuple[float, int, int]],
-          buds: bool, seed: int) -> Image.Image:
-    """Plante : tige visible + amas feuillus + pointes de feuilles.
-
-    clusters : liste de (hauteur relative, largeur, hauteur) d'amas.
-    """
-    rng = random.Random(seed)
-    img = new16()
-    base_x, base_y = 8, 15
-    top_y = base_y - height
-
-    for y in range(top_y, base_y + 1):
-        put(img, base_x, y, STEM if y % 2 == 0 else STEM_DARK)
-
-    for rel, width, tall in clusters:
-        cy = round(base_y - height * rel)
-        cluster(img, base_x, cy, width, tall, rng)
-        leaf_tips(img, base_x, cy, width, 2 + width // 3, rng)
-
-    if buds:
-        # Cola principale au sommet et deux grappes laterales.
-        cola(img, base_x, top_y - 1, 5, rng)
-        top_cluster = clusters[-1]
-        side = max(2, top_cluster[1] // 2 - 1)
-        cy = round(base_y - height * clusters[0][0])
-        cola(img, base_x - side - 1, cy - 2, 3, rng)
-        cola(img, base_x + side + 1, cy - 1, 3, rng)
-    return img
-
-
 def dry_variant(img: Image.Image) -> Image.Image:
-    """Jaunit une plante assoiffee : verts vers paille et ocre."""
-    out = new16()
-    for y in range(16):
-        for x in range(16):
+    out = Image.new("RGBA", img.size, T)
+    for y in range(img.height):
+        for x in range(img.width):
             r, g, b, a = img.getpixel((x, y))
             if a == 0:
                 continue
@@ -153,118 +89,361 @@ def dry_variant(img: Image.Image) -> Image.Image:
 
 
 def dead_variant(img: Image.Image) -> Image.Image:
-    """Plante morte : bruns ternes par luminance."""
-    out = new16()
+    out = Image.new("RGBA", img.size, T)
     low, high = (66, 48, 30), (148, 112, 68)
-    for y in range(16):
-        for x in range(16):
+    for y in range(img.height):
+        for x in range(img.width):
             r, g, b, a = img.getpixel((x, y))
             if a == 0:
                 continue
-            t = (0.3 * r + 0.6 * g + 0.1 * b) / 200.0
-            t = max(0.0, min(1.0, t))
+            t = max(0.0, min(1.0, (0.3 * r + 0.6 * g + 0.1 * b) / 200.0))
             color = tuple(clamp(low[i] + (high[i] - low[i]) * t) for i in range(3))
             out.putpixel((x, y), (*color, a))
     return out
 
 
 # ------------------------------------------------------------------
-# Pot, terre, rack
+# Atlas des pieces de plante (32x32)
+#
+# Regions (pixels / UV en 16emes) :
+#   feuille large : (0,0)-(13,11)   uv [0, 0, 6.5, 5.5]
+#   feuille petite: (16,0)-(26,8)   uv [8, 0, 13, 4]
+#   tige          : (0,16)-(4,32)   uv [0, 8, 2, 16]
+#   bud           : (16,16)-(24,24) uv [8, 8, 12, 12]
+#   cola          : (24,16)-(30,26) uv [12, 8, 15, 13]
 # ------------------------------------------------------------------
 
-def noisy_fill(base: tuple, variants: list[tuple], density: float,
-               seed: int) -> Image.Image:
+def draw_leaf(img: Image.Image, ox: int, oy: int, w: int, h: int,
+              specs: list[tuple[float, float]], rng: random.Random) -> None:
+    """Feuille en eventail pointant vers le haut, folioles effilees."""
+    base_x, base_y = ox + w // 2, oy + h - 1
+    max_len = h - 1.2
+    for angle, ratio in specs:
+        rad = math.radians(angle)
+        dx, dy = math.sin(rad), -math.cos(rad)
+        length = max_len * ratio
+        steps = int(length) + 1
+        for step in range(steps):
+            t = step / max(1.0, length)
+            x = base_x + dx * step
+            y = base_y + dy * step
+            idx = min(3, int(t * 4.2))
+            color = GREEN_RAMP[idx]
+            put(img, round(x), round(y), color)
+            # Charnue a la base, effilee en pointe.
+            if t < 0.7 and length > 4:
+                px = round(x - dy * 0.9)
+                py = round(y + dx * 0.9)
+                if rng.random() < 0.9:
+                    put(img, px, py, GREEN_RAMP[max(0, idx - 1)])
+            # Foliole centrale un peu plus large a la base.
+            if angle == 0 and t < 0.4:
+                put(img, round(x + dy * 0.9), round(y - dx * 0.9),
+                    GREEN_RAMP[max(0, idx - 1)])
+    # Nervure centrale plus claire sur la foliole principale.
+    for step in range(2, int(max_len) - 1, 2):
+        put(img, base_x, base_y - step, GREEN_LIGHT)
+
+
+def plant_parts() -> Image.Image:
+    img = new(32)
+    rng = random.Random(7)
+
+    # Feuille large : 5 folioles.
+    draw_leaf(img, 0, 0, 13, 11,
+              [(0, 1.0), (32, 0.85), (-32, 0.85), (68, 0.58), (-68, 0.58)], rng)
+    # Feuille petite : 3 folioles.
+    draw_leaf(img, 16, 0, 10, 8, [(0, 1.0), (45, 0.7), (-45, 0.7)], rng)
+
+    # Tige : 4x16, bord ombre, noeuds clairs.
+    for y in range(16, 32):
+        for x, color in ((0, STEM_DARK), (1, STEM), (2, STEM), (3, STEM_DARK)):
+            put(img, x, y, color)
+    for y in (19, 24, 29):
+        put(img, 1, y, GREEN_MID)
+        put(img, 2, y, GREEN_LIGHT)
+
+    # Bud : 8x8 dense, lisere sombre, pistils.
+    for y in range(16, 24):
+        for x in range(16, 24):
+            edge = x in (16, 23) or y in (16, 23)
+            if edge and (x + y) % 2 == 0:
+                continue
+            color = BUD_DARK if edge else (
+                BUD_LIGHT if (x + y) % 2 else BUD_MID)
+            put(img, x, y, color)
+    put(img, 18, 18, PISTIL)
+    put(img, 21, 21, PISTIL)
+    put(img, 19, 22, GREEN_LIGHT)
+
+    # Cola : 6x10, pointe effilee vers le haut.
+    for i, width in enumerate((2, 3, 3, 3, 3, 2, 2, 1, 1, 1)):
+        y = 25 - i + 0  # de bas (25) vers haut (16)
+        y = 25 - i
+        cx = 27
+        for dx in range(-width + 1, width):
+            color = BUD_LIGHT if (dx + i) % 2 else BUD_MID
+            put(img, cx + dx, y, color)
+    put(img, 26, 22, PISTIL)
+    put(img, 28, 19, PISTIL)
+    put(img, 27, 16, GREEN_LIGHT)
+    return img
+
+
+# ------------------------------------------------------------------
+# Pot (32x32, densite 2x) et rack
+# ------------------------------------------------------------------
+
+def noisy(size: int, base: tuple, variants: list[tuple], density: float,
+          seed: int) -> Image.Image:
     rng = random.Random(seed)
-    img = Image.new("RGBA", (16, 16), base)
-    for y in range(16):
-        for x in range(16):
+    img = Image.new("RGBA", (size, size), base)
+    for y in range(size):
+        for x in range(size):
             if rng.random() < density:
                 img.putpixel((x, y), rng.choice(variants))
     return img
 
 
 def pot_side() -> Image.Image:
-    base = (167, 105, 66, 255)
-    dark = (143, 87, 55, 255)
-    light = (186, 122, 79, 255)
-    img = noisy_fill(base, [dark, light], 0.16, seed=11)
-    rng = random.Random(12)
-    # Stries verticales discretes, comme de la terre cuite tournee.
-    for x in range(0, 16, 4):
-        col = x + rng.randint(0, 2)
-        for y in range(16):
-            if rng.random() < 0.6:
-                img.putpixel((col % 16, y), dark)
-    # Ombre sous le rebord et lumiere en haut.
-    for x in range(16):
+    base = (181, 112, 70, 255)
+    dark = (163, 99, 61, 255)
+    light = (197, 126, 81, 255)
+    img = noisy(32, base, [dark, light], 0.12, seed=11)
+    # Sillons de tournage discrets, tous les 8 px.
+    for y in range(6, 32, 8):
+        for x in range(32):
+            if (x + y) % 5 != 0:
+                img.putpixel((x, y), dark)
+    for x in range(32):
         img.putpixel((x, 0), light)
-        img.putpixel((x, 15), (120, 72, 45, 255))
+        img.putpixel((x, 31), (140, 84, 52, 255))
     return img
 
 
 def pot_rim() -> Image.Image:
-    base = (196, 130, 86, 255)
-    img = noisy_fill(base, [(210, 146, 100, 255), (178, 114, 73, 255)], 0.2, seed=13)
-    for x in range(16):
-        img.putpixel((x, 0), (219, 155, 108, 255))
-        img.putpixel((x, 15), (160, 100, 63, 255))
+    img = noisy(32, (196, 130, 86, 255),
+                [(210, 146, 100, 255), (178, 114, 73, 255)], 0.2, seed=13)
+    for x in range(32):
+        img.putpixel((x, 0), (222, 158, 110, 255))
+        img.putpixel((x, 1), (210, 146, 100, 255))
+        img.putpixel((x, 31), (156, 98, 62, 255))
     return img
 
 
 def pot_soil() -> Image.Image:
-    return noisy_fill((56, 40, 27, 255),
-                      [(76, 56, 38, 255), (40, 28, 18, 255), (66, 50, 32, 255)],
-                      0.5, seed=14)
+    img = noisy(32, (56, 40, 27, 255),
+                [(76, 56, 38, 255), (40, 28, 18, 255), (66, 50, 32, 255)],
+                0.5, seed=14)
+    rng = random.Random(15)
+    # Quelques petits cailloux et mottes.
+    for _ in range(6):
+        x, y = rng.randint(2, 29), rng.randint(2, 29)
+        img.putpixel((x, y), (108, 96, 84, 255))
+        img.putpixel((x + 1, y), (88, 76, 64, 255))
+    return img
 
 
 def pot_bottom() -> Image.Image:
-    return noisy_fill((122, 76, 47, 255),
-                      [(104, 63, 39, 255), (137, 88, 56, 255)], 0.3, seed=15)
+    return noisy(32, (122, 76, 47, 255),
+                 [(104, 63, 39, 255), (137, 88, 56, 255)], 0.3, seed=16)
 
 
 def rack_wood() -> Image.Image:
     base = (122, 88, 52, 255)
     grain = (96, 68, 40, 255)
     light = (143, 106, 65, 255)
-    img = noisy_fill(base, [light], 0.12, seed=21)
+    img = noisy(32, base, [light], 0.1, seed=21)
     rng = random.Random(22)
-    for y in (3, 7, 11, 14):
-        for x in range(16):
-            if rng.random() < 0.85:
-                img.putpixel((x, y), grain)
-    # Deux noeuds de bois.
-    for cx, cy in ((4, 5), (11, 12)):
+    # Veines horizontales continues, legerement ondulees.
+    for band in range(4):
+        y = band * 8 + rng.randint(2, 4)
+        for x in range(32):
+            yy = y + (1 if (x // 7 + band) % 2 else 0)
+            if rng.random() < 0.9:
+                img.putpixel((x, yy % 32), grain)
+    for cx, cy in ((7, 11), (22, 26), (27, 5)):
         img.putpixel((cx, cy), (78, 54, 32, 255))
         img.putpixel((cx + 1, cy), grain)
+        img.putpixel((cx, cy + 1), grain)
     return img
 
 
-def rack_hanging(dry: bool) -> Image.Image:
-    img = new16()
-    string = (201, 178, 138, 255)
+def rack_rope() -> Image.Image:
+    img = new(8)
+    rope = (201, 178, 138, 255)
+    rope_dark = (172, 148, 108, 255)
+    for y in range(8):
+        for x in range(8):
+            img.putpixel((x, y), rope_dark if (x + y) % 3 == 0 else rope)
+    return img
+
+
+def rack_bud(dry: bool) -> Image.Image:
+    img = new(8)
     if dry:
-        bud_a = (150, 138, 74, 255)
-        bud_b = (122, 110, 58, 255)
+        a, b, edge = (150, 138, 74, 255), (122, 110, 58, 255), (98, 88, 48, 255)
         tip = (170, 120, 56, 255)
     else:
-        bud_a = BUD_LIGHT
-        bud_b = (98, 138, 70, 255)
+        a, b, edge = BUD_LIGHT, (98, 138, 70, 255), (66, 98, 48, 255)
         tip = PISTIL
-    # Trois bouquets suspendus tete en bas, longueurs variees.
-    for column, (x, top, size) in enumerate(((3, 3, 5), (8, 3, 6), (12, 3, 4))):
-        for y in range(top, top + 2):
-            put(img, x, y, string)
-        for dy in range(size):
-            width = 2 if dy < size - 2 else 1
-            for dx in range(-width + 1, width):
-                color = bud_a if (dx + dy + column) % 2 else bud_b
-                put(img, x + dx, top + 2 + dy, color)
-        put(img, x, top + 2 + size - 1, tip)
+    for y in range(8):
+        for x in range(8):
+            is_edge = x in (0, 7) or y in (0, 7)
+            if is_edge and (x + y) % 2 == 0:
+                continue
+            img.putpixel((x, y), edge if is_edge else (a if (x + y) % 2 else b))
+    img.putpixel((2, 3), tip)
+    img.putpixel((5, 5), tip)
     return img
 
 
 # ------------------------------------------------------------------
-# Items (pixel maps)
+# Glyphes de font (8x8, blancs, teintes par la couleur du texte)
+# ------------------------------------------------------------------
+
+GLYPHS: dict[str, list[str]] = {
+    #  feuille
+    "leaf": [
+        "...X....",
+        ".X.X.X..",
+        ".XXXXX..",
+        "XXXXXXX.",
+        ".XXXXX..",
+        "..XXX...",
+        "...X....",
+        "...X....",
+    ],
+    #  goutte
+    "drop": [
+        "...X....",
+        "...X....",
+        "..XXX...",
+        ".XXXXX..",
+        ".XXXXX..",
+        ".XXXXX..",
+        "..XXX...",
+        "........",
+    ],
+    #  etoile pleine
+    "star_full": [
+        "...X....",
+        "..XXX...",
+        "XXXXXXX.",
+        ".XXXXX..",
+        "..XXX...",
+        ".XX.XX..",
+        "X.....X.",
+        "........",
+    ],
+    #  etoile vide
+    "star_empty": [
+        "...X....",
+        "..X.X...",
+        "XX...XX.",
+        ".X...X..",
+        "..X.X...",
+        ".X...X..",
+        "X.....X.",
+        "........",
+    ],
+    #  segment plein
+    "seg_full": [
+        "........",
+        "..XXXXX.",
+        ".XXXXX..",
+        ".XXXXX..",
+        "XXXXX...",
+        "........",
+        "........",
+        "........",
+    ],
+    #  segment vide
+    "seg_empty": [
+        "........",
+        "..XXXXX.",
+        ".X...X..",
+        ".X...X..",
+        "XXXXX...",
+        "........",
+        "........",
+        "........",
+    ],
+    #  soleil
+    "sun": [
+        "...X....",
+        ".X.X.X..",
+        "..XXX...",
+        "XXXXXXX.",
+        "..XXX...",
+        ".X.X.X..",
+        "...X....",
+        "........",
+    ],
+    #  ciseaux
+    "scissors": [
+        "X....X..",
+        ".X..X...",
+        "..XX....",
+        "..XX....",
+        ".X..X...",
+        "X....X..",
+        "........",
+        "........",
+    ],
+    #  sablier
+    "hourglass": [
+        "XXXXX...",
+        ".XXX....",
+        "..X.....",
+        "..X.....",
+        ".XXX....",
+        "XXXXX...",
+        "........",
+        "........",
+    ],
+    #  coche
+    "check": [
+        "......X.",
+        ".....XX.",
+        "....XX..",
+        "X..XX...",
+        "XXXX....",
+        ".XX.....",
+        "........",
+        "........",
+    ],
+    #  alerte
+    "warning": [
+        "...X....",
+        "..XXX...",
+        "..XXX...",
+        ".XX.XX..",
+        ".XXXXX..",
+        "XXX.XXX.",
+        "XXXXXXX.",
+        "........",
+    ],
+    #  fumee
+    "smoke": [
+        "....XX..",
+        "...XX...",
+        "....XX..",
+        "...XX...",
+        "..XX....",
+        "...XX...",
+        "..XX....",
+        "........",
+    ],
+}
+
+
+def glyph(rows: list[str]) -> Image.Image:
+    return from_map(rows, {"X": WHITE}, size=8)
+
+
+# ------------------------------------------------------------------
+# Items 16x16 (pixel maps)
 # ------------------------------------------------------------------
 
 SEED_MAP = [
@@ -486,15 +665,12 @@ def pack_icon() -> Image.Image:
     size = 64
     img = Image.new("RGBA", (size, size), (18, 24, 16, 255))
     draw = ImageDraw.Draw(img)
-    # Vignette sombre.
     for radius, color in ((30, (24, 32, 20, 255)), (22, (28, 38, 24, 255))):
         draw.ellipse([32 - radius, 32 - radius, 32 + radius, 32 + radius],
                      fill=color)
-    # Feuille stylisee : 7 folioles depuis un point bas.
     cx, cy = 32, 44
     angles = (-90, -60, -120, -30, -150, -8, -172)
     lengths = (26, 22, 22, 16, 16, 10, 10)
-    import math
     for angle, length in zip(angles, lengths):
         rad = math.radians(angle)
         tip = (cx + math.cos(rad) * length, cy + math.sin(rad) * length)
@@ -517,31 +693,25 @@ def pack_icon() -> Image.Image:
 def main() -> None:
     print("Textures :")
 
-    # Plantes (4 stages), variantes seches et morte.
-    stage_1 = plant(4, [(1.0, 4, 2)], False, seed=101)
-    stage_2 = plant(8, [(0.5, 6, 3), (1.0, 5, 3)], False, seed=102)
-    stage_3 = plant(13, [(0.3, 9, 3), (0.62, 8, 3), (0.95, 6, 3)],
-                    False, seed=103)
-    stage_4 = plant(13, [(0.3, 9, 3), (0.62, 8, 3), (0.95, 6, 3)],
-                    True, seed=104)
+    # Atlas de pieces de plante et variantes.
+    parts = plant_parts()
+    save(parts, "block/plant_weed_parts.png")
+    save(dry_variant(parts), "block/plant_weed_parts_dry.png")
+    save(dead_variant(parts), "block/plant_weed_parts_dead.png")
 
-    save(stage_1, "block/plant_weed_stage_1.png")
-    save(stage_2, "block/plant_weed_stage_2.png")
-    save(stage_3, "block/plant_weed_stage_3.png")
-    save(stage_4, "block/plant_weed_stage_4.png")
-    save(dry_variant(stage_2), "block/plant_weed_stage_2_dry.png")
-    save(dry_variant(stage_3), "block/plant_weed_stage_3_dry.png")
-    save(dry_variant(stage_4), "block/plant_weed_stage_4_dry.png")
-    save(dead_variant(stage_2), "block/plant_weed_dead.png")
-
-    # Pot et rack.
+    # Pot et rack (32x).
     save(pot_side(), "block/pot_side.png")
     save(pot_rim(), "block/pot_rim.png")
     save(pot_soil(), "block/pot_soil.png")
     save(pot_bottom(), "block/pot_bottom.png")
     save(rack_wood(), "block/rack_wood.png")
-    save(rack_hanging(dry=False), "block/rack_hanging_fresh.png")
-    save(rack_hanging(dry=True), "block/rack_hanging_dry.png")
+    save(rack_rope(), "block/rack_rope.png")
+    save(rack_bud(dry=False), "block/rack_bud_fresh.png")
+    save(rack_bud(dry=True), "block/rack_bud_dry.png")
+
+    # Glyphes de font.
+    for name, rows in GLYPHS.items():
+        save(glyph(rows), f"font/{name}.png")
 
     # Items.
     save(from_map(SEED_MAP, SEED_PALETTE), "item/weed_seed.png")
@@ -554,7 +724,6 @@ def main() -> None:
     save(from_map(BUD_MAP, BUD_DRIED_PALETTE), "item/weed_dried.png")
     save(from_map(JOINT_MAP, JOINT_PALETTE), "item/weed_joint.png")
 
-    # Icone du pack.
     icon = pack_icon()
     icon.save(ROOT / "pack.png")
     print("  pack.png")
