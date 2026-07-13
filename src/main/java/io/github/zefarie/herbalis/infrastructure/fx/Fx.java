@@ -120,6 +120,12 @@ public final class Fx {
         sound(loc, "minecraft:block.sweet_berry_bush.pick_berries", 0.9f, 1.0f);
     }
 
+    /** Scintillement discret d'une plante en fenetre de recolte optimale. */
+    public void harvestSparkle(Location loc) {
+        particles(loc, w -> w.spawnParticle(Particle.END_ROD,
+                loc.clone().add(0.5, 1.1, 0.5), 1, 0.18, 0.2, 0.18, 0.006));
+    }
+
     public void broken(Location loc) {
         particles(loc, w -> w.spawnParticle(Particle.BLOCK, center(loc), 16,
                 0.25, 0.2, 0.25, 0.0, Material.DECORATED_POT.createBlockData()));

@@ -130,7 +130,7 @@ public final class ItemUseListener implements Listener {
         held.subtract();
         PosCodec.corner(pos).ifPresent(loc -> {
             if (type == HerbalisItemType.POT) {
-                renderer.showPot(pos, Optional.empty(), "");
+                renderer.showPot(pos, Optional.empty(), "", "pot", 1.0f);
                 fx.potPlaced(loc);
                 player.sendActionBar(messages.msg("culture.pot-pose"));
             } else {

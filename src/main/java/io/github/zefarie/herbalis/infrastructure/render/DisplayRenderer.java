@@ -44,6 +44,7 @@ public final class DisplayRenderer {
     private final Plugin plugin;
     private final Map<BlockPos, Spawned> pots = new HashMap<>();
     private final Map<BlockPos, Spawned> racks = new HashMap<>();
+    private final Map<BlockPos, String> potModels = new HashMap<>();
 
     public DisplayRenderer(Plugin plugin) {
         this.plugin = plugin;
@@ -54,7 +55,8 @@ public final class DisplayRenderer {
     // ----------------------------------------------------------------
 
     /** Fait apparaitre le pot (et sa plante eventuelle) a une position. */
-    public void showPot(BlockPos pos, Optional<Plant> plant, String drugModelPrefix) {
+    public void showPot(BlockPos pos, Optional<Plant> plant, String drugModelPrefix,
+                        String potModel, float plantScale) {
         removePotVisual(pos);
         Optional<Location> center = PosCodec.center(pos);
         if (center.isEmpty()) {
@@ -62,11 +64,15 @@ public final class DisplayRenderer {
         }
         Location loc = center.get();
 
-        ItemDisplay potDisplay = spawnDisplay(loc, "pot", MARKER_POT, pos);
+        ItemDisplay potDisplay = spawnDisplay(loc, potModel, MARKER_POT, pos);
+        potModels.put(pos, potModel);
         UUID plantId = null;
         if (plant.isPresent()) {
             ItemDisplay plantDisplay = spawnPlantDisplay(pos, plant.get(), drugModelPrefix);
-            plantId = plantDisplay == null ? null : plantDisplay.getUniqueId();
+            if (plantDisplay != null) {
+                plantDisplay.setTransformation(transform(plantScale));
+                plantId = plantDisplay.getUniqueId();
+            }
         }
         Interaction interaction = spawnInteraction(pos, MARKER_POT,
                 plant.isPresent() ? 1.35f : 0.5f, 0.85f);
@@ -76,10 +82,11 @@ public final class DisplayRenderer {
     }
 
     /** Plante une graine : apparait avec un petit pop de scale. */
-    public void spawnPlantWithPop(BlockPos pos, Plant plant, String modelPrefix) {
+    public void spawnPlantWithPop(BlockPos pos, Plant plant, String modelPrefix,
+                                  float scale) {
         Spawned current = pots.get(pos);
         if (current == null) {
-            showPot(pos, Optional.of(plant), modelPrefix);
+            showPot(pos, Optional.of(plant), modelPrefix, "pot", scale);
             return;
         }
         removeEntity(current.plantDisplay());
@@ -89,7 +96,7 @@ public final class DisplayRenderer {
             return;
         }
         display.setTransformation(transform(0.05f));
-        animate(display, 3, 8, transform(1.0f));
+        animate(display, 3, 8, transform(scale));
 
         pots.put(pos, new Spawned(current.potDisplay(), display.getUniqueId(),
                 current.interaction()));
@@ -97,7 +104,8 @@ public final class DisplayRenderer {
     }
 
     /** Met a jour le modele de la plante (stage ou etat) avec interpolation. */
-    public void updatePlant(BlockPos pos, Plant plant, String modelPrefix, boolean growPop) {
+    public void updatePlant(BlockPos pos, Plant plant, String modelPrefix,
+                            boolean growPop, float scale) {
         Spawned current = pots.get(pos);
         if (current == null || current.plantDisplay() == null) {
             return;
@@ -108,9 +116,23 @@ public final class DisplayRenderer {
         }
         display.setItemStack(ItemFactory.displayItem(plantModel(plant, modelPrefix)));
         if (growPop) {
-            display.setTransformation(transform(0.72f));
-            animate(display, 2, 26, transform(1.0f));
+            display.setTransformation(transform(scale * 0.75f));
+            animate(display, 2, 26, transform(scale));
         }
+    }
+
+    /** Change le modele du pot (terreau humide, sec, fertilise). */
+    public void updatePotModel(BlockPos pos, String potModel) {
+        if (potModel.equals(potModels.get(pos))) {
+            return;
+        }
+        Spawned current = pots.get(pos);
+        if (current == null
+                || !(entity(current.potDisplay()) instanceof ItemDisplay display)) {
+            return;
+        }
+        display.setItemStack(ItemFactory.displayItem(potModel));
+        potModels.put(pos, potModel);
     }
 
     /** Micro pulsation de scale (arrosage, engrais). */
@@ -120,8 +142,9 @@ public final class DisplayRenderer {
             return;
         }
         if (entity(current.plantDisplay()) instanceof ItemDisplay display) {
-            animate(display, 0, 4, transform(1.07f));
-            animate(display, 6, 8, transform(1.0f));
+            Vector3f scale = display.getTransformation().getScale();
+            animate(display, 0, 4, transform(scale.x * 1.07f));
+            animate(display, 6, 8, transform(scale.x));
         }
     }
 
@@ -138,6 +161,7 @@ public final class DisplayRenderer {
 
     /** Retire pot et plante. */
     public void removePotVisual(BlockPos pos) {
+        potModels.remove(pos);
         Spawned current = pots.remove(pos);
         if (current != null) {
             removeEntity(current.potDisplay());
@@ -188,6 +212,7 @@ public final class DisplayRenderer {
     public void forgetChunk(UUID worldId, int chunkX, int chunkZ) {
         pots.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         racks.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
+        potModels.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
     }
 
     /**

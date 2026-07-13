@@ -25,6 +25,7 @@ import io.github.zefarie.herbalis.infrastructure.item.HerbalisItemType;
 import io.github.zefarie.herbalis.infrastructure.item.ItemFactory;
 import io.github.zefarie.herbalis.infrastructure.item.ItemKeys;
 import io.github.zefarie.herbalis.infrastructure.render.DisplayRenderer;
+import io.github.zefarie.herbalis.infrastructure.render.PlantVisuals;
 import io.github.zefarie.herbalis.infrastructure.render.PosCodec;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
@@ -136,6 +137,7 @@ public final class PlantInteractListener implements Listener {
         if (plant.isPresent() && plant.get().isDead()) {
             breakPlant.execute(pos);
             renderer.removePlantVisual(pos);
+            renderer.updatePotModel(pos, "pot");
             fx.died(loc);
             player.sendActionBar(messages.msg("culture.plante-morte-arrachee"));
             return;
@@ -175,9 +177,10 @@ public final class PlantInteractListener implements Listener {
         switch (plantSeed.execute(pos, drugId, now)) {
             case PlantSeedUseCase.Result.Success success -> {
                 seed.subtract();
-                renderer.spawnPlantWithPop(pos, success.plant(), drugId);
-                fx.planted(loc);
                 DrugType drug = drugs.byId(drugId).orElseThrow();
+                renderer.spawnPlantWithPop(pos, success.plant(), drugId,
+                        PlantVisuals.scaleOf(success.plant(), drug));
+                fx.planted(loc);
                 player.sendActionBar(messages.msg("culture.graine-plantee",
                         Messages.ph("drogue", drug.displayName())));
             }
@@ -196,11 +199,15 @@ public final class PlantInteractListener implements Listener {
             return;
         }
         switch (waterPlant.execute(pos)) {
-            case WaterPlantUseCase.Result.Success ignored -> {
+            case WaterPlantUseCase.Result.Success success -> {
                 if (damage != null) {
                     can.setData(DataComponentTypes.DAMAGE, damage + 1);
                 }
                 renderer.pulsePlant(pos);
+                // Le terreau fonce immediatement, le soin se voit.
+                renderer.updatePotModel(pos, PlantVisuals.potModel(
+                        Optional.of(success.plant()),
+                        drugs.byId(success.plant().drugId())));
                 fx.watered(loc);
                 player.sendActionBar(messages.msg("arrosage.arrosee"));
             }
@@ -216,9 +223,12 @@ public final class PlantInteractListener implements Listener {
     private void fertilizeAction(Player player, BlockPos pos, ItemStack fertilizer,
                                  Location loc) {
         switch (fertilizePlant.execute(pos)) {
-            case FertilizePlantUseCase.Result.Success ignored -> {
+            case FertilizePlantUseCase.Result.Success success -> {
                 fertilizer.subtract();
                 renderer.pulsePlant(pos);
+                renderer.updatePotModel(pos, PlantVisuals.potModel(
+                        Optional.of(success.plant()),
+                        drugs.byId(success.plant().drugId())));
                 fx.fertilized(loc);
                 player.sendActionBar(messages.msg("engrais.applique"));
             }
@@ -241,6 +251,7 @@ public final class PlantInteractListener implements Listener {
         }
         DrugType drug = drugs.byId(success.drugId()).orElseThrow();
         renderer.removePlantVisual(pos);
+        renderer.updatePotModel(pos, "pot");
         fx.harvested(loc);
         Location dropAt = loc.clone().add(0.5, 0.8, 0.5);
         for (int i = 0; i < success.yield(); i++) {
@@ -359,6 +370,7 @@ public final class PlantInteractListener implements Listener {
         if (plant.isPresent()) {
             breakPlant.execute(pos);
             renderer.removePlantVisual(pos);
+            renderer.updatePotModel(pos, "pot");
             fx.harvested(loc);
             if (config.dropSeedOnBreak() && !plant.get().isDead()) {
                 drugs.byId(plant.get().drugId()).ifPresent(drug ->

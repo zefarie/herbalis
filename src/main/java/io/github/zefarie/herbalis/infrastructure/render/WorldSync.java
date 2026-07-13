@@ -45,8 +45,13 @@ public final class WorldSync {
         for (BlockPos pos : pots.all()) {
             if (inChunk(pos, worldId, chunk.getX(), chunk.getZ())) {
                 Optional<Plant> plant = plants.at(pos);
+                var drug = plant.flatMap(p -> drugs.byId(p.drugId()));
+                float scale = plant.isPresent() && drug.isPresent()
+                        ? PlantVisuals.scaleOf(plant.get(), drug.get())
+                        : 1.0f;
                 renderer.showPot(pos, plant,
-                        plant.map(Plant::drugId).orElse(""));
+                        plant.map(Plant::drugId).orElse(""),
+                        PlantVisuals.potModel(plant, drug), scale);
             }
         }
         for (DryingRack rack : racks.all()) {

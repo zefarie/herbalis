@@ -165,7 +165,7 @@ public final class HerbalisPlugin extends JavaPlugin {
         scheduler.runTaskTimer(this,
                 new RackTicker(rackRepo, drugs, environment, renderer, fx), 60L, 60L);
         scheduler.runTaskTimer(this,
-                new PlantSwayTicker(renderer, plantRepo, config),
+                new PlantSwayTicker(renderer, plantRepo, drugs, config, fx),
                 PlantSwayTicker.PERIOD_TICKS, PlantSwayTicker.PERIOD_TICKS);
         scheduler.runTaskTimer(this,
                 new PlayerTicker(effects, withdrawal), 20L, 20L);
