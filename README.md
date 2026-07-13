@@ -5,10 +5,12 @@ Purpur/Paper 1.21.11, avec son resource pack. Scope v1 : la weed, sur une
 architecture multi-drogue (ajouter une drogue = un fichier de config et
 des assets, zéro refonte).
 
-Le plugin mise tout sur l'immersion : plantes en 3D (Item Display avec
-interpolation de croissance), particules et sons sur chaque action, HUD
-en action bar stylée MiniMessage, effets de consommation cinématiques
-(montée, plateau, descente, blackout), tolérance et manque persistants.
+Le plugin mise tout sur l'immersion : plantes sculptées en volumes 3D
+(tige, rosettes de feuilles inclinées, buds), balancement doux et animé
+des plants, particules et sons sur chaque action (fumée de joint en
+spirale), HUD en action bar avec une font d'icônes dessinée pour le
+pack, effets de consommation cinématiques (montée, plateau, descente,
+blackout), tolérance et manque persistants.
 
 ## Installation
 
@@ -191,16 +193,30 @@ Choix techniques notables :
 
 ## Resource pack
 
-Structure dans `resourcepack/`, format 75 (1.21.11). Les textures 16x16
-sont générées par `resourcepack/tools/generate_textures.py` (Pillow) et
-les models par `generate_models.py` ; les chemins sont stables pour
-permettre à un artiste de remplacer les PNG sans toucher aux models.
+Structure dans `resourcepack/`, format 75 (1.21.11).
+
+- Plantes sculptées en éléments (tige en volume, feuilles en quads
+  inclinés à 22.5 degrés disposés en rosettes, cola et buds en cubes au
+  stade final), pot conique par étages, rack avec bouquets suspendus en
+  volume. Textures 32x pour le végétal et les blocs, 16x pour les items
+  (cohérence vanilla en inventaire).
+- Font d'icônes `herbalis:icons` (feuille, goutte, étoiles, segments,
+  soleil, ciseaux, sablier, coche...) : glyphes blancs teintés par les
+  balises de couleur MiniMessage, utilisés partout dans messages.yml.
+- Les textures sont générées par `resourcepack/tools/generate_textures.py`
+  (Pillow) et les models par `generate_models.py` ; les chemins et les
+  régions UV sont stables pour permettre à un artiste de remplacer les
+  PNG sans toucher aux models.
+- `preview_render.py` rend n'importe quel model en isométrique sans
+  lancer le jeu (z-buffer, ombrage par face, conventions de rotation du
+  jeu) : idéal pour itérer sur les models.
 
 ```bash
 cd resourcepack/tools
 python3 -m venv .venv && .venv/bin/pip install pillow
 .venv/bin/python generate_textures.py
 .venv/bin/python generate_models.py
+.venv/bin/python preview_render.py --all -o /tmp/previews
 ```
 
 `./gradlew packResourcePack` zippe le pack et écrit son SHA-1.
