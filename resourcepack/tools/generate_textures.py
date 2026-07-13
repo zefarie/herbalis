@@ -106,11 +106,16 @@ def dead_variant(img: Image.Image) -> Image.Image:
 # Atlas des pieces de plante (32x32)
 #
 # Regions (pixels / UV en 16emes) :
-#   feuille large : (0,0)-(13,11)   uv [0, 0, 6.5, 5.5]
-#   feuille petite: (16,0)-(26,8)   uv [8, 0, 13, 4]
-#   tige          : (0,16)-(4,32)   uv [0, 8, 2, 16]
-#   bud           : (16,16)-(24,24) uv [8, 8, 12, 12]
-#   cola          : (24,16)-(30,26) uv [12, 8, 15, 13]
+#   feuille large A : (0,0)-(13,11)    uv [0, 0, 6.5, 5.5]
+#   feuille large B : (14,0)-(27,11)   uv [7, 0, 13.5, 5.5]
+#   feuille petite A: (0,12)-(10,20)   uv [0, 6, 5, 10]
+#   feuille petite B: (11,12)-(21,20)  uv [5.5, 6, 10.5, 10]
+#   tige            : (28,0)-(32,16)   uv [14, 0, 16, 8]
+#   bud             : (0,21)-(8,29)    uv [0, 10.5, 4, 14.5]
+#   cola            : (9,21)-(15,31)   uv [4.5, 10.5, 7.5, 15.5]
+#
+# Deux silhouettes par taille de feuille : les rosettes des models les
+# alternent pour casser la repetition.
 # ------------------------------------------------------------------
 
 def draw_leaf(img: Image.Image, ox: int, oy: int, w: int, h: int,
@@ -149,44 +154,46 @@ def plant_parts() -> Image.Image:
     img = new(32)
     rng = random.Random(7)
 
-    # Feuille large : 5 folioles.
+    # Feuilles larges : deux silhouettes (folioles differentes).
     draw_leaf(img, 0, 0, 13, 11,
               [(0, 1.0), (32, 0.85), (-32, 0.85), (68, 0.58), (-68, 0.58)], rng)
-    # Feuille petite : 3 folioles.
-    draw_leaf(img, 16, 0, 10, 8, [(0, 1.0), (45, 0.7), (-45, 0.7)], rng)
+    draw_leaf(img, 14, 0, 13, 11,
+              [(0, 0.95), (24, 0.9), (-40, 0.8), (58, 0.65), (-72, 0.5)], rng)
+    # Feuilles petites : deux silhouettes.
+    draw_leaf(img, 0, 12, 10, 8, [(0, 1.0), (45, 0.7), (-45, 0.7)], rng)
+    draw_leaf(img, 11, 12, 10, 8, [(8, 1.0), (-38, 0.8), (55, 0.6)], rng)
 
-    # Tige : 4x16, bord ombre, noeuds clairs.
-    for y in range(16, 32):
-        for x, color in ((0, STEM_DARK), (1, STEM), (2, STEM), (3, STEM_DARK)):
-            put(img, x, y, color)
-    for y in (19, 24, 29):
-        put(img, 1, y, GREEN_MID)
-        put(img, 2, y, GREEN_LIGHT)
+    # Tige : 4x16 a droite, bord ombre, noeuds clairs.
+    for y in range(0, 16):
+        for dx, color in ((0, STEM_DARK), (1, STEM), (2, STEM), (3, STEM_DARK)):
+            put(img, 28 + dx, y, color)
+    for y in (3, 8, 13):
+        put(img, 29, y, GREEN_MID)
+        put(img, 30, y, GREEN_LIGHT)
 
     # Bud : 8x8 dense, lisere sombre, pistils.
-    for y in range(16, 24):
-        for x in range(16, 24):
-            edge = x in (16, 23) or y in (16, 23)
+    for y in range(21, 29):
+        for x in range(0, 8):
+            edge = x in (0, 7) or y in (21, 28)
             if edge and (x + y) % 2 == 0:
                 continue
             color = BUD_DARK if edge else (
                 BUD_LIGHT if (x + y) % 2 else BUD_MID)
             put(img, x, y, color)
-    put(img, 18, 18, PISTIL)
-    put(img, 21, 21, PISTIL)
-    put(img, 19, 22, GREEN_LIGHT)
+    put(img, 2, 23, PISTIL)
+    put(img, 5, 26, PISTIL)
+    put(img, 3, 27, GREEN_LIGHT)
 
     # Cola : 6x10, pointe effilee vers le haut.
     for i, width in enumerate((2, 3, 3, 3, 3, 2, 2, 1, 1, 1)):
-        y = 25 - i + 0  # de bas (25) vers haut (16)
-        y = 25 - i
-        cx = 27
+        y = 30 - i  # de bas (30) vers haut (21)
+        cx = 12
         for dx in range(-width + 1, width):
             color = BUD_LIGHT if (dx + i) % 2 else BUD_MID
             put(img, cx + dx, y, color)
-    put(img, 26, 22, PISTIL)
-    put(img, 28, 19, PISTIL)
-    put(img, 27, 16, GREEN_LIGHT)
+    put(img, 11, 27, PISTIL)
+    put(img, 13, 24, PISTIL)
+    put(img, 12, 21, GREEN_LIGHT)
     return img
 
 
@@ -244,6 +251,32 @@ def pot_soil() -> Image.Image:
     return img
 
 
+def pot_soil_dry() -> Image.Image:
+    """Terreau a sec : pale, craquele. Le soin se lit de loin."""
+    img = noisy(32, (118, 94, 66, 255),
+                [(132, 108, 78, 255), (104, 82, 58, 255)], 0.4, seed=17)
+    rng = random.Random(18)
+    # Craquelures : segments sombres qui serpentent.
+    for _ in range(7):
+        x, y = rng.randint(2, 29), rng.randint(2, 29)
+        for _ in range(rng.randint(4, 8)):
+            img.putpixel((x % 32, y % 32), (78, 60, 42, 255))
+            x += rng.choice((-1, 0, 1))
+            y += rng.choice((-1, 1))
+    return img
+
+
+def pot_soil_fert() -> Image.Image:
+    """Terreau fertilise : sombre et humide, mouchete de nutriments."""
+    img = pot_soil()
+    rng = random.Random(19)
+    for _ in range(14):
+        x, y = rng.randint(1, 30), rng.randint(1, 30)
+        img.putpixel((x, y), rng.choice(
+            [(110, 170, 80, 255), (230, 222, 196, 255)]))
+    return img
+
+
 def pot_bottom() -> Image.Image:
     return noisy(32, (122, 76, 47, 255),
                  [(104, 63, 39, 255), (137, 88, 56, 255)], 0.3, seed=16)
@@ -276,6 +309,39 @@ def rack_rope() -> Image.Image:
     for y in range(8):
         for x in range(8):
             img.putpixel((x, y), rope_dark if (x + y) % 3 == 0 else rope)
+    return img
+
+
+def can_metal() -> Image.Image:
+    """Metal brosse de l'arrosoir 3D (16x16)."""
+    img = Image.new("RGBA", (16, 16), (125, 138, 148, 255))
+    rng = random.Random(23)
+    for y in range(16):
+        shade = rng.choice((-1, 0, 0, 1))
+        for x in range(16):
+            base = 125 + shade * 9 + rng.choice((-4, 0, 4))
+            img.putpixel((x, y), (clamp(base), clamp(base + 13), clamp(base + 23), 255))
+    for x in range(16):
+        img.putpixel((x, 0), (170, 182, 190, 255))
+        img.putpixel((x, 15), (91, 103, 112, 255))
+    return img
+
+
+def joint_wrap() -> Image.Image:
+    """Papier roule du joint 3D : pointe torsadee, corps, filtre (16x16)."""
+    img = Image.new("RGBA", (16, 16), (240, 240, 232, 255))
+    rng = random.Random(29)
+    for y in range(16):
+        for x in range(16):
+            if y == 0:
+                img.putpixel((x, y), (176, 174, 158, 255))  # torsade
+            elif y >= 12:
+                tan = (196, 164, 110, 255) if (x + y) % 2 else (208, 176, 122, 255)
+                img.putpixel((x, y), tan)  # filtre
+            elif rng.random() < 0.18:
+                img.putpixel((x, y), (222, 222, 212, 255))  # grain du papier
+    for x in range(16):
+        img.putpixel((x, 11), (212, 200, 168, 255))  # lisere du filtre
     return img
 
 
@@ -703,7 +769,11 @@ def main() -> None:
     save(pot_side(), "block/pot_side.png")
     save(pot_rim(), "block/pot_rim.png")
     save(pot_soil(), "block/pot_soil.png")
+    save(pot_soil_dry(), "block/pot_soil_dry.png")
+    save(pot_soil_fert(), "block/pot_soil_fert.png")
     save(pot_bottom(), "block/pot_bottom.png")
+    save(can_metal(), "item/watering_can_metal.png")
+    save(joint_wrap(), "item/weed_joint_wrap.png")
     save(rack_wood(), "block/rack_wood.png")
     save(rack_rope(), "block/rack_rope.png")
     save(rack_bud(dry=False), "block/rack_bud_fresh.png")

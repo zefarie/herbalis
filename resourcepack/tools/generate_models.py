@@ -20,11 +20,16 @@ ASSETS = ROOT / "assets" / "herbalis"
 FULL_UV = [0, 0, 16, 16]
 
 # Regions UV de l'atlas de pieces (en 16emes de texture).
-LEAF_LARGE_UV = [0, 0, 6.5, 5.5]
-LEAF_SMALL_UV = [8, 0, 13, 4]
-STEM_UV = [0, 8, 2, 16]
-BUD_UV = [8, 8, 12, 12]
-COLA_UV = [12, 8, 15, 13]
+# Deux silhouettes par taille de feuille, alternees dans les rosettes.
+LEAF_UVS = {
+    ("large", 0): [0, 0, 6.5, 5.5],
+    ("large", 1): [7, 0, 13.5, 5.5],
+    ("small", 0): [0, 6, 5, 10],
+    ("small", 1): [5.5, 6, 10.5, 10],
+}
+STEM_UV = [14, 0, 16, 8]
+BUD_UV = [0, 10.5, 4, 14.5]
+COLA_UV = [4.5, 10.5, 7.5, 15.5]
 
 
 def write(path: Path, data: dict) -> None:
@@ -66,14 +71,15 @@ def box(from_, to, texture, uv=None) -> dict:
 
 
 def leaf(base_dir: str, y: float, length: float, width: float,
-         droop: float, size: str, yaw: float | None = None) -> dict:
+         droop: float, size: str, yaw: float | None = None,
+         variant: int = 0) -> dict:
     """Feuille : quad horizontal sans epaisseur partant de la tige.
 
     base_dir : n / s / e / w. droop positif = pointe vers le sol.
     yaw : rotation optionnelle autour de Y (feuilles diagonales,
-    exclusif avec droop).
+    exclusif avec droop). variant : silhouette 0 ou 1 de l'atlas.
     """
-    uv = LEAF_LARGE_UV if size == "large" else LEAF_SMALL_UV
+    uv = LEAF_UVS[(size, variant % 2)]
     hw = width / 2
     gap = 0.4  # attache au bord de la tige
 
@@ -120,8 +126,8 @@ def leaf(base_dir: str, y: float, length: float, width: float,
 def stem(height: float, half: float = 0.4) -> dict:
     element = box([8 - half, 0, 8 - half], [8 + half, height, 8 + half],
                   "#parts", uv=STEM_UV)
-    element["faces"]["up"]["uv"] = [0, 8, 2, 10]
-    element["faces"]["down"]["uv"] = [0, 8, 2, 10]
+    element["faces"]["up"]["uv"] = [14, 0, 16, 2]
+    element["faces"]["down"]["uv"] = [14, 0, 16, 2]
     return element
 
 
@@ -138,28 +144,29 @@ def bud_cube(center_x: float, y: float, center_z: float, size: float) -> dict:
 
 def rosette(y: float, length: float, width: float, droop: float,
             size: str) -> list[dict]:
-    """Quatre feuilles cardinales inclinees."""
-    return [leaf(d, y, length, width, droop, size) for d in "nsew"]
+    """Quatre feuilles cardinales inclinees, silhouettes alternees."""
+    return [leaf(d, y, length, width, droop, size, variant=i)
+            for i, d in enumerate("nsew")]
 
 
 def rosette_diagonal(y: float, length: float, width: float,
                      size: str) -> list[dict]:
     """Quatre feuilles a plat en diagonale (variete de canopee)."""
     return [
-        leaf("n", y, length, width, 0, size, yaw=45),
-        leaf("n", y + 0.15, length, width, 0, size, yaw=-45),
-        leaf("s", y + 0.3, length, width, 0, size, yaw=45),
-        leaf("s", y + 0.45, length, width, 0, size, yaw=-45),
+        leaf("n", y, length, width, 0, size, yaw=45, variant=1),
+        leaf("n", y + 0.15, length, width, 0, size, yaw=-45, variant=0),
+        leaf("s", y + 0.3, length, width, 0, size, yaw=45, variant=0),
+        leaf("s", y + 0.45, length, width, 0, size, yaw=-45, variant=1),
     ]
 
 
 def plant_stage_1() -> list[dict]:
     return [
         stem(3.8),
-        leaf("n", 2.4, 3.5, 3.0, 22.5, "small"),
-        leaf("s", 2.8, 3.2, 2.8, 22.5, "small"),
-        leaf("e", 3.1, 2.8, 2.6, 22.5, "small"),
-        leaf("w", 3.4, 2.6, 2.4, 22.5, "small"),
+        leaf("n", 2.4, 3.5, 3.0, 22.5, "small", variant=0),
+        leaf("s", 2.8, 3.2, 2.8, 22.5, "small", variant=1),
+        leaf("e", 3.1, 2.8, 2.6, 22.5, "small", variant=1),
+        leaf("w", 3.4, 2.6, 2.4, 22.5, "small", variant=0),
     ]
 
 
@@ -168,8 +175,8 @@ def plant_stage_2() -> list[dict]:
         stem(7.5),
         *rosette(3.6, 4.5, 3.6, 22.5, "small"),
         *rosette_diagonal(5.8, 4.0, 3.2, "small"),
-        leaf("n", 7.2, 3.5, 3.0, -22.5, "small"),
-        leaf("s", 7.4, 3.2, 2.8, -22.5, "small"),
+        leaf("n", 7.2, 3.5, 3.0, -22.5, "small", variant=1),
+        leaf("s", 7.4, 3.2, 2.8, -22.5, "small", variant=0),
     ]
 
 
@@ -179,8 +186,8 @@ def plant_stage_3() -> list[dict]:
         *rosette(3.8, 6.5, 5.5, 22.5, "large"),
         *rosette_diagonal(6.8, 5.5, 4.6, "large"),
         *rosette(9.4, 4.5, 3.6, 22.5, "small"),
-        leaf("n", 11.2, 3.5, 3.0, -22.5, "small"),
-        leaf("s", 11.4, 3.2, 2.8, -22.5, "small"),
+        leaf("n", 11.2, 3.5, 3.0, -22.5, "small", variant=1),
+        leaf("s", 11.4, 3.2, 2.8, -22.5, "small", variant=0),
     ]
 
 
@@ -224,7 +231,8 @@ def plant_model(name: str, elements: list[dict], parts_texture: str) -> None:
 # Pot de culture (conique, par etages)
 # ------------------------------------------------------------------
 
-def pot_model() -> None:
+def pot_model(name: str, soil_texture: str) -> None:
+    """Le terreau raconte l'etat de la plante : humide, sec ou fertilise."""
     foot = box([5.2, 0, 5.2], [10.8, 1.8, 10.8], "#side")
     foot["faces"]["down"] = {"uv": [5.2, 5.2, 10.8, 10.8], "texture": "#bottom"}
     mid = box([4.1, 1.8, 4.1], [11.9, 4.0, 11.9], "#side")
@@ -238,13 +246,13 @@ def pot_model() -> None:
         box([2.6, 5.2, 2.6], [3.9, 6.6, 13.4], "#rim"),
         box([12.1, 5.2, 2.6], [13.4, 6.6, 13.4], "#rim"),
     ]
-    write(ASSETS / "models" / "block" / "pot.json", {
+    write(ASSETS / "models" / "block" / f"{name}.json", {
         "parent": "minecraft:block/block",
         "textures": {
             "particle": "herbalis:block/pot_side",
             "side": "herbalis:block/pot_side",
             "rim": "herbalis:block/pot_rim",
-            "soil": "herbalis:block/pot_soil",
+            "soil": f"herbalis:block/{soil_texture}",
             "bottom": "herbalis:block/pot_bottom",
         },
         "elements": [foot, mid, top, soil, *rim],
@@ -255,7 +263,9 @@ def pot_model() -> None:
 # Rack de sechage (bouquets en volume)
 # ------------------------------------------------------------------
 
-def rack_model(name: str, buds_texture: str | None) -> None:
+def rack_model(name: str, buds_texture: str | None,
+               shrink: float = 1.0) -> None:
+    """shrink < 1 : les bouquets se resserrent en sechant (etat pret)."""
     elements = [
         box([0.4, 0, 6.3], [3.4, 1.4, 9.7], "#wood"),
         box([12.6, 0, 6.3], [15.6, 1.4, 9.7], "#wood"),
@@ -270,14 +280,19 @@ def rack_model(name: str, buds_texture: str | None) -> None:
             elements.append(box([x - 0.2, 11.4 + drop, 7.85],
                                 [x + 0.2, 13.6, 8.15], "#rope", uv=FULL_UV))
     else:
+        big_w, big_h = 1.5 * shrink, 3 * shrink
+        small_w, small_h = 0.95 * shrink, 1.4 * shrink
         for x, drop in bunches:
             top = 10.8 + drop
             elements.append(box([x - 0.2, top, 7.85],
                                 [x + 0.2, 13.6, 8.15], "#rope", uv=FULL_UV))
-            elements.append(box([x - 1.5, top - 3, 7.05],
-                                [x + 1.5, top, 8.95], "#buds", uv=FULL_UV))
-            elements.append(box([x - 0.95, top - 4.4, 7.5],
-                                [x + 0.95, top - 3, 8.5], "#buds", uv=FULL_UV))
+            elements.append(box([x - big_w, top - big_h, 8 - 0.95 * shrink],
+                                [x + big_w, top, 8 + 0.95 * shrink],
+                                "#buds", uv=FULL_UV))
+            elements.append(box([x - small_w, top - big_h - small_h,
+                                 8 - 0.5 * shrink],
+                                [x + small_w, top - big_h, 8 + 0.5 * shrink],
+                                "#buds", uv=FULL_UV))
     textures = {
         "particle": "herbalis:block/rack_wood",
         "wood": "herbalis:block/rack_wood",
@@ -289,6 +304,110 @@ def rack_model(name: str, buds_texture: str | None) -> None:
         "parent": "minecraft:block/block",
         "textures": textures,
         "elements": elements,
+    })
+
+
+# ------------------------------------------------------------------
+# Models 3D en main (arrosoir, joint)
+#
+# En inventaire (gui/fixed), l'item definition bascule sur le sprite 2D
+# via un select sur minecraft:display_context.
+# ------------------------------------------------------------------
+
+HANDHELD_DISPLAY = {
+    "thirdperson_righthand": {
+        "rotation": [0, -90, 0], "translation": [0, 1.5, 0],
+        "scale": [0.55, 0.55, 0.55],
+    },
+    "thirdperson_lefthand": {
+        "rotation": [0, 90, 0], "translation": [0, 1.5, 0],
+        "scale": [0.55, 0.55, 0.55],
+    },
+    "firstperson_righthand": {
+        "rotation": [0, -45, 0], "translation": [0, 2.5, 0],
+        "scale": [0.5, 0.5, 0.5],
+    },
+    "firstperson_lefthand": {
+        "rotation": [0, 45, 0], "translation": [0, 2.5, 0],
+        "scale": [0.5, 0.5, 0.5],
+    },
+    "ground": {"translation": [0, 2, 0], "scale": [0.35, 0.35, 0.35]},
+    "head": {"scale": [0.8, 0.8, 0.8]},
+}
+
+
+def watering_can_3d() -> None:
+    # Bec attache bas sur le corps, qui monte vers l'exterieur,
+    # termine par une pomme d'arrosage plus large.
+    spout = box([-2.2, 4.4, 7.35], [4.2, 5.8, 8.65], "#metal")
+    spout["rotation"] = {"origin": [4.2, 5.1, 8], "axis": "z",
+                         "angle": 22.5, "rescale": False}
+    tip = box([-3.6, 4.9, 7.0], [-1.9, 6.3, 9.0], "#metal")
+    tip["rotation"] = {"origin": [4.2, 5.1, 8], "axis": "z",
+                       "angle": 22.5, "rescale": False}
+    elements = [
+        box([4, 2, 5], [12, 10, 11], "#metal"),
+        spout,
+        tip,
+        box([5.5, 10, 7.5], [6.5, 12.4, 8.5], "#metal"),
+        box([10.5, 10, 7.5], [11.5, 12.4, 8.5], "#metal"),
+        box([5.5, 12.4, 7.5], [11.5, 13.4, 8.5], "#metal"),
+    ]
+    write(ASSETS / "models" / "item" / "watering_can_3d.json", {
+        "textures": {
+            "particle": "herbalis:item/watering_can_metal",
+            "metal": "herbalis:item/watering_can_metal",
+        },
+        "elements": elements,
+        "display": HANDHELD_DISPLAY,
+    })
+
+
+def joint_3d() -> None:
+    body = box([7.35, 2, 7.35], [8.65, 12, 8.65], "#wrap", uv=[0, 0, 3, 16])
+    body["faces"]["up"]["uv"] = [0, 0, 3, 1.5]
+    body["faces"]["down"]["uv"] = [0, 13, 3, 14.5]
+    display = {
+        "thirdperson_righthand": {
+            "rotation": [-70, 0, 0], "translation": [0, 2, 1],
+            "scale": [0.45, 0.45, 0.45],
+        },
+        "thirdperson_lefthand": {
+            "rotation": [-70, 0, 0], "translation": [0, 2, 1],
+            "scale": [0.45, 0.45, 0.45],
+        },
+        "firstperson_righthand": {
+            "rotation": [-55, 15, 0], "translation": [0, 3, 1],
+            "scale": [0.5, 0.5, 0.5],
+        },
+        "firstperson_lefthand": {
+            "rotation": [-55, -15, 0], "translation": [0, 3, 1],
+            "scale": [0.5, 0.5, 0.5],
+        },
+        "ground": {"translation": [0, 1, 0], "scale": [0.35, 0.35, 0.35]},
+    }
+    write(ASSETS / "models" / "item" / "weed_joint_3d.json", {
+        "textures": {
+            "particle": "herbalis:item/weed_joint_wrap",
+            "wrap": "herbalis:item/weed_joint_wrap",
+        },
+        "elements": [body],
+        "display": display,
+    })
+
+
+def item_definition_contextual(key: str, flat_model: str, hand_model: str) -> None:
+    """Sprite 2D en inventaire, model 3D en main et au sol."""
+    write(ASSETS / "items" / f"{key}.json", {
+        "model": {
+            "type": "minecraft:select",
+            "property": "minecraft:display_context",
+            "cases": [{
+                "when": ["gui", "fixed"],
+                "model": {"type": "minecraft:model", "model": flat_model},
+            }],
+            "fallback": {"type": "minecraft:model", "model": hand_model},
+        },
     })
 
 
@@ -339,12 +458,26 @@ def main() -> None:
         flat_item(key)
         item_definition(key, f"herbalis:item/{key}")
 
-    pot_model()
-    item_definition("pot", "herbalis:block/pot")
+    # Arrosoir et joint : 3D en main, sprite 2D en inventaire.
+    watering_can_3d()
+    joint_3d()
+    item_definition_contextual("watering_can",
+                               "herbalis:item/watering_can",
+                               "herbalis:item/watering_can_3d")
+    item_definition_contextual("weed_joint",
+                               "herbalis:item/weed_joint",
+                               "herbalis:item/weed_joint_3d")
+
+    # Pots : le terreau reflete l'etat (humide, sec, fertilise).
+    pot_model("pot", "pot_soil")
+    pot_model("pot_dry", "pot_soil_dry")
+    pot_model("pot_fert", "pot_soil_fert")
+    for key in ("pot", "pot_dry", "pot_fert"):
+        item_definition(key, f"herbalis:block/{key}")
 
     rack_model("drying_rack", None)
     rack_model("drying_rack_full", "rack_bud_fresh")
-    rack_model("drying_rack_ready", "rack_bud_dry")
+    rack_model("drying_rack_ready", "rack_bud_dry", shrink=0.8)
     for key in ("drying_rack", "drying_rack_full", "drying_rack_ready"):
         item_definition(key, f"herbalis:block/{key}")
 

@@ -19,55 +19,55 @@
       "faces": {
         "north": {
           "uv": [
+            14,
             0,
-            8,
-            2,
-            16
+            16,
+            8
           ],
           "texture": "#parts"
         },
         "south": {
           "uv": [
+            14,
             0,
-            8,
-            2,
-            16
+            16,
+            8
           ],
           "texture": "#parts"
         },
         "west": {
           "uv": [
+            14,
             0,
-            8,
-            2,
-            16
+            16,
+            8
           ],
           "texture": "#parts"
         },
         "east": {
           "uv": [
+            14,
             0,
-            8,
-            2,
-            16
+            16,
+            8
           ],
           "texture": "#parts"
         },
         "up": {
           "uv": [
+            14,
             0,
-            8,
-            2,
-            10
+            16,
+            2
           ],
           "texture": "#parts"
         },
         "down": {
           "uv": [
+            14,
             0,
-            8,
-            2,
-            10
+            16,
+            2
           ],
           "texture": "#parts"
         }
@@ -88,20 +88,20 @@
       "faces": {
         "up": {
           "uv": [
-            8,
             0,
-            13,
-            4
+            6,
+            5,
+            10
           ],
           "texture": "#parts",
           "rotation": 0
         },
         "down": {
           "uv": [
-            8,
             0,
-            13,
-            4
+            6,
+            5,
+            10
           ],
           "texture": "#parts",
           "rotation": 0
@@ -133,20 +133,20 @@
       "faces": {
         "up": {
           "uv": [
-            8,
-            0,
-            13,
-            4
+            5.5,
+            6,
+            10.5,
+            10
           ],
           "texture": "#parts",
           "rotation": 180
         },
         "down": {
           "uv": [
-            8,
-            0,
-            13,
-            4
+            5.5,
+            6,
+            10.5,
+            10
           ],
           "texture": "#parts",
           "rotation": 180
@@ -178,20 +178,20 @@
       "faces": {
         "up": {
           "uv": [
-            8,
             0,
-            13,
-            4
+            6,
+            5,
+            10
           ],
           "texture": "#parts",
           "rotation": 90
         },
         "down": {
           "uv": [
-            8,
             0,
-            13,
-            4
+            6,
+            5,
+            10
           ],
           "texture": "#parts",
           "rotation": 90
@@ -223,20 +223,20 @@
       "faces": {
         "up": {
           "uv": [
-            8,
-            0,
-            13,
-            4
+            5.5,
+            6,
+            10.5,
+            10
           ],
           "texture": "#parts",
           "rotation": 270
         },
         "down": {
           "uv": [
-            8,
-            0,
-            13,
-            4
+            5.5,
+            6,
+            10.5,
+            10
           ],
           "texture": "#parts",
           "rotation": 270
@@ -268,20 +268,20 @@
       "faces": {
         "up": {
           "uv": [
-            8,
-            0,
-            13,
-            4
+            5.5,
+            6,
+            10.5,
+            10
           ],
           "texture": "#parts",
           "rotation": 0
         },
         "down": {
           "uv": [
-            8,
-            0,
-            13,
-            4
+            5.5,
+            6,
+            10.5,
+            10
           ],
           "texture": "#parts",
           "rotation": 0
@@ -313,20 +313,20 @@
       "faces": {
         "up": {
           "uv": [
-            8,
             0,
-            13,
-            4
+            6,
+            5,
+            10
           ],
           "texture": "#parts",
           "rotation": 0
         },
         "down": {
           "uv": [
-            8,
             0,
-            13,
-            4
+            6,
+            5,
+            10
           ],
           "texture": "#parts",
           "rotation": 0
@@ -358,20 +358,20 @@
       "faces": {
         "up": {
           "uv": [
-            8,
             0,
-            13,
-            4
+            6,
+            5,
+            10
           ],
           "texture": "#parts",
           "rotation": 180
         },
         "down": {
           "uv": [
-            8,
             0,
-            13,
-            4
+            6,
+            5,
+            10
           ],
           "texture": "#parts",
           "rotation": 180
@@ -403,20 +403,20 @@
       "faces": {
         "up": {
           "uv": [
-            8,
-            0,
-            13,
-            4
+            5.5,
+            6,
+            10.5,
+            10
           ],
           "texture": "#parts",
           "rotation": 180
         },
         "down": {
           "uv": [
-            8,
-            0,
-            13,
-            4
+            5.5,
+            6,
+            10.5,
+            10
           ],
           "texture": "#parts",
           "rotation": 180
@@ -448,20 +448,20 @@
       "faces": {
         "up": {
           "uv": [
-            8,
-            0,
-            13,
-            4
+            5.5,
+            6,
+            10.5,
+            10
           ],
           "texture": "#parts",
           "rotation": 0
         },
         "down": {
           "uv": [
-            8,
-            0,
-            13,
-            4
+            5.5,
+            6,
+            10.5,
+            10
           ],
           "texture": "#parts",
           "rotation": 0
@@ -493,20 +493,20 @@
       "faces": {
         "up": {
           "uv": [
-            8,
             0,
-            13,
-            4
+            6,
+            5,
+            10
           ],
           "texture": "#parts",
           "rotation": 180
         },
         "down": {
           "uv": [
-            8,
             0,
-            13,
-            4
+            6,
+            5,
+            10
           ],
           "texture": "#parts",
           "rotation": 180

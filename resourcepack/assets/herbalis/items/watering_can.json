@@ -1,6 +1,22 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "herbalis:item/watering_can"
+    "type": "minecraft:select",
+    "property": "minecraft:display_context",
+    "cases": [
+      {
+        "when": [
+          "gui",
+          "fixed"
+        ],
+        "model": {
+          "type": "minecraft:model",
+          "model": "herbalis:item/watering_can"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "herbalis:item/watering_can_3d"
+    }
   }
 }

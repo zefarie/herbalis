@@ -203,11 +203,13 @@ def main() -> None:
         return
 
     for name in names:
-        model = MODELS / "block" / f"{name}.json"
+        # "item/xxx" pour un model d'item, sinon models/block/.
+        model = MODELS / (f"{name}.json" if "/" in name
+                          else f"block/{name}.json")
         if not model.exists():
             print(f"  model introuvable : {name}")
             continue
-        render_model(model, out_dir / f"{name}.png")
+        render_model(model, out_dir / f"{name.replace('/', '_')}.png")
 
 
 if __name__ == "__main__":
