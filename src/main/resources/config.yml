@@ -25,6 +25,8 @@ effets-visuels:
   particules: true
   # Coupe tous les sons du plugin.
   sons: true
+  # Oscillation douce des plantes (leger balancement anime).
+  animation-plantes: true
 
 hud:
   # Action bar d'etat quand on regarde une plante, un pot ou un rack.

@@ -41,6 +41,7 @@ import io.github.zefarie.herbalis.infrastructure.persistence.SqliteSessionStore;
 import io.github.zefarie.herbalis.infrastructure.render.DisplayRenderer;
 import io.github.zefarie.herbalis.infrastructure.render.WorldSync;
 import io.github.zefarie.herbalis.infrastructure.scheduler.GrowthTicker;
+import io.github.zefarie.herbalis.infrastructure.scheduler.PlantSwayTicker;
 import io.github.zefarie.herbalis.infrastructure.scheduler.PlayerTicker;
 import io.github.zefarie.herbalis.infrastructure.scheduler.RackTicker;
 import io.github.zefarie.herbalis.infrastructure.world.BukkitPlantEnvironment;
@@ -163,6 +164,9 @@ public final class HerbalisPlugin extends JavaPlugin {
                 new GrowthTicker(growPlants, drugs, renderer, fx), growthPeriod, growthPeriod);
         scheduler.runTaskTimer(this,
                 new RackTicker(rackRepo, drugs, environment, renderer, fx), 60L, 60L);
+        scheduler.runTaskTimer(this,
+                new PlantSwayTicker(renderer, plantRepo, config),
+                PlantSwayTicker.PERIOD_TICKS, PlantSwayTicker.PERIOD_TICKS);
         scheduler.runTaskTimer(this,
                 new PlayerTicker(effects, withdrawal), 20L, 20L);
         scheduler.runTaskTimer(this, () -> {

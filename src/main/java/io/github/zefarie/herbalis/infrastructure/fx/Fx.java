@@ -173,12 +173,23 @@ public final class Fx {
         sound(player.getLocation(), "minecraft:block.campfire.crackle", 1.0f, 1.0f);
     }
 
-    /** Fumee qui s'echappe de la tete du joueur, visible par tous. */
+    /** Fumee en spirale qui s'echappe de la tete du joueur, visible par tous. */
     public void smokePuff(Player player) {
         particles(player.getLocation(), w -> {
             Location head = player.getEyeLocation().add(0, 0.25, 0);
-            w.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, head,
-                    1, 0.06, 0.02, 0.06, 0.004);
+            double phase = (player.getTicksLived() % 60) / 60.0 * Math.PI * 2;
+            for (int i = 0; i < 3; i++) {
+                double angle = phase + i * 0.9;
+                double radius = 0.10 + i * 0.05;
+                Location at = head.clone().add(
+                        Math.cos(angle) * radius,
+                        i * 0.14,
+                        Math.sin(angle) * radius);
+                w.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, at, 0,
+                        Math.cos(angle + 1.2) * 0.015,
+                        0.045,
+                        Math.sin(angle + 1.2) * 0.015, 1.0);
+            }
         });
     }
 

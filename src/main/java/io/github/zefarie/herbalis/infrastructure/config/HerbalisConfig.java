@@ -15,6 +15,7 @@ public final class HerbalisConfig {
             Duration autosaveInterval,
             boolean particlesEnabled,
             boolean soundsEnabled,
+            boolean plantSwayEnabled,
             boolean hudEnabled,
             double hudRange,
             int wateringCanCharges,
@@ -46,6 +47,7 @@ public final class HerbalisConfig {
                 DurationParser.parse(config.getString("persistence.autosave", "5m")),
                 config.getBoolean("effets-visuels.particules", true),
                 config.getBoolean("effets-visuels.sons", true),
+                config.getBoolean("effets-visuels.animation-plantes", true),
                 config.getBoolean("hud.actif", true),
                 config.getDouble("hud.portee", 5.0),
                 Math.max(1, config.getInt("arrosoir.charges", 8)),
@@ -71,6 +73,10 @@ public final class HerbalisConfig {
 
     public boolean soundsEnabled() {
         return data.soundsEnabled();
+    }
+
+    public boolean plantSwayEnabled() {
+        return data.plantSwayEnabled();
     }
 
     public boolean hudEnabled() {

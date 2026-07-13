@@ -203,6 +203,17 @@ public final class DisplayRenderer {
         }
     }
 
+    /** Parcourt les displays de plantes vivants (pour l'animation de sway). */
+    public void forEachPlantDisplay(java.util.function.BiConsumer<BlockPos, ItemDisplay> consumer) {
+        pots.forEach((pos, spawned) -> {
+            if (spawned.plantDisplay() != null
+                    && entity(spawned.plantDisplay()) instanceof ItemDisplay display
+                    && display.isValid()) {
+                consumer.accept(pos, display);
+            }
+        });
+    }
+
     /** Position portee par une entite Herbalis (hitbox ou display). */
     public Optional<BlockPos> posOf(Entity entity) {
         String raw = entity.getPersistentDataContainer()
