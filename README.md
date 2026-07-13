@@ -6,11 +6,14 @@ architecture multi-drogue (ajouter une drogue = un fichier de config et
 des assets, zéro refonte).
 
 Le plugin mise tout sur l'immersion : plantes sculptées en volumes 3D
-(tige, rosettes de feuilles inclinées, buds), balancement doux et animé
-des plants, particules et sons sur chaque action (fumée de joint en
-spirale), HUD en action bar avec une font d'icônes dessinée pour le
-pack, effets de consommation cinématiques (montée, plateau, descente,
-blackout), tolérance et manque persistants.
+(tige, rosettes de feuilles inclinées, buds) qui grandissent en continu
+et se balancent doucement, terreau qui raconte le soin (humide, sec et
+craquelé, fertilisé), scintillement des plants en fenêtre de récolte
+optimale, arrosoir et joint en vrais models 3D en main, particules et
+sons sur chaque action (fumée de joint en spirale), HUD en action bar
+avec une font d'icônes dessinée pour le pack, effets de consommation
+cinématiques (montée, plateau, descente, blackout), tolérance et
+manque persistants.
 
 ## Installation
 
@@ -196,10 +199,14 @@ Choix techniques notables :
 Structure dans `resourcepack/`, format 75 (1.21.11).
 
 - Plantes sculptées en éléments (tige en volume, feuilles en quads
-  inclinés à 22.5 degrés disposés en rosettes, cola et buds en cubes au
-  stade final), pot conique par étages, rack avec bouquets suspendus en
-  volume. Textures 32x pour le végétal et les blocs, 16x pour les items
-  (cohérence vanilla en inventaire).
+  inclinés à 22.5 degrés disposés en rosettes, deux silhouettes de
+  feuille alternées, cola et buds en cubes au stade final), pot conique
+  par étages avec trois terreaux (humide, sec, fertilisé), rack avec
+  bouquets suspendus en volume qui se resserrent en séchant. Textures
+  32x pour le végétal et les blocs, 16x pour les items (cohérence
+  vanilla en inventaire).
+- Arrosoir et joint : models 3D en main et au sol, sprite 2D en
+  inventaire (select sur le contexte d'affichage, 1.21.4+).
 - Font d'icônes `herbalis:icons` (feuille, goutte, étoiles, segments,
   soleil, ciseaux, sablier, coche...) : glyphes blancs teintés par les
   balises de couleur MiniMessage, utilisés partout dans messages.yml.
