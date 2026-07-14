@@ -109,7 +109,7 @@
       },
       "rotation": {
         "origin": [
-          8,
+          8.0,
           5.0,
           7.6
         ],
@@ -133,9 +133,9 @@
       "faces": {
         "up": {
           "uv": [
-            0,
+            5.5,
             6,
-            5,
+            10.5,
             10
           ],
           "texture": "#parts",
@@ -143,9 +143,9 @@
         },
         "down": {
           "uv": [
-            0,
+            5.5,
             6,
-            5,
+            10.5,
             10
           ],
           "texture": "#parts",
@@ -154,7 +154,7 @@
       },
       "rotation": {
         "origin": [
-          8,
+          8.0,
           5.4,
           8.4
         ],
@@ -201,9 +201,234 @@
         "origin": [
           7.6,
           5.8,
-          8
+          8.0
         ],
         "axis": "z",
+        "angle": -45,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        8.4,
+        4.4,
+        6.5
+      ],
+      "to": [
+        12.2,
+        4.4,
+        9.5
+      ],
+      "shade": false,
+      "faces": {
+        "up": {
+          "uv": [
+            5.5,
+            6,
+            10.5,
+            10
+          ],
+          "texture": "#parts",
+          "rotation": 90
+        },
+        "down": {
+          "uv": [
+            5.5,
+            6,
+            10.5,
+            10
+          ],
+          "texture": "#parts",
+          "rotation": 90
+        }
+      },
+      "rotation": {
+        "origin": [
+          8.4,
+          4.4,
+          8.0
+        ],
+        "axis": "z",
+        "angle": 45,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        6.6,
+        3.4,
+        4.199999999999999
+      ],
+      "to": [
+        9.4,
+        3.4,
+        7.6
+      ],
+      "shade": false,
+      "faces": {
+        "up": {
+          "uv": [
+            5.5,
+            6,
+            10.5,
+            10
+          ],
+          "texture": "#parts",
+          "rotation": 0
+        },
+        "down": {
+          "uv": [
+            5.5,
+            6,
+            10.5,
+            10
+          ],
+          "texture": "#parts",
+          "rotation": 0
+        }
+      },
+      "rotation": {
+        "origin": [
+          8.0,
+          3.4,
+          7.6
+        ],
+        "axis": "x",
+        "angle": 22.5,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        8.4,
+        2.8,
+        6.7
+      ],
+      "to": [
+        11.600000000000001,
+        2.8,
+        9.3
+      ],
+      "shade": false,
+      "faces": {
+        "up": {
+          "uv": [
+            0,
+            6,
+            5,
+            10
+          ],
+          "texture": "#parts",
+          "rotation": 90
+        },
+        "down": {
+          "uv": [
+            0,
+            6,
+            5,
+            10
+          ],
+          "texture": "#parts",
+          "rotation": 90
+        }
+      },
+      "rotation": {
+        "origin": [
+          8.4,
+          2.8,
+          8.0
+        ],
+        "axis": "z",
+        "angle": 22.5,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        6.7,
+        0.25,
+        8.4
+      ],
+      "to": [
+        9.3,
+        0.25,
+        11.4
+      ],
+      "shade": false,
+      "faces": {
+        "up": {
+          "uv": [
+            0,
+            6,
+            5,
+            10
+          ],
+          "texture": "#parts",
+          "rotation": 180
+        },
+        "down": {
+          "uv": [
+            0,
+            6,
+            5,
+            10
+          ],
+          "texture": "#parts",
+          "rotation": 180
+        }
+      },
+      "rotation": {
+        "origin": [
+          8.0,
+          0.25,
+          8.0
+        ],
+        "axis": "y",
+        "angle": 45,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        4.8,
+        0.4,
+        6.8
+      ],
+      "to": [
+        7.6,
+        0.4,
+        9.2
+      ],
+      "shade": false,
+      "faces": {
+        "up": {
+          "uv": [
+            5.5,
+            6,
+            10.5,
+            10
+          ],
+          "texture": "#parts",
+          "rotation": 270
+        },
+        "down": {
+          "uv": [
+            5.5,
+            6,
+            10.5,
+            10
+          ],
+          "texture": "#parts",
+          "rotation": 270
+        }
+      },
+      "rotation": {
+        "origin": [
+          8.0,
+          0.4,
+          8.0
+        ],
+        "axis": "y",
         "angle": -45,
         "rescale": false
       }

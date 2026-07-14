@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Genere les models JSON, item definitions et font du resource pack.
 
-Les plantes sont sculptees en volumes : tige en boite, feuilles en
-quads inclines disposes en rosettes, buds en petits cubes. Les regions
-UV pointent dans l'atlas plant_weed_parts.png (voir generate_textures).
+Les plantes sont sculptees en volumes : tige en boite, branches
+laterales inclinees portant leurs bouquets de feuilles (stages 3-4),
+feuilles en quads disposes en rosettes ou en bouquets, buds et colas
+en boites. Les regions UV pointent dans l'atlas plant_weed_parts.png
+(voir generate_textures).
 
 Convention de rotation Minecraft (verifiee sur block/lectern.json) :
 un angle positif autour de +X abaisse le cote nord de l'element.
@@ -12,6 +14,7 @@ Usage : .venv/bin/python generate_models.py
 """
 
 import json
+import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -72,8 +75,9 @@ def box(from_, to, texture, uv=None) -> dict:
 
 def leaf(base_dir: str, y: float, length: float, width: float,
          droop: float, size: str, yaw: float | None = None,
-         variant: int = 0) -> dict:
-    """Feuille : quad horizontal sans epaisseur partant de la tige.
+         variant: int = 0, cx: float = 8.0, cz: float = 8.0) -> dict:
+    """Feuille : quad horizontal sans epaisseur partant d'un point
+    d'attache (la tige par defaut, un bout de branche sinon).
 
     base_dir : n / s / e / w. droop positif = pointe vers le sol.
     yaw : rotation optionnelle autour de Y (feuilles diagonales,
@@ -81,31 +85,35 @@ def leaf(base_dir: str, y: float, length: float, width: float,
     """
     uv = LEAF_UVS[(size, variant % 2)]
     hw = width / 2
-    gap = 0.4  # attache au bord de la tige
+    gap = 0.4  # attache au bord du support
 
     match base_dir:
         case "n":
-            from_, to = [8 - hw, y, 8 - gap - length], [8 + hw, y, 8 - gap]
+            from_ = [cx - hw, y, cz - gap - length]
+            to = [cx + hw, y, cz - gap]
             axis, angle, rot = "x", droop, 0
-            origin = [8, y, 8 - gap]
+            origin = [cx, y, cz - gap]
         case "s":
-            from_, to = [8 - hw, y, 8 + gap], [8 + hw, y, 8 + gap + length]
+            from_ = [cx - hw, y, cz + gap]
+            to = [cx + hw, y, cz + gap + length]
             axis, angle, rot = "x", -droop, 180
-            origin = [8, y, 8 + gap]
+            origin = [cx, y, cz + gap]
         case "e":
-            from_, to = [8 + gap, y, 8 - hw], [8 + gap + length, y, 8 + hw]
+            from_ = [cx + gap, y, cz - hw]
+            to = [cx + gap + length, y, cz + hw]
             axis, angle, rot = "z", droop, 90
-            origin = [8 + gap, y, 8]
+            origin = [cx + gap, y, cz]
         case "w":
-            from_, to = [8 - gap - length, y, 8 - hw], [8 - gap, y, 8 + hw]
+            from_ = [cx - gap - length, y, cz - hw]
+            to = [cx - gap, y, cz + hw]
             axis, angle, rot = "z", -droop, 270
-            origin = [8 - gap, y, 8]
+            origin = [cx - gap, y, cz]
         case _:
             raise ValueError(base_dir)
 
     if yaw is not None:
         axis, angle = "y", yaw
-        origin = [8, y, 8]
+        origin = [cx, y, cz]
 
     element = {
         "from": from_, "to": to,
@@ -131,11 +139,77 @@ def stem(height: float, half: float = 0.4) -> dict:
     return element
 
 
-def bud_cube(center_x: float, y: float, center_z: float, size: float) -> dict:
-    half = size / 2
-    return box([center_x - half, y, center_z - half],
-               [center_x + half, y + size, center_z + half],
-               "#parts", uv=BUD_UV)
+# Sens de rotation pour lever la pointe d'une branche (voir leaf()).
+BRANCH_ROT = {"n": ("x", -1), "s": ("x", 1), "e": ("z", -1), "w": ("z", 1)}
+BRANCH_DIR = {"n": (0, -1), "s": (0, 1), "e": (1, 0), "w": (-1, 0)}
+
+
+def branch(direction: str, y: float, length: float, rise: float,
+           half: float = 0.3) -> dict:
+    """Branche laterale : boite fine partant de la tige, pointe levee."""
+    gap = 0.2
+    dx, dz = BRANCH_DIR[direction]
+    axis, sign = BRANCH_ROT[direction]
+    from_ = [
+        min(8 + dx * gap, 8 + dx * (gap + length)) if dx else 8 - half,
+        y - half,
+        min(8 + dz * gap, 8 + dz * (gap + length)) if dz else 8 - half,
+    ]
+    to = [
+        max(8 + dx * gap, 8 + dx * (gap + length)) if dx else 8 + half,
+        y + half,
+        max(8 + dz * gap, 8 + dz * (gap + length)) if dz else 8 + half,
+    ]
+    element = box(from_, to, "#parts", uv=STEM_UV)
+    element["rotation"] = {
+        "origin": [8 + dx * gap, y, 8 + dz * gap],
+        "axis": axis, "angle": sign * rise, "rescale": False,
+    }
+    return element
+
+
+def branch_tip(direction: str, y: float, length: float,
+               rise: float) -> tuple[float, float, float]:
+    """Position (x, y, z) du bout d'une branche apres rotation."""
+    rad = math.radians(rise)
+    dist = 0.2 + (length - 0.4) * math.cos(rad)
+    tip_y = y + (length - 0.4) * math.sin(rad)
+    dx, dz = BRANCH_DIR[direction]
+    return 8 + dx * dist, tip_y, 8 + dz * dist
+
+
+def branch_cluster(direction: str, y: float, length: float, rise: float,
+                   leaf_len: float, leaf_w: float, size: str,
+                   variant: int, cola: float = 0.0) -> list[dict]:
+    """Branche + bouquet de trois feuilles au bout, feuille a
+    mi-longueur pour habiller le bois, cola optionnel."""
+    cx, tip_y, cz = branch_tip(direction, y, length, rise)
+    rad = math.radians(rise)
+    mid_d = 0.2 + length * 0.5 * math.cos(rad)
+    mid_y = y + length * 0.5 * math.sin(rad)
+    dx, dz = BRANCH_DIR[direction]
+    elements = [
+        branch(direction, y, length, rise),
+        leaf(direction, tip_y + 0.15, leaf_len, leaf_w, 22.5, size,
+             variant=variant, cx=cx, cz=cz),
+        leaf(direction, tip_y + 0.4, leaf_len * 0.85, leaf_w * 0.85, 0,
+             size, yaw=45, variant=1 - variant, cx=cx, cz=cz),
+        leaf(direction, tip_y - 0.1, leaf_len * 0.85, leaf_w * 0.85, 0,
+             size, yaw=-45, variant=variant, cx=cx, cz=cz),
+        leaf(direction, mid_y + 0.2, leaf_len * 0.7, leaf_w * 0.7, 22.5,
+             "small", variant=1 - variant,
+             cx=8 + dx * mid_d, cz=8 + dz * mid_d),
+        # Feuille d'attache : meme pente que la branche, elle en
+        # couvre le dessus depuis la tige.
+        leaf(direction, y + 0.45, length * 0.8, leaf_w * 0.8, -rise,
+             size, variant=variant),
+    ]
+    if cola > 0:
+        half = 0.75
+        elements.append(box([cx - half, tip_y, cz - half],
+                            [cx + half, tip_y + cola, cz + half],
+                            "#parts", uv=BUD_UV))
+    return elements
 
 
 # ------------------------------------------------------------------
@@ -173,46 +247,81 @@ def plant_stage_1() -> list[dict]:
 def plant_stage_2() -> list[dict]:
     return [
         stem(7.5),
-        *rosette(3.6, 4.5, 3.6, 22.5, "small"),
-        *rosette_diagonal(5.8, 4.0, 3.2, "small"),
+        *rosette(3.6, 4.4, 3.6, 22.5, "small"),
+        *rosette_diagonal(5.6, 3.8, 3.2, "small"),
+        # Premiere branche : le port buissonnant s'annonce.
+        *branch_cluster("e", 4.6, 3.0, 22.5, 3.0, 2.6, "small", 1),
         leaf("n", 7.2, 3.5, 3.0, -22.5, "small", variant=1),
         leaf("s", 7.4, 3.2, 2.8, -22.5, "small", variant=0),
     ]
 
 
+# Branches etagees des stages 3-4, volontairement asymetriques :
+# (direction, y, longueur, montee, long feuille, larg feuille, variante).
+BRANCHES = [
+    ("e", 4.8, 5.2, 22.5, 4.4, 3.7, 0),
+    ("s", 5.6, 4.4, 22.5, 4.0, 3.4, 1),
+    ("w", 6.4, 4.6, 22.5, 4.0, 3.4, 1),
+    ("n", 7.8, 3.6, 22.5, 3.6, 3.0, 0),
+]
+
+
+def bush(colas: bool) -> list[dict]:
+    """Corps commun des stages 3 et 4 : tige, jupe basse, canopee
+    diagonale et branches etagees avec leurs bouquets."""
+    elements = [stem(11.5, half=0.5)]
+    elements += rosette(3.4, 5.8, 5.0, 22.5, "large")
+    elements += rosette_diagonal(6.0, 4.6, 4.0, "large")
+    for i, (d, y, ln, rise, ll, lw, var) in enumerate(BRANCHES):
+        cola = (1.7 + 0.2 * i) if colas else 0.0
+        elements += branch_cluster(d, y, ln, rise, ll, lw, "large", var,
+                                   cola=cola)
+    return elements
+
+
 def plant_stage_3() -> list[dict]:
     return [
-        stem(11.5, half=0.5),
-        *rosette(3.8, 6.5, 5.5, 22.5, "large"),
-        *rosette_diagonal(6.8, 5.5, 4.6, "large"),
-        *rosette(9.4, 4.5, 3.6, 22.5, "small"),
-        leaf("n", 11.2, 3.5, 3.0, -22.5, "small", variant=1),
-        leaf("s", 11.4, 3.2, 2.8, -22.5, "small", variant=0),
+        *bush(colas=False),
+        # Tete : jeunes feuilles dressees.
+        leaf("n", 10.9, 3.4, 2.9, -22.5, "small", variant=1),
+        leaf("s", 11.1, 3.2, 2.7, -22.5, "small", variant=0),
+        leaf("e", 11.0, 3.0, 2.6, -22.5, "small", variant=0),
+        leaf("w", 11.2, 2.8, 2.4, -22.5, "small", variant=1),
     ]
 
 
 def plant_stage_4() -> list[dict]:
-    cola = box([7.2, 11.3, 7.2], [8.8, 14.6, 8.8], "#parts", uv=COLA_UV)
-    cola["faces"]["up"]["uv"] = BUD_UV
-    cola["faces"]["down"]["uv"] = BUD_UV
-    tip = box([7.6, 14.6, 7.6], [8.4, 15.4, 8.4], "#parts", uv=BUD_UV)
+    # Cola apical segmente, effile vers la pointe.
+    seg1 = box([7.1, 10.6, 7.1], [8.9, 13.2, 8.9], "#parts", uv=COLA_UV)
+    seg2 = box([7.35, 13.2, 7.35], [8.65, 15.1, 8.65], "#parts", uv=COLA_UV)
+    seg3 = box([7.65, 15.1, 7.65], [8.35, 15.9, 8.35], "#parts", uv=BUD_UV)
+    for seg in (seg1, seg2):
+        seg["faces"]["up"]["uv"] = BUD_UV
+        seg["faces"]["down"]["uv"] = BUD_UV
     return [
-        *plant_stage_3(),
-        cola,
-        tip,
-        bud_cube(8.0, 4.6, 3.6, 1.5),
-        bud_cube(8.0, 5.0, 12.4, 1.5),
-        bud_cube(12.2, 4.4, 8.0, 1.5),
-        bud_cube(3.8, 5.2, 8.0, 1.5),
+        *bush(colas=True),
+        seg1, seg2, seg3,
+        # Sugar leaves dressees a la base du cola.
+        leaf("n", 10.8, 3.0, 2.6, -45, "small", variant=0),
+        leaf("s", 10.9, 2.8, 2.5, -45, "small", variant=1),
+        leaf("e", 11.0, 2.7, 2.4, -45, "small", variant=1),
     ]
 
 
 def plant_dead() -> list[dict]:
     return [
         stem(6.0),
-        leaf("n", 5.0, 4.5, 3.4, 45, "small"),
-        leaf("s", 5.4, 4.0, 3.0, 45, "small"),
-        leaf("w", 5.8, 3.6, 2.8, 45, "small"),
+        # Feuilles pendantes, presque verticales.
+        leaf("n", 5.0, 4.5, 3.4, 45, "small", variant=0),
+        leaf("s", 5.4, 4.0, 3.0, 45, "small", variant=1),
+        leaf("w", 5.8, 3.6, 2.8, 45, "small", variant=0),
+        leaf("e", 4.4, 3.8, 3.0, 45, "small", variant=1),
+        # Feuilles fanees a mi-pente, encore lisibles de face.
+        leaf("n", 3.4, 3.4, 2.8, 22.5, "small", variant=1),
+        leaf("e", 2.8, 3.2, 2.6, 22.5, "small", variant=0),
+        # Feuilles mortes tombees sur le terreau.
+        leaf("s", 0.25, 3.0, 2.6, 0, "small", yaw=45, variant=0),
+        leaf("w", 0.4, 2.8, 2.4, 0, "small", yaw=-45, variant=1),
     ]
 
 
