@@ -2,9 +2,10 @@
 """Genere les textures du resource pack Herbalis (pixel art).
 
 - Items : 16x16 (coherence vanilla en inventaire).
-- Pot, rack, plantes : 32x32 (densite 2x, la ou le regard se pose).
-- Plantes : atlas de pieces (feuille, tige, bud) mappees par les models
-  sculptes de generate_models.py.
+- Pot, rack : 32x32 (densite 2x).
+- Plantes : atlas de pieces 64x64 (feuilles de cannabis dentelees a
+  5-7 folioles, tige, buds), mappe par les models sculptes de
+  generate_models.py. C'est la que le regard se pose : densite 4x.
 - Font : glyphes 8x8 blancs, teintes par les balises de couleur.
 
 Les PNG produits sont commites; un artiste peut les remplacer sans
@@ -103,97 +104,173 @@ def dead_variant(img: Image.Image) -> Image.Image:
 
 
 # ------------------------------------------------------------------
-# Atlas des pieces de plante (32x32)
+# Atlas des pieces de plante (64x64)
 #
-# Regions (pixels / UV en 16emes) :
-#   feuille large A : (0,0)-(13,11)    uv [0, 0, 6.5, 5.5]
-#   feuille large B : (14,0)-(27,11)   uv [7, 0, 13.5, 5.5]
-#   feuille petite A: (0,12)-(10,20)   uv [0, 6, 5, 10]
-#   feuille petite B: (11,12)-(21,20)  uv [5.5, 6, 10.5, 10]
-#   tige            : (28,0)-(32,16)   uv [14, 0, 16, 8]
-#   bud             : (0,21)-(8,29)    uv [0, 10.5, 4, 14.5]
-#   cola            : (9,21)-(15,31)   uv [4.5, 10.5, 7.5, 15.5]
+# Regions (pixels / UV en 16emes, memes UV relatifs que l'ancien 32x) :
+#   feuille large A : (0,0)-(26,22)    uv [0, 0, 6.5, 5.5]
+#   feuille large B : (28,0)-(54,22)   uv [7, 0, 13.5, 5.5]
+#   feuille petite A: (0,24)-(20,40)   uv [0, 6, 5, 10]
+#   feuille petite B: (22,24)-(42,40)  uv [5.5, 6, 10.5, 10]
+#   tige            : (56,0)-(64,32)   uv [14, 0, 16, 8]
+#   bud             : (0,42)-(16,58)   uv [0, 10.5, 4, 14.5]
+#   cola            : (18,42)-(30,62)  uv [4.5, 10.5, 7.5, 15.5]
 #
 # Deux silhouettes par taille de feuille : les rosettes des models les
 # alternent pour casser la repetition.
 # ------------------------------------------------------------------
 
-def draw_leaf(img: Image.Image, ox: int, oy: int, w: int, h: int,
-              specs: list[tuple[float, float]], rng: random.Random) -> None:
-    """Feuille en eventail pointant vers le haut, folioles effilees."""
-    base_x, base_y = ox + w // 2, oy + h - 1
-    max_len = h - 1.2
-    for angle, ratio in specs:
+VEIN = (168, 210, 130, 255)
+
+# Folioles : (angle depuis la verticale, longueur relative, demi-largeur px).
+FINGERS_LARGE_A = [
+    (0, 1.0, 1.3), (30, 0.88, 1.15), (-30, 0.88, 1.15),
+    (58, 0.68, 1.0), (-58, 0.68, 1.0), (81, 0.42, 0.8), (-81, 0.42, 0.8),
+]
+FINGERS_LARGE_B = [
+    (6, 0.97, 1.25), (35, 0.84, 1.15), (-26, 0.88, 1.15),
+    (62, 0.62, 0.95), (-53, 0.7, 1.0), (84, 0.38, 0.8), (-77, 0.46, 0.8),
+]
+FINGERS_SMALL_A = [
+    (0, 1.0, 1.15), (38, 0.78, 1.0), (-38, 0.78, 1.0),
+    (70, 0.46, 0.8), (-70, 0.46, 0.8),
+]
+FINGERS_SMALL_B = [
+    (8, 0.95, 1.1), (43, 0.74, 1.0), (-33, 0.8, 1.0),
+    (75, 0.42, 0.8), (-65, 0.5, 0.8),
+]
+
+
+def draw_fan_leaf(img: Image.Image, ox: int, oy: int, w: int, h: int,
+                  fingers: list[tuple[float, float, float]]) -> None:
+    """Feuille de cannabis : folioles dentelees en eventail depuis un
+    petiole, effilees en pointe, nervure centrale claire."""
+    node_x = ox + w / 2.0
+    base_y = oy + h - 1.0
+    stalk = 3.0 if h >= 20 else 2.0
+    for i in range(int(stalk) + 1):
+        put(img, round(node_x), round(base_y - i), STEM)
+    node_y = base_y - stalk
+    max_len = h - stalk - 1.5
+
+    for angle, ratio, hw_max in fingers:
         rad = math.radians(angle)
         dx, dy = math.sin(rad), -math.cos(rad)
+        perp_x, perp_y = -dy, dx
         length = max_len * ratio
-        steps = int(length) + 1
-        for step in range(steps):
-            t = step / max(1.0, length)
-            x = base_x + dx * step
-            y = base_y + dy * step
-            idx = min(3, int(t * 4.2))
-            color = GREEN_RAMP[idx]
-            put(img, round(x), round(y), color)
-            # Charnue a la base, effilee en pointe.
-            if t < 0.7 and length > 4:
-                px = round(x - dy * 0.9)
-                py = round(y + dx * 0.9)
-                if rng.random() < 0.9:
-                    put(img, px, py, GREEN_RAMP[max(0, idx - 1)])
-            # Foliole centrale un peu plus large a la base.
-            if angle == 0 and t < 0.4:
-                put(img, round(x + dy * 0.9), round(y - dx * 0.9),
-                    GREEN_RAMP[max(0, idx - 1)])
-    # Nervure centrale plus claire sur la foliole principale.
-    for step in range(2, int(max_len) - 1, 2):
-        put(img, base_x, base_y - step, GREEN_LIGHT)
+        steps = int(length * 2) + 1
+        for k in range(steps):
+            t = k / max(1, steps - 1)
+            cx = node_x + dx * length * t
+            cy = node_y + dy * length * t
+            # Profil : etroit a la base, charnu au tiers, effile en pointe.
+            if t < 0.35:
+                prof = 0.4 + 0.6 * (t / 0.35)
+            else:
+                prof = max(0.1, 1.0 - 0.95 * ((t - 0.35) / 0.65) ** 1.1)
+            hw = hw_max * prof
+            # Dents : une saillie sur trois pas, hors base et pointe.
+            if 0.2 < t < 0.9 and k % 3 == 0:
+                hw += 0.5
+            idx = min(3, int(t * 3.6))
+            off = -hw
+            while off <= hw:
+                color = GREEN_RAMP[idx]
+                if abs(off) > hw - 0.55:
+                    color = GREEN_RAMP[max(0, idx - 1)]
+                put(img, round(cx + perp_x * off), round(cy + perp_y * off),
+                    color)
+                off += 0.5
+            # Nervure centrale, en pointille.
+            if k % 2 == 0 and 0.05 < t < 0.85:
+                put(img, round(cx), round(cy), VEIN)
+
+    # Ombre au point de convergence des folioles : creuse le centre.
+    for ddy in range(-3, 1):
+        for ddx in range(-2, 3):
+            x, y = round(node_x) + ddx, round(node_y) + ddy
+            if math.hypot(ddx, ddy) < 2.6 and 0 <= x < img.width \
+                    and 0 <= y < img.height and img.getpixel((x, y))[3]:
+                img.putpixel((x, y), GREEN_DARK)
+
+
+def draw_stem_strip(img: Image.Image, ox: int, oy: int, w: int,
+                    h: int) -> None:
+    """Tige verticale : bords ombres, striures, noeuds clairs."""
+    rng = random.Random(31)
+    for y in range(h):
+        for x in range(w):
+            if x in (0, w - 1):
+                color = STEM_DARK
+            elif x in (1, w - 2):
+                color = STEM if (y + x) % 3 else STEM_DARK
+            else:
+                color = STEM if rng.random() < 0.8 else (108, 142, 68, 255)
+            put(img, ox + x, oy + y, color)
+    for ny in range(5, h, 9):
+        for x in range(2, w - 2):
+            put(img, ox + x, oy + ny, GREEN_MID)
+        put(img, ox + w // 2, oy + ny, GREEN_LIGHT)
+
+
+def draw_bud_blob(img: Image.Image, ox: int, oy: int, w: int, h: int,
+                  seed: int, taper: float = 0.0) -> None:
+    """Masse de calices : blobs imbriques, lisere sombre, pistils orange.
+
+    taper > 0 : silhouette qui s'effile vers le haut (cola)."""
+    rng = random.Random(seed)
+
+    def half_width(ny: float) -> float:
+        # ny : 0 en haut, 1 en bas. Bords arrondis, effilage optionnel.
+        round_cap = math.sin(min(1.0, ny * 4.0) * math.pi / 2) \
+            * math.sin(min(1.0, (1 - ny) * 4.0) * math.pi / 2)
+        base = w / 2 - 0.6
+        narrow = 1.0 - taper * (1.0 - ny)
+        return max(1.0, base * narrow * (0.55 + 0.45 * round_cap))
+
+    cx = ox + w / 2.0 - 0.5
+    inside = []
+    for y in range(h):
+        ny = y / (h - 1)
+        hw = half_width(ny)
+        for x in range(w):
+            if abs(ox + x - cx) <= hw:
+                inside.append((ox + x, oy + y))
+                edge = abs(ox + x - cx) > hw - 1.1 or y in (0, h - 1)
+                color = BUD_DARK if edge else (
+                    BUD_MID if (x + y) % 2 else BUD_DARK)
+                put(img, ox + x, oy + y, color)
+    # Calices : petits amas clairs avec ombre portee, en quinconce.
+    for _ in range(max(9, w * h // 14)):
+        bx, by = inside[rng.randrange(len(inside))]
+        put(img, bx, by, BUD_LIGHT)
+        put(img, bx - 1, by, BUD_MID)
+        put(img, bx + 1, by + 1, BUD_DARK)
+    # Pistils : petits crochets orange.
+    for _ in range(max(3, w * h // 60)):
+        bx, by = inside[rng.randrange(len(inside))]
+        put(img, bx, by, PISTIL)
+        put(img, bx + rng.choice((-1, 1)), by - 1, PISTIL)
+    # Pointes de sugar leaves qui depassent en bas.
+    for _ in range(3):
+        bx, by = inside[rng.randrange(len(inside))]
+        if by > oy + h * 0.6:
+            put(img, bx, by, GREEN_LIGHT)
 
 
 def plant_parts() -> Image.Image:
-    img = new(32)
-    rng = random.Random(7)
+    img = new(64)
 
-    # Feuilles larges : deux silhouettes (folioles differentes).
-    draw_leaf(img, 0, 0, 13, 11,
-              [(0, 1.0), (32, 0.85), (-32, 0.85), (68, 0.58), (-68, 0.58)], rng)
-    draw_leaf(img, 14, 0, 13, 11,
-              [(0, 0.95), (24, 0.9), (-40, 0.8), (58, 0.65), (-72, 0.5)], rng)
-    # Feuilles petites : deux silhouettes.
-    draw_leaf(img, 0, 12, 10, 8, [(0, 1.0), (45, 0.7), (-45, 0.7)], rng)
-    draw_leaf(img, 11, 12, 10, 8, [(8, 1.0), (-38, 0.8), (55, 0.6)], rng)
+    # Feuilles en eventail : 7 folioles (larges), 5 folioles (petites).
+    draw_fan_leaf(img, 0, 0, 26, 22, FINGERS_LARGE_A)
+    draw_fan_leaf(img, 28, 0, 26, 22, FINGERS_LARGE_B)
+    draw_fan_leaf(img, 0, 24, 20, 16, FINGERS_SMALL_A)
+    draw_fan_leaf(img, 22, 24, 20, 16, FINGERS_SMALL_B)
 
-    # Tige : 4x16 a droite, bord ombre, noeuds clairs.
-    for y in range(0, 16):
-        for dx, color in ((0, STEM_DARK), (1, STEM), (2, STEM), (3, STEM_DARK)):
-            put(img, 28 + dx, y, color)
-    for y in (3, 8, 13):
-        put(img, 29, y, GREEN_MID)
-        put(img, 30, y, GREEN_LIGHT)
+    draw_stem_strip(img, 56, 0, 8, 32)
 
-    # Bud : 8x8 dense, lisere sombre, pistils.
-    for y in range(21, 29):
-        for x in range(0, 8):
-            edge = x in (0, 7) or y in (21, 28)
-            if edge and (x + y) % 2 == 0:
-                continue
-            color = BUD_DARK if edge else (
-                BUD_LIGHT if (x + y) % 2 else BUD_MID)
-            put(img, x, y, color)
-    put(img, 2, 23, PISTIL)
-    put(img, 5, 26, PISTIL)
-    put(img, 3, 27, GREEN_LIGHT)
-
-    # Cola : 6x10, pointe effilee vers le haut.
-    for i, width in enumerate((2, 3, 3, 3, 3, 2, 2, 1, 1, 1)):
-        y = 30 - i  # de bas (30) vers haut (21)
-        cx = 12
-        for dx in range(-width + 1, width):
-            color = BUD_LIGHT if (dx + i) % 2 else BUD_MID
-            put(img, cx + dx, y, color)
-    put(img, 11, 27, PISTIL)
-    put(img, 13, 24, PISTIL)
-    put(img, 12, 21, GREEN_LIGHT)
+    # Bud rond et cola effile vers le haut.
+    draw_bud_blob(img, 0, 42, 16, 16, seed=12)
+    draw_bud_blob(img, 18, 42, 12, 20, seed=13, taper=0.5)
     return img
 
 
