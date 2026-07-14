@@ -593,6 +593,7 @@ def main() -> None:
     fresh = "herbalis:block/plant_weed_parts"
     dry = "herbalis:block/plant_weed_parts_dry"
     dead = "herbalis:block/plant_weed_parts_dead"
+    prime = "herbalis:block/plant_weed_parts_prime"
     stages = {
         "plant_weed_stage_1": (plant_stage_1(), fresh),
         "plant_weed_stage_2": (plant_stage_2(), fresh),
@@ -601,6 +602,8 @@ def main() -> None:
         "plant_weed_stage_2_dry": (plant_stage_2(), dry),
         "plant_weed_stage_3_dry": (plant_stage_3(), dry),
         "plant_weed_stage_4_dry": (plant_stage_4(), dry),
+        # Fenetre de recolte optimale : buds givres de trichomes.
+        "plant_weed_stage_4_prime": (plant_stage_4(), prime),
         "plant_weed_dead": (plant_dead(), dead),
     }
     for name, (elements, texture) in stages.items():

@@ -89,6 +89,29 @@ def dry_variant(img: Image.Image) -> Image.Image:
     return out
 
 
+# Regions de bud et de cola dans l'atlas (x0, y0, x1, y1).
+BUD_REGIONS = [(0, 42, 16, 58), (18, 42, 30, 62)]
+
+
+def prime_variant(img: Image.Image) -> Image.Image:
+    """Buds givres de trichomes (fenetre de recolte optimale) : voile
+    clair et mouchetis blancs, uniquement sur les regions de bud."""
+    out = img.copy()
+    rng = random.Random(37)
+    for x0, y0, x1, y1 in BUD_REGIONS:
+        for y in range(y0, y1):
+            for x in range(x0, x1):
+                r, g, b, a = out.getpixel((x, y))
+                if a == 0:
+                    continue
+                if rng.random() < 0.22:
+                    out.putpixel((x, y), (238, 242, 246, 255))
+                else:
+                    out.putpixel((x, y),
+                                 (clamp(r + 24), clamp(g + 24), clamp(b + 20), a))
+    return out
+
+
 def dead_variant(img: Image.Image) -> Image.Image:
     out = Image.new("RGBA", img.size, T)
     low, high = (66, 48, 30), (148, 112, 68)
@@ -841,6 +864,7 @@ def main() -> None:
     save(parts, "block/plant_weed_parts.png")
     save(dry_variant(parts), "block/plant_weed_parts_dry.png")
     save(dead_variant(parts), "block/plant_weed_parts_dead.png")
+    save(prime_variant(parts), "block/plant_weed_parts_prime.png")
 
     # Pot et rack (32x).
     save(pot_side(), "block/pot_side.png")
