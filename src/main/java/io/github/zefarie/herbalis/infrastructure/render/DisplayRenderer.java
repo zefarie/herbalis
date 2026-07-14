@@ -3,7 +3,6 @@ package io.github.zefarie.herbalis.infrastructure.render;
 import io.github.zefarie.herbalis.domain.drying.RackVisualState;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
 import io.github.zefarie.herbalis.domain.plant.Plant;
-import io.github.zefarie.herbalis.domain.plant.PlantState;
 import io.github.zefarie.herbalis.infrastructure.item.ItemFactory;
 import io.github.zefarie.herbalis.infrastructure.item.ItemKeys;
 import org.bukkit.Chunk;
@@ -45,6 +44,7 @@ public final class DisplayRenderer {
     private final Map<BlockPos, Spawned> pots = new HashMap<>();
     private final Map<BlockPos, Spawned> racks = new HashMap<>();
     private final Map<BlockPos, String> potModels = new HashMap<>();
+    private final Map<BlockPos, String> plantModels = new HashMap<>();
 
     public DisplayRenderer(Plugin plugin) {
         this.plugin = plugin;
@@ -55,7 +55,7 @@ public final class DisplayRenderer {
     // ----------------------------------------------------------------
 
     /** Fait apparaitre le pot (et sa plante eventuelle) a une position. */
-    public void showPot(BlockPos pos, Optional<Plant> plant, String drugModelPrefix,
+    public void showPot(BlockPos pos, Optional<Plant> plant, String plantModel,
                         String potModel, float plantScale) {
         removePotVisual(pos);
         Optional<Location> center = PosCodec.center(pos);
@@ -68,7 +68,7 @@ public final class DisplayRenderer {
         potModels.put(pos, potModel);
         UUID plantId = null;
         if (plant.isPresent()) {
-            ItemDisplay plantDisplay = spawnPlantDisplay(pos, plant.get(), drugModelPrefix);
+            ItemDisplay plantDisplay = spawnPlantDisplay(pos, plantModel);
             if (plantDisplay != null) {
                 plantDisplay.setTransformation(transform(plantScale));
                 plantId = plantDisplay.getUniqueId();
@@ -82,16 +82,16 @@ public final class DisplayRenderer {
     }
 
     /** Plante une graine : apparait avec un petit pop de scale. */
-    public void spawnPlantWithPop(BlockPos pos, Plant plant, String modelPrefix,
+    public void spawnPlantWithPop(BlockPos pos, Plant plant, String model,
                                   float scale) {
         Spawned current = pots.get(pos);
         if (current == null) {
-            showPot(pos, Optional.of(plant), modelPrefix, "pot", scale);
+            showPot(pos, Optional.of(plant), model, "pot", scale);
             return;
         }
         removeEntity(current.plantDisplay());
 
-        ItemDisplay display = spawnPlantDisplay(pos, plant, modelPrefix);
+        ItemDisplay display = spawnPlantDisplay(pos, model);
         if (display == null) {
             return;
         }
@@ -104,8 +104,8 @@ public final class DisplayRenderer {
     }
 
     /** Met a jour le modele de la plante (stage ou etat) avec interpolation. */
-    public void updatePlant(BlockPos pos, Plant plant, String modelPrefix,
-                            boolean growPop, float scale) {
+    public void updatePlant(BlockPos pos, String model, boolean growPop,
+                            float scale) {
         Spawned current = pots.get(pos);
         if (current == null || current.plantDisplay() == null) {
             return;
@@ -114,11 +114,29 @@ public final class DisplayRenderer {
         if (!(entity instanceof ItemDisplay display)) {
             return;
         }
-        display.setItemStack(ItemFactory.displayItem(plantModel(plant, modelPrefix)));
+        display.setItemStack(ItemFactory.displayItem(model));
+        plantModels.put(pos, model);
         if (growPop) {
             display.setTransformation(transform(scale * 0.75f));
             animate(display, 2, 26, transform(scale));
         }
+    }
+
+    /**
+     * Change le modele de la plante sans animation (givrage de la
+     * fenetre optimale). Sans effet si le modele est deja affiche.
+     */
+    public void updatePlantModel(BlockPos pos, String model) {
+        if (model.equals(plantModels.get(pos))) {
+            return;
+        }
+        Spawned current = pots.get(pos);
+        if (current == null || current.plantDisplay() == null
+                || !(entity(current.plantDisplay()) instanceof ItemDisplay display)) {
+            return;
+        }
+        display.setItemStack(ItemFactory.displayItem(model));
+        plantModels.put(pos, model);
     }
 
     /** Change le modele du pot (terreau humide, sec, fertilise). */
@@ -150,6 +168,7 @@ public final class DisplayRenderer {
 
     /** Retire la plante mais garde le pot (recolte, arrachage). */
     public void removePlantVisual(BlockPos pos) {
+        plantModels.remove(pos);
         Spawned current = pots.get(pos);
         if (current == null) {
             return;
@@ -162,6 +181,7 @@ public final class DisplayRenderer {
     /** Retire pot et plante. */
     public void removePotVisual(BlockPos pos) {
         potModels.remove(pos);
+        plantModels.remove(pos);
         Spawned current = pots.remove(pos);
         if (current != null) {
             removeEntity(current.potDisplay());
@@ -213,6 +233,7 @@ public final class DisplayRenderer {
         pots.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         racks.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         potModels.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
+        plantModels.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
     }
 
     /**
@@ -255,13 +276,16 @@ public final class DisplayRenderer {
     // Interne
     // ----------------------------------------------------------------
 
-    private ItemDisplay spawnPlantDisplay(BlockPos pos, Plant plant, String modelPrefix) {
+    private ItemDisplay spawnPlantDisplay(BlockPos pos, String model) {
         Optional<Location> center = PosCodec.center(pos);
         if (center.isEmpty()) {
             return null;
         }
         Location loc = center.get().add(0, SOIL_HEIGHT, 0);
-        return spawnDisplayAt(loc, plantModel(plant, modelPrefix), MARKER_PLANT, pos);
+        // Orientation propre a la position : pas deux plants identiques.
+        loc.setYaw(PlantVisuals.yawOf(pos));
+        plantModels.put(pos, model);
+        return spawnDisplayAt(loc, model, MARKER_PLANT, pos);
     }
 
     private ItemDisplay spawnDisplay(Location center, String model, String marker, BlockPos pos) {
@@ -327,15 +351,6 @@ public final class DisplayRenderer {
     private static Transformation transform(float scale) {
         return new Transformation(new Vector3f(0f, 0f, 0f), new Quaternionf(),
                 new Vector3f(scale, scale, scale), new Quaternionf());
-    }
-
-    private String plantModel(Plant plant, String modelPrefix) {
-        if (plant.state() == PlantState.DEAD) {
-            return "plant_" + modelPrefix + "_dead";
-        }
-        String suffix = plant.state() == PlantState.WITHERED && plant.stage() >= 2
-                ? "_dry" : "";
-        return "plant_" + modelPrefix + "_stage_" + plant.stage() + suffix;
     }
 
     private String rackModel(RackVisualState state) {

@@ -50,7 +50,8 @@ public final class WorldSync {
                         ? PlantVisuals.scaleOf(plant.get(), drug.get())
                         : 1.0f;
                 renderer.showPot(pos, plant,
-                        plant.map(Plant::drugId).orElse(""),
+                        plant.map(p -> PlantVisuals.plantModel(
+                                p, drug.orElse(null))).orElse(""),
                         PlantVisuals.potModel(plant, drug), scale);
             }
         }

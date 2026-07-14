@@ -178,7 +178,8 @@ public final class PlantInteractListener implements Listener {
             case PlantSeedUseCase.Result.Success success -> {
                 seed.subtract();
                 DrugType drug = drugs.byId(drugId).orElseThrow();
-                renderer.spawnPlantWithPop(pos, success.plant(), drugId,
+                renderer.spawnPlantWithPop(pos, success.plant(),
+                        PlantVisuals.plantModel(success.plant(), drug),
                         PlantVisuals.scaleOf(success.plant(), drug));
                 fx.planted(loc);
                 player.sendActionBar(messages.msg("culture.graine-plantee",

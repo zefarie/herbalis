@@ -25,7 +25,7 @@ effets-visuels:
   particules: true
   # Coupe tous les sons du plugin.
   sons: true
-  # Oscillation douce des plantes (leger balancement anime).
+  # Animation continue des plantes : balancement doux et respiration.
   animation-plantes: true
 
 hud:

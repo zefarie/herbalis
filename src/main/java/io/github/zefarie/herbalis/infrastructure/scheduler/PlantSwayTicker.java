@@ -16,11 +16,13 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Animation continue des plantes : oscillation douce (phase propre a
- * chaque plante), croissance en direct via l'echelle interpolee, et
- * scintillement discret des plants en fenetre de recolte optimale.
+ * Animation continue des plantes : oscillation douce et respiration
+ * (phases propres a chaque plante), croissance en direct via l'echelle
+ * interpolee, givrage des buds en fenetre optimale (swap de modele),
+ * scintillement discret et rares feuilles qui se detachent.
  */
 public final class PlantSwayTicker implements Runnable {
 
@@ -28,6 +30,12 @@ public final class PlantSwayTicker implements Runnable {
     public static final long PERIOD_TICKS = 30L;
 
     private static final float AMPLITUDE_RADIANS = 0.038f; // environ 2.2 degres
+
+    /** Respiration : micro pulsation d'echelle (+/- 1.5 %). */
+    private static final float BREATH_AMPLITUDE = 0.015f;
+
+    /** Une chance sur N par cycle qu'une feuille se detache. */
+    private static final int LEAF_FALL_ODDS = 30;
 
     private final DisplayRenderer renderer;
     private final PlantRepository plants;
@@ -48,7 +56,7 @@ public final class PlantSwayTicker implements Runnable {
     @Override
     public void run() {
         cycle++;
-        boolean sway = config.plantSwayEnabled();
+        boolean animate = config.plantSwayEnabled();
         renderer.forEachPlantDisplay((pos, display) -> {
             Plant plant = plants.at(pos).orElse(null);
             DrugType drug = plant == null
@@ -57,18 +65,26 @@ public final class PlantSwayTicker implements Runnable {
                 return;
             }
 
+            // Le modele suit l'etat courant : les buds se givrent en
+            // fenetre optimale, et redeviennent normaux apres.
+            renderer.updatePlantModel(pos, PlantVisuals.plantModel(plant, drug));
+
             // Croissance continue : l'echelle suit la progression du stage.
             float scale = PlantVisuals.scaleOf(plant, drug);
 
+            int hash = PlantVisuals.hash(pos);
             Quaternionf lean = new Quaternionf();
-            if (sway && plant.state() != PlantState.WITHERED) {
-                int hash = (pos.x() * 73856093) ^ (pos.z() * 19349663)
-                        ^ (pos.y() * 83492791);
+            if (animate && plant.state() != PlantState.WITHERED) {
                 double phase = cycle * 0.9 + (hash & 15) * 0.42;
                 float leanZ = (float) (AMPLITUDE_RADIANS * Math.sin(phase));
                 float leanX = (float) (AMPLITUDE_RADIANS * 0.6
                         * Math.cos(phase * 0.73));
                 lean.rotationXYZ(leanX, 0f, leanZ);
+                // Respiration : la plante gonfle et degonfle a peine.
+                if (plant.state() == PlantState.HEALTHY) {
+                    scale *= 1f + BREATH_AMPLITUDE
+                            * (float) Math.sin(cycle * 0.55 + (hash & 7));
+                }
             }
 
             Transformation current = display.getTransformation();
@@ -89,6 +105,13 @@ public final class PlantSwayTicker implements Runnable {
                     && drug.harvestWindow().isOptimal(plant.ripenMillis())
                     && plant.state() == PlantState.HEALTHY) {
                 PosCodec.corner(pos).ifPresent(fx::harvestSparkle);
+            }
+
+            // Une feuille se detache parfois des plants matures sains.
+            if (plant.state() == PlantState.HEALTHY
+                    && plant.stage() >= drug.growth().stageCount() - 1
+                    && ThreadLocalRandom.current().nextInt(LEAF_FALL_ODDS) == 0) {
+                PosCodec.corner(pos).ifPresent(fx::leafFall);
             }
         });
     }

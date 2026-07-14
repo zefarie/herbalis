@@ -45,10 +45,11 @@ public final class GrowthTicker implements Runnable {
                 continue;
             }
             float scale = PlantVisuals.scaleOf(plant, drug);
+            String model = PlantVisuals.plantModel(plant, drug);
             for (PlantEvent event : report.events()) {
                 switch (event) {
                     case PlantEvent.StageAdvanced advanced -> {
-                        renderer.updatePlant(pos, plant, plant.drugId(), true, scale);
+                        renderer.updatePlant(pos, model, true, scale);
                         if (advanced.isFinal()) {
                             fx.bloomed(loc);
                         } else {
@@ -56,15 +57,15 @@ public final class GrowthTicker implements Runnable {
                         }
                     }
                     case PlantEvent.Withered ignored -> {
-                        renderer.updatePlant(pos, plant, plant.drugId(), false, scale);
+                        renderer.updatePlant(pos, model, false, scale);
                         fx.withered(loc);
                     }
                     case PlantEvent.Recovered ignored -> {
-                        renderer.updatePlant(pos, plant, plant.drugId(), false, scale);
+                        renderer.updatePlant(pos, model, false, scale);
                         fx.recovered(loc);
                     }
                     case PlantEvent.Died ignored -> {
-                        renderer.updatePlant(pos, plant, plant.drugId(), false, scale);
+                        renderer.updatePlant(pos, model, false, scale);
                         fx.died(loc);
                     }
                     case PlantEvent.HarvestWindowClosed ignored -> {

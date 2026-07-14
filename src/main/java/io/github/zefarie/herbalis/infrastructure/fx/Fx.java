@@ -52,6 +52,9 @@ public final class Fx {
         particles(loc, w -> {
             w.spawnParticle(Particle.SPLASH, above(loc), 22, 0.22, 0.15, 0.22, 0.0);
             w.spawnParticle(Particle.FALLING_WATER, above(loc), 10, 0.18, 0.2, 0.18, 0.0);
+            // Gouttes qui perlent de la canopee pendant quelques secondes.
+            w.spawnParticle(Particle.DRIPPING_WATER, plantHeart(loc), 10,
+                    0.28, 0.3, 0.28, 0.0);
         });
         sound(loc, "minecraft:entity.generic.splash", 0.55f, 1.35f);
         sound(loc, "minecraft:block.water.ambient", 0.8f, 1.6f);
@@ -124,6 +127,19 @@ public final class Fx {
     public void harvestSparkle(Location loc) {
         particles(loc, w -> w.spawnParticle(Particle.END_ROD,
                 loc.clone().add(0.5, 1.1, 0.5), 1, 0.18, 0.2, 0.18, 0.006));
+    }
+
+    /** Une feuille se detache de la canopee et tombe. */
+    public void leafFall(Location loc) {
+        particles(loc, w -> {
+            ThreadLocalRandom rng = ThreadLocalRandom.current();
+            Location at = loc.clone().add(
+                    0.5 + rng.nextDouble(-0.3, 0.3),
+                    0.8 + rng.nextDouble(0.35),
+                    0.5 + rng.nextDouble(-0.3, 0.3));
+            w.spawnParticle(Particle.TINTED_LEAVES, at, 1,
+                    0.0, 0.0, 0.0, 0.0, LEAF_GREEN);
+        });
     }
 
     public void broken(Location loc) {
