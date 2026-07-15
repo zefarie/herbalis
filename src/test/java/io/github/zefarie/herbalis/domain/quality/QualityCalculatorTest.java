@@ -25,7 +25,8 @@ class QualityCalculatorTest {
         return new Plant(UUID.randomUUID(), "weed", TestFixtures.pos(),
                 4, 0L, ripenMillis,
                 avgHydration, avgHydration * 100, 100L, 0L,
-                0, fertilizerUses, seedQuality, topping, PlantState.HEALTHY, 0L);
+                0, fertilizerUses, seedQuality, topping,
+                PlantState.HEALTHY, 0L, 0L);
     }
 
     @Test

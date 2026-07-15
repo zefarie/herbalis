@@ -9,8 +9,9 @@ import java.util.UUID;
  * produit une nouvelle instance; la persistence et le rendu consomment
  * ces instances sans jamais les modifier.
  *
- * <p>Les durees sont des compteurs de millisecondes accumulees uniquement
- * quand le chunk est charge (la croissance n'avance pas serveur eteint).</p>
+ * <p>La croissance suit le temps reel : chaque plante garde la date de son
+ * dernier tick et rattrape son retard (chunk decharge, serveur eteint)
+ * au tick suivant.</p>
  *
  * @param id                identifiant stable de la plante
  * @param drugId            type de drogue cultive
@@ -28,6 +29,7 @@ import java.util.UUID;
  * @param topping           taille : 0 jamais, 1 reussie, -1 ratee
  * @param state             etat de sante visible
  * @param plantedAt         date de plantation (epoch millis)
+ * @param lastTickAt        date du dernier tick de croissance (epoch millis)
  */
 public record Plant(
         UUID id,
@@ -45,7 +47,8 @@ public record Plant(
         int seedQuality,
         int topping,
         PlantState state,
-        long plantedAt
+        long plantedAt,
+        long lastTickAt
 ) {
 
     /** Qualite de graine neutre (graine commune, sans lignee). */
@@ -63,7 +66,7 @@ public record Plant(
                 100.0, 0.0, 0L, 0L,
                 0, 0,
                 Math.clamp(seedQuality, 1, 5), 0,
-                PlantState.HEALTHY, now);
+                PlantState.HEALTHY, now, now);
     }
 
     /** Hydratation moyenne sur la vie de la plante, 0 a 100. */
@@ -91,13 +94,22 @@ public record Plant(
         return new Plant(id, drugId, pos, stage, stageGrowthMillis, ripenMillis,
                 Math.clamp(newHydration, 0.0, 100.0), hydrationSum, hydrationSamples,
                 dryMillis, fertilizedStage, fertilizerUses, seedQuality, topping,
-                state, plantedAt);
+                state, plantedAt, lastTickAt);
     }
 
     public Plant withFertilizer() {
         return new Plant(id, drugId, pos, stage, stageGrowthMillis, ripenMillis,
                 hydration, hydrationSum, hydrationSamples, dryMillis,
-                stage, fertilizerUses + 1, seedQuality, topping, state, plantedAt);
+                stage, fertilizerUses + 1, seedQuality, topping, state,
+                plantedAt, lastTickAt);
+    }
+
+    /** Marque la plante comme avancee jusqu'a cette date. */
+    public Plant withLastTickAt(long now) {
+        return new Plant(id, drugId, pos, stage, stageGrowthMillis, ripenMillis,
+                hydration, hydrationSum, hydrationSamples, dryMillis,
+                fertilizedStage, fertilizerUses, seedQuality, topping,
+                state, plantedAt, now);
     }
 
     /** Taille reussie : la coupe rend de la progression au stage. */
@@ -105,14 +117,16 @@ public record Plant(
         return new Plant(id, drugId, pos, stage,
                 Math.max(0L, newStageGrowthMillis), ripenMillis,
                 hydration, hydrationSum, hydrationSamples, dryMillis,
-                fertilizedStage, fertilizerUses, seedQuality, 1, state, plantedAt);
+                fertilizedStage, fertilizerUses, seedQuality, 1, state,
+                plantedAt, lastTickAt);
     }
 
     /** Taille ratee : la plante est abimee, la qualite en patira. */
     public Plant toppingMissed() {
         return new Plant(id, drugId, pos, stage, stageGrowthMillis, ripenMillis,
                 hydration, hydrationSum, hydrationSamples, dryMillis,
-                fertilizedStage, fertilizerUses, seedQuality, -1, state, plantedAt);
+                fertilizedStage, fertilizerUses, seedQuality, -1, state,
+                plantedAt, lastTickAt);
     }
 
     Plant ticked(int newStage, long newStageGrowth, long newRipen,
@@ -121,6 +135,6 @@ public record Plant(
         return new Plant(id, drugId, pos, newStage, newStageGrowth, newRipen,
                 newHydration, newHydrationSum, newSamples, newDryMillis,
                 fertilizedStage, fertilizerUses, seedQuality, topping,
-                newState, plantedAt);
+                newState, plantedAt, lastTickAt);
     }
 }

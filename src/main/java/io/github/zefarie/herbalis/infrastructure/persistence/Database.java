@@ -78,6 +78,7 @@ public final class Database implements AutoCloseable {
                         topping INTEGER NOT NULL DEFAULT 0,
                         state TEXT NOT NULL,
                         planted_at INTEGER NOT NULL,
+                        last_tick_at INTEGER NOT NULL DEFAULT 0,
                         UNIQUE (world, x, y, z)
                     )""");
             // Migration des bases anterieures a la genetique et a la taille.
@@ -85,6 +86,10 @@ public final class Database implements AutoCloseable {
                     "seed_quality", "INTEGER NOT NULL DEFAULT 2");
             addColumnIfMissing(statement, "plants",
                     "topping", "INTEGER NOT NULL DEFAULT 0");
+            // Migration vers la croissance en temps reel (0 = inconnu,
+            // le chargement repart de l'instant present).
+            addColumnIfMissing(statement, "plants",
+                    "last_tick_at", "INTEGER NOT NULL DEFAULT 0");
             statement.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS racks (
                         id TEXT PRIMARY KEY,

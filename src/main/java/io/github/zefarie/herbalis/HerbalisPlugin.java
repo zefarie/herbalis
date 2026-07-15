@@ -123,7 +123,7 @@ public final class HerbalisPlugin extends JavaPlugin {
         var harvestPlant = new HarvestPlantUseCase(plantRepo, drugs,
                 new java.util.Random());
         var breakPlant = new BreakPlantUseCase(plantRepo);
-        var growPlants = new GrowPlantsUseCase(plantRepo, drugs, environment, now);
+        var growPlants = new GrowPlantsUseCase(plantRepo, drugs, environment);
         var placeRack = new PlaceRackUseCase(rackRepo);
         var breakRack = new BreakRackUseCase(rackRepo);
         var addBud = new AddBudToRackUseCase(rackRepo, drugs);

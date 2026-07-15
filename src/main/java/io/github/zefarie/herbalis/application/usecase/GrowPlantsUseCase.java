@@ -14,11 +14,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Tick global de croissance : avance toutes les plantes dont le chunk est
- * charge et collecte les evenements pour que l'infrastructure produise
- * les retours visuels et sonores.
+ * Tick global de croissance en temps reel. Chaque plante avance de son
+ * propre retard (date de dernier tick), si bien qu'un chunk decharge ou
+ * un serveur eteint ne fige rien : au retour, la plante rattrape tout
+ * le temps ecoule, tranche par tranche pour que les seuils (soif, mort,
+ * passages de stage) tombent au bon moment.
  */
 public final class GrowPlantsUseCase {
+
+    /**
+     * Taille maximale d'une tranche de rattrapage. Assez fine pour que
+     * les seuils restent fideles, assez large pour absorber des jours
+     * d'absence en quelques centaines d'iterations.
+     */
+    private static final long SLICE_MILLIS = 5 * 60_000L;
 
     /** Evenements d'une plante lors d'un tick. */
     public record PlantTickReport(Plant plant, List<PlantEvent> events) {
@@ -28,14 +37,11 @@ public final class GrowPlantsUseCase {
     private final DrugRegistry drugs;
     private final PlantEnvironment environment;
 
-    private long lastTickAt;
-
     public GrowPlantsUseCase(PlantRepository plants, DrugRegistry drugs,
-                             PlantEnvironment environment, long now) {
+                             PlantEnvironment environment) {
         this.plants = plants;
         this.drugs = drugs;
         this.environment = environment;
-        this.lastTickAt = now;
     }
 
     /**
@@ -44,12 +50,6 @@ public final class GrowPlantsUseCase {
      * @return les rapports des plantes ayant produit au moins un evenement
      */
     public List<PlantTickReport> tick(long now) {
-        long delta = now - lastTickAt;
-        lastTickAt = now;
-        if (delta <= 0) {
-            return List.of();
-        }
-
         List<PlantTickReport> reports = new ArrayList<>();
         for (Plant plant : List.copyOf(plants.all())) {
             BlockPos pos = plant.pos();
@@ -60,12 +60,27 @@ public final class GrowPlantsUseCase {
             if (drug == null) {
                 continue;
             }
-            GrowthConditions conditions = new GrowthConditions(
-                    environment.lightLevel(pos), delta);
-            GrowthEngine.GrowthTick result = GrowthEngine.tick(plant, drug, conditions);
-            plants.put(result.plant());
-            if (result.hasEvents()) {
-                reports.add(new PlantTickReport(result.plant(), result.events()));
+            long remaining = now - plant.lastTickAt();
+            if (remaining <= 0) {
+                continue;
+            }
+            // La lumiere du rattrapage est celle du moment : approximation
+            // honnete, une serre eclairee reste eclairee.
+            int light = environment.lightLevel(pos);
+            List<PlantEvent> events = new ArrayList<>(2);
+            Plant current = plant;
+            while (remaining > 0 && !current.isDead()) {
+                long step = Math.min(remaining, SLICE_MILLIS);
+                remaining -= step;
+                GrowthEngine.GrowthTick result = GrowthEngine.tick(
+                        current, drug, new GrowthConditions(light, step));
+                current = result.plant();
+                events.addAll(result.events());
+            }
+            current = current.withLastTickAt(now);
+            plants.put(current);
+            if (!events.isEmpty()) {
+                reports.add(new PlantTickReport(current, events));
             }
         }
         return reports;

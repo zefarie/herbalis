@@ -44,11 +44,12 @@ public final class GrowthEngine {
         HydrationProfile hydrationProfile = drug.hydration();
         long delta = conditions.deltaMillis();
 
-        // Hydratation : decroissance et echantillonnage pour la moyenne.
+        // Hydratation : decroissance, puis echantillon pondere par la duree
+        // du tick (les ticks de rattrapage pesent leur juste poids).
         double hydration = Math.max(0.0,
                 plant.hydration() - hydrationProfile.decayPerMinute() * delta / 60_000.0);
-        double hydrationSum = plant.hydrationSum() + hydration;
-        long samples = plant.hydrationSamples() + 1;
+        double hydrationSum = plant.hydrationSum() + hydration * delta;
+        long samples = plant.hydrationSamples() + delta;
 
         // Secheresse : jaunissement puis mort.
         long dryMillis = hydration <= 0.0 ? plant.dryMillis() + delta : 0L;
