@@ -17,7 +17,10 @@ Arrosoir et joint en vrais models 3D en main, particules et sons sur
 chaque action (fumée de joint en spirale), HUD en action bar avec une
 font d'icônes dessinée pour le pack, effets de consommation
 cinématiques (montée, plateau, descente, blackout), tolérance et
-manque persistants.
+manque persistants. Et de la profondeur de jeu : taille au sécateur
+dans une fenêtre précise, affinage en jarre de curing (avec
+moisissure punitive), génétique des graines sur plusieurs
+générations, toute la pipeline craftable.
 
 ## Installation
 
@@ -66,6 +69,12 @@ par le serveur au premier démarrage.
      arrête de pousser, jaunit, puis meurt (le pot reste).
    - **Engrais** : un par stage, accélère le stage en cours et
      améliore la qualité potentielle.
+   - **Taille (topping)** : un coup de sécateur aux stages 2 ou 3,
+     dans la fenêtre du milieu de stage (le HUD affiche des ciseaux
+     quand c'est le moment) : +1 à 2 têtes à la récolte, mais la
+     plante encaisse la coupe et perd un peu de progression. Hors
+     fenêtre, la coupe abîme la plante (-1 étoile). Une seule taille
+     par plante, et le sécateur s'use.
 4. **Croissance** : 4 stages (pousse, jeune plant, plant mature, plant
    en fleur), 8 minutes par stage par défaut, transitions animées par
    interpolation. Regarder la plante affiche son état complet en action
@@ -74,22 +83,31 @@ par le serveur au premier démarrage.
 5. **Récolter** : au stade final, clic droit main vide. Une fenêtre
    optimale de 10 minutes s'ouvre à la floraison : les buds givrent de
    trichomes blancs et la plante scintille. Récolter dedans maximise
-   la qualité, après elle décline. La qualité (1 à 5 étoiles)
-   combine hydratation moyenne, engrais et timing de récolte.
+   la qualité, après elle décline. La qualité (1 à 5 étoiles) combine
+   hydratation moyenne, engrais, timing de récolte et génétique de la
+   graine. La récolte rend aussi **2 ou 3 graines héritées** : la
+   plupart gardent les étoiles de la plante mère, certaines dérivent
+   d'une étoile. On sélectionne sa lignée au fil des générations.
 6. **Sécher** : poser un rack de séchage, y suspendre jusqu'à 6 têtes
    fraîches (clic droit). 20 minutes en temps réel, le séchage continue
    serveur éteint. Le modèle du rack change selon son état et des
    particules discrètes signalent de loin qu'il est prêt. Retirer trop
    tôt (sneak + clic droit) coûte de la qualité.
-7. **Conditionner** : pochon vide en main, clic droit : la meilleure
+7. **Affiner (curing, optionnel)** : déposer la weed séchée dans une
+   jarre de curing (jusqu'à 6 têtes, contenu visible à travers le
+   verre). 45 minutes en temps réel (continue serveur éteint) :
+   +1 étoile. Mais une jarre oubliée moisit 90 minutes après la fin
+   d'affinage : tout le contenu est ruiné (1 étoile), et une seule
+   tête moisie contamine la jarre entière.
+8. **Conditionner** : pochon vide en main, clic droit : la meilleure
    weed séchée de l'inventaire est emballée, qualité héritée.
-8. **Rouler** : pochon + feuille à rouler dans une grille de craft
+9. **Rouler** : pochon + feuille à rouler dans une grille de craft
    (établi ou inventaire) = joint, qualité héritée.
-9. **Fumer** : maintenir clic droit. Braise à l'allumage, fumée visible
-   par tous les joueurs, montée en 15 secondes par paliers avec
-   messages d'ambiance, plateau avec buffs (durée et intensité selon la
-   qualité : 2 minutes à 1 étoile, 6 minutes à 5 étoiles), descente
-   systématique (lenteur, faim, courte nausée).
+10. **Fumer** : maintenir clic droit. Braise à l'allumage, fumée
+    visible par tous les joueurs, montée en 15 secondes par paliers
+    avec messages d'ambiance, plateau avec buffs (durée et intensité
+    selon la qualité : 2 minutes à 1 étoile, 6 minutes à 5 étoiles),
+    descente systématique (lenteur, faim, courte nausée).
 
 ### Abus, tolérance, manque
 
@@ -102,40 +120,45 @@ par le serveur au premier démarrage.
   coeur, messages d'ambiance). Tenir assez longtemps fait retomber
   l'addiction.
 
-## Items
+## Items et crafts
 
-| Item | Obtention | Usage |
+Toute la pipeline se craft avec des matériaux vanilla, sauf les
+graines (récolte, casse de plante ou `/herbalis give` uniquement).
+
+| Item | Craft | Usage |
 | --- | --- | --- |
-| Pot de culture | `/herbalis give` | Se pose au sol, socle de la plante |
-| Graine de weed | Give, ou drop en cassant une plante | Clic droit sur un pot |
-| Arrosoir | Give | Arrose (8 charges), se recharge sur l'eau |
-| Engrais naturel | Give | Un par stage, boost vitesse et qualité |
+| Pot de culture | 7 briques (forme pot) | Se pose au sol, socle de la plante |
+| Graine de weed | Pas de craft : récolte ou give | Clic droit sur un pot, porte sa lignée (étoiles) |
+| Arrosoir | 1 pépite (bec) + 4 lingots de fer | Arrose (8 charges), se recharge sur l'eau |
+| Sécateur | 2 lingots de fer + 1 bâton | Taille aux stages 2-3 (25 utilisations) |
+| Engrais naturel | 2 poudres d'os + 1 terre (x2) | Un par stage, boost vitesse et qualité |
 | Tête fraîche | Récolte | Se suspend au rack de séchage |
-| Rack de séchage | Give | Sèche jusqu'à 6 têtes |
-| Weed séchée | Rack | Se conditionne en pochon |
-| Pochon vide | Give | Clic droit pour emballer la weed séchée |
+| Rack de séchage | 3 bâtons + 3 ficelles + 2 bâtons | Sèche jusqu'à 6 têtes |
+| Weed séchée | Rack | Se conditionne en pochon, ou s'affine en jarre |
+| Jarre de curing | 5 verres + 1 dalle de chêne | Affine la weed séchée (+1 étoile, gare à la moisissure) |
+| Pochon vide | 1 cuir + 1 ficelle (x2) | Clic droit pour emballer la weed séchée |
 | Pochon de weed | Conditionnement | Ingrédient du joint |
-| Feuille à rouler | Give | Ingrédient du joint |
-| Joint | Craft pochon + feuille | Maintenir clic droit pour fumer |
+| Feuille à rouler | 1 papier + 1 canne à sucre (x3) | Ingrédient du joint |
+| Joint | Pochon + feuille à rouler | Maintenir clic droit pour fumer |
 
-Casser une plante (clic gauche) rend la graine (configurable). Casser
-un pot ou un rack (clic gauche) rend l'item ; un rack plein rend
-d'abord ses têtes, fraîches.
+Casser une plante (clic gauche) rend une graine de sa lignée
+(configurable). Casser un pot, un rack ou une jarre (clic gauche) rend
+l'item ; pleins, ils rendent d'abord leur contenu.
 
 ## Commandes
 
 | Commande | Permission | Description |
 | --- | --- | --- |
-| `/herbalis give <joueur> <item> [quantité] [qualité]` | `herbalis.admin` | Donne un item Herbalis (qualité 1 à 5) |
-| `/herbalis info` | `herbalis.info` | Détails de la plante ou du rack regardé |
+| `/herbalis give <joueur> <item> [quantité] [qualité]` | `herbalis.admin` | Donne un item Herbalis (qualité 1 à 5, graines incluses) |
+| `/herbalis info` | `herbalis.info` | Détails de la plante, du rack ou de la jarre regardés |
 | `/herbalis tolerance <joueur> [reset]` | `herbalis.admin` | Consulte ou remet à zéro tolérance et addiction |
 | `/herbalis reload` | `herbalis.admin` | Recharge config, messages et drogues |
 
 Tab completion complète sur tout. Alias : `/herb`.
 
-Items pour `give` : `pot`, `drying_rack`, `watering_can`, `fertilizer`,
-`rolling_paper`, `pouch_empty`, `weed_seed`, `weed_bud_fresh`,
-`weed_dried`, `weed_pouch`, `weed_joint`.
+Items pour `give` : `pot`, `drying_rack`, `curing_jar`, `watering_can`,
+`secateur`, `fertilizer`, `rolling_paper`, `pouch_empty`, `weed_seed`,
+`weed_bud_fresh`, `weed_dried`, `weed_pouch`, `weed_joint`.
 
 ## Permissions
 
@@ -150,12 +173,16 @@ Items pour `give` : `pot`, `drying_rack`, `watering_can`, `fertilizer`,
 ## Configuration
 
 - `config.yml` : tick de croissance, autosave, particules et sons,
-  HUD, charges de l'arrosoir, drops, explosions, cadence du manque.
-  Tout est commenté en français.
+  HUD, charges de l'arrosoir, utilisations du sécateur, drops,
+  explosions, cadence du manque. Tout est commenté en français.
 - `drugs/weed.yml` : la définition complète de la weed : durées de
   stages, lumière minimum, hydratation, engrais, fenêtre de récolte,
-  séchage, effets (montée, plateau, descente), blackout, tolérance,
-  addiction, poids du calcul de qualité.
+  séchage, taille (stages, fenêtre, bonus, malus), curing (durée,
+  moisissure, bonus), effets (montée, plateau, descente), blackout,
+  tolérance, addiction, poids du calcul de qualité (dont la
+  génétique). Les sections `taille` et `curing` sont optionnelles :
+  une config antérieure reste valide (défauts raisonnables, génétique
+  à 0 tant que le poids n'est pas déclaré).
 - `messages.yml` : 100 % des textes joueur, en MiniMessage.
 
 ### Ajouter une drogue
@@ -175,8 +202,9 @@ partagé entre drogues.
 
 ```
 domain/          Métier pur, zéro import Bukkit, testé unitairement :
-                 Plant, GrowthEngine, Quality, DryingRack, DrugType,
-                 ConsumptionEngine (tolérance, blackout, manque)
+                 Plant, GrowthEngine, Quality, DryingRack, CuringJar,
+                 DrugType, ConsumptionEngine (tolérance, blackout,
+                 manque)
 application/     Cas d'usage (PlantSeed, Water, Harvest, Consume...)
                  et ports (repositories, environnement)
 infrastructure/  Bukkit : rendu Item Display + Interaction, SQLite
@@ -243,6 +271,9 @@ python3 -m venv .venv && .venv/bin/pip install pillow
 ./gradlew test
 ```
 
-34 tests unitaires sur le domaine : progression de croissance, lumière,
-sécheresse et mort, calcul de qualité, malus de séchage, tolérance,
-fenêtre de blackout, seuils de manque, chronologie des effets.
+47 tests unitaires sur le domaine et les cas d'usage : progression de
+croissance, lumière, sécheresse et mort, calcul de qualité (dont
+génétique et malus de taille), malus de séchage, curing (affinage,
+moisissure, contamination), fenêtre de taille, graines héritées,
+tolérance, fenêtre de blackout, seuils de manque, chronologie des
+effets.
