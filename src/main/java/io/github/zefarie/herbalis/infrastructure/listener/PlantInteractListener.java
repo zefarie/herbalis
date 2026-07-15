@@ -21,6 +21,7 @@ import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
 import io.github.zefarie.herbalis.domain.drying.RackVisualState;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
+import io.github.zefarie.herbalis.domain.plant.GrowthEngine;
 import io.github.zefarie.herbalis.domain.plant.Plant;
 import io.github.zefarie.herbalis.domain.quality.Quality;
 import io.github.zefarie.herbalis.infrastructure.config.HerbalisConfig;
@@ -36,6 +37,7 @@ import io.github.zefarie.herbalis.infrastructure.render.PosCodec;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
@@ -175,17 +177,15 @@ public final class PlantInteractListener implements Listener {
             fertilizeAction(player, pos, held, loc);
             return;
         }
-        if (heldType.filter(t -> t == HerbalisItemType.SECATEUR).isPresent()) {
+        // Cisailles vanilla : on taille, sauf au stade final ou elles
+        // servent naturellement a couper la recolte.
+        if (held.getType() == Material.SHEARS && !isHarvestable(plant)) {
             pruneAction(player, pos, held, loc);
             return;
         }
-        if (plant.isPresent()) {
-            DrugType drug = drugs.byId(plant.get().drugId()).orElse(null);
-            if (drug != null && io.github.zefarie.herbalis.domain.plant.GrowthEngine
-                    .isHarvestable(plant.get(), drug)) {
-                harvestAction(player, pos, loc);
-                return;
-            }
+        if (isHarvestable(plant)) {
+            harvestAction(player, pos, loc);
+            return;
         }
         // Rien d'actionnable : afficher l'etat.
         hud.buildLine(pos, now).ifPresent(player::sendActionBar);
@@ -297,7 +297,13 @@ public final class PlantInteractListener implements Listener {
                         messages.deserialize(items.starsMarkup(success.quality())))));
     }
 
-    private void pruneAction(Player player, BlockPos pos, ItemStack secateur,
+    private boolean isHarvestable(Optional<Plant> plant) {
+        return plant.isPresent() && drugs.byId(plant.get().drugId())
+                .map(drug -> GrowthEngine.isHarvestable(plant.get(), drug))
+                .orElse(false);
+    }
+
+    private void pruneAction(Player player, BlockPos pos, ItemStack shears,
                              Location loc) {
         if (!player.hasPermission("herbalis.plant")) {
             player.sendMessage(messages.msg("erreurs.permission"));
@@ -306,7 +312,7 @@ public final class PlantInteractListener implements Listener {
         PrunePlantUseCase.Result result = prunePlant.execute(pos);
         switch (result) {
             case PrunePlantUseCase.Result.Topped success -> {
-                useSecateur(player, secateur);
+                wearShears(player, shears);
                 DrugType drug = drugs.byId(success.plant().drugId()).orElse(null);
                 if (drug != null) {
                     // La coupe se voit : la plante revient un peu en arriere.
@@ -318,7 +324,7 @@ public final class PlantInteractListener implements Listener {
                 player.sendActionBar(messages.msg("taille.reussie"));
             }
             case PrunePlantUseCase.Result.Missed ignored -> {
-                useSecateur(player, secateur);
+                wearShears(player, shears);
                 fx.pruneMissed(loc);
                 player.sendActionBar(messages.msg("taille.ratee"));
             }
@@ -331,20 +337,11 @@ public final class PlantInteractListener implements Listener {
         }
     }
 
-    /** Use le secateur d'un cran; il casse au bout de ses utilisations. */
-    private void useSecateur(Player player, ItemStack secateur) {
-        Integer damage = secateur.getData(DataComponentTypes.DAMAGE);
-        Integer maxDamage = secateur.getData(DataComponentTypes.MAX_DAMAGE);
-        if (damage == null || maxDamage == null) {
-            return;
-        }
-        if (damage + 1 >= maxDamage) {
-            secateur.setAmount(0);
-            player.playSound(player.getLocation(),
-                    "minecraft:entity.item.break", 0.8f, 1.0f);
-            player.sendMessage(messages.msg("taille.secateur-casse"));
-        } else {
-            secateur.setData(DataComponentTypes.DAMAGE, damage + 1);
+    /** Usure vanilla des cisailles : unbreaking, casse et son inclus. */
+    private void wearShears(Player player, ItemStack shears) {
+        int wear = config.shearsWearPerPruning();
+        if (wear > 0) {
+            shears.damage(wear, player);
         }
     }
 

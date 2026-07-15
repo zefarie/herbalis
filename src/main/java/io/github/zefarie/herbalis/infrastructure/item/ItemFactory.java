@@ -69,15 +69,6 @@ public final class ItemFactory {
         return stack;
     }
 
-    /** Secateur : s'use a chaque taille, barre de durabilite. */
-    public ItemStack secateur(int maxUses) {
-        ItemStack stack = base(HerbalisItemType.SECATEUR, null, null);
-        stack.setData(DataComponentTypes.MAX_STACK_SIZE, 1);
-        stack.setData(DataComponentTypes.MAX_DAMAGE, maxUses);
-        stack.setData(DataComponentTypes.DAMAGE, 0);
-        return stack;
-    }
-
     // ----------------------------------------------------------------
     // Items lies a une drogue
     // ----------------------------------------------------------------
@@ -132,12 +123,11 @@ public final class ItemFactory {
      * de recettes ou /herbalis give).
      */
     public Optional<ItemStack> byId(String itemId, List<DrugType> drugs,
-                                    int maxCharges, int secateurUses) {
+                                    int maxCharges) {
         for (HerbalisItemType type : HerbalisItemType.values()) {
             if (!type.isDrugScoped() && type.id().equals(itemId)) {
                 return Optional.of(switch (type) {
                     case WATERING_CAN -> wateringCan(maxCharges);
-                    case SECATEUR -> secateur(secateurUses);
                     default -> generic(type, 16);
                 });
             }

@@ -39,9 +39,10 @@ arrosoir:
   # (clic droit sur un bloc d'eau pour recharger).
   charges: 8
 
-secateur:
-  # Nombre de tailles avant que le secateur ne casse.
-  utilisations: 25
+taille:
+  # Points de durabilite perdus par les cisailles (l'outil vanilla)
+  # a chaque taille. 0 = aucune usure.
+  usure-cisailles: 1
 
 plantes:
   # Une plante cassee (coup, explosion, support detruit) rend sa graine.

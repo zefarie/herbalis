@@ -98,8 +98,7 @@ public final class HerbalisCommand implements TabExecutor {
         amount = Math.clamp(amount, 1, 64);
 
         Optional<ItemStack> built = items.byId(itemId,
-                List.copyOf(drugs.all()), config.wateringCanCharges(),
-                config.secateurUses());
+                List.copyOf(drugs.all()), config.wateringCanCharges());
         if (built.isEmpty()) {
             sender.sendMessage(messages.msg("erreurs.item-inconnu",
                     Messages.ph("item", itemId)));

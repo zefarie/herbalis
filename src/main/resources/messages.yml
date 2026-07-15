@@ -54,14 +54,6 @@ items:
       - "<!i><color:#9ca3af>Se recharge sur un bloc d'eau.</color>"
       - "<!i><i><color:#71717a>La vie coule a petites gouttes.</color></i>"
       - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
-  secateur:
-    nom: "<gradient:#cbd5e1:#64748b>Sécateur</gradient>"
-    lore:
-      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
-      - "<!i><color:#9ca3af>Tailler au bon moment renforce</color>"
-      - "<!i><color:#9ca3af>la plante. Au mauvais, l'abîme.</color>"
-      - "<!i><i><color:#71717a>La main verte, ça se prouve.</color></i>"
-      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
   fertilizer:
     nom: "<gradient:#a3e635:#65a30d>Engrais naturel</gradient>"
     lore:
@@ -195,7 +187,6 @@ taille:
   reussie: "<color:#4ade80><font:herbalis:icons></font> Taille propre. La plante donnera davantage.</color>"
   ratee: "<color:#f87171><font:herbalis:icons></font> Mauvais moment... la coupe a abîmé la plante.</color>"
   deja-taillee: "<color:#9ca3af>Cette plante a déjà été taillée.</color>"
-  secateur-casse: "<prefix> <color:#f87171>Le sécateur rend l'âme dans un claquement sec.</color>"
 
 # --------------------------------------------------------------
 #  Sechage et conditionnement

@@ -8,7 +8,7 @@ import io.github.zefarie.herbalis.domain.geo.BlockPos;
 import io.github.zefarie.herbalis.domain.plant.Plant;
 
 /**
- * Taille (topping) d'une plante au secateur. Bien placee, la coupe
+ * Taille (topping) d'une plante aux cisailles. Bien placee, la coupe
  * augmente le rendement final au prix d'un peu de progression de stage.
  * Mal placee, elle abime la plante et coutera des etoiles.
  */
