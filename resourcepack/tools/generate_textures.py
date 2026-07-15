@@ -445,6 +445,43 @@ def joint_wrap() -> Image.Image:
     return img
 
 
+def jar_glass() -> Image.Image:
+    """Verre de la jarre : cadre visible, interieur transparent."""
+    img = new(32)
+    frame = (214, 230, 236, 255)
+    frame_dark = (168, 190, 200, 255)
+    for i in range(32):
+        for edge in (0, 1, 30, 31):
+            put(img, i, edge, frame if edge in (0, 31) else frame_dark)
+            put(img, edge, i, frame if edge in (0, 31) else frame_dark)
+    # Reflets discrets dans le vide.
+    for x, y in ((6, 5), (7, 6), (8, 7), (24, 20), (25, 21)):
+        put(img, x, y, (235, 245, 248, 90))
+    return img
+
+
+def jar_weed(kind: str) -> Image.Image:
+    """Contenu de la jarre : masse de tetes, teinte selon l'etat."""
+    if kind == "curing":
+        base = (92, 138, 64, 255)
+        variants = [(122, 160, 84, 255), (70, 108, 50, 255), (150, 172, 96, 255)]
+    elif kind == "ready":
+        base = (150, 138, 74, 255)
+        variants = [(178, 162, 90, 255), (122, 110, 58, 255), (196, 150, 70, 255)]
+    else:  # moisi
+        base = (96, 104, 84, 255)
+        variants = [(118, 126, 106, 255), (74, 82, 66, 255)]
+    img = noisy(32, base, variants, 0.55, seed=41)
+    if kind == "moldy":
+        rng = random.Random(43)
+        for _ in range(26):
+            x, y = rng.randint(0, 31), rng.randint(0, 31)
+            put(img, x, y, (222, 226, 214, 255))
+            if rng.random() < 0.5:
+                put(img, x + 1, y, (198, 204, 190, 255))
+    return img
+
+
 def rack_bud(dry: bool) -> Image.Image:
     img = new(8)
     if dry:
@@ -795,6 +832,32 @@ BUD_DRIED_PALETTE = {
     "p": (190, 120, 50, 255),
 }
 
+SECATEUR_MAP = [
+    "................",
+    "....M......m....",
+    "....MM....mm....",
+    ".....M....m.....",
+    ".....MM..mm.....",
+    "......M..m......",
+    "......MMmm......",
+    ".......PP.......",
+    "......hHHh......",
+    ".....hH..Hh.....",
+    ".....H....H.....",
+    "....hH....Hh....",
+    "....H......H....",
+    "....h......h....",
+    "................",
+    "................",
+]
+SECATEUR_PALETTE = {
+    "M": (226, 232, 240, 255),
+    "m": (148, 163, 184, 255),
+    "P": (71, 85, 105, 255),
+    "H": (146, 64, 40, 255),
+    "h": (110, 46, 28, 255),
+}
+
 JOINT_MAP = [
     "................",
     "................",
@@ -880,12 +943,19 @@ def main() -> None:
     save(rack_bud(dry=False), "block/rack_bud_fresh.png")
     save(rack_bud(dry=True), "block/rack_bud_dry.png")
 
+    # Jarre de curing : verre, contenus (affinage, pret, moisi).
+    save(jar_glass(), "block/jar_glass.png")
+    save(jar_weed("curing"), "block/jar_weed_curing.png")
+    save(jar_weed("ready"), "block/jar_weed_ready.png")
+    save(jar_weed("moldy"), "block/jar_weed_moldy.png")
+
     # Glyphes de font.
     for name, rows in GLYPHS.items():
         save(glyph(rows), f"font/{name}.png")
 
     # Items.
     save(from_map(SEED_MAP, SEED_PALETTE), "item/weed_seed.png")
+    save(from_map(SECATEUR_MAP, SECATEUR_PALETTE), "item/secateur.png")
     save(from_map(WATERING_CAN_MAP, WATERING_CAN_PALETTE), "item/watering_can.png")
     save(from_map(FERTILIZER_MAP, FERTILIZER_PALETTE), "item/fertilizer.png")
     save(from_map(ROLLING_PAPER_MAP, ROLLING_PAPER_PALETTE), "item/rolling_paper.png")

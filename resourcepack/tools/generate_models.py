@@ -417,6 +417,34 @@ def rack_model(name: str, buds_texture: str | None,
 
 
 # ------------------------------------------------------------------
+# Jarre de curing (verre, couvercle bois, contenu visible)
+# ------------------------------------------------------------------
+
+def jar_model(name: str, weed_texture: str | None,
+              content_height: float = 5.4) -> None:
+    """Le contenu se voit a travers le verre et change avec l'etat."""
+    glass = box([5, 0, 5], [11, 7, 11], "#glass", uv=FULL_UV)
+    lid = box([4.5, 7, 4.5], [11.5, 8.3, 11.5], "#lid")
+    knob = box([7.3, 8.3, 7.3], [8.7, 9.1, 8.7], "#lid")
+    elements = [glass, lid, knob]
+    textures = {
+        "particle": "herbalis:block/jar_glass",
+        "glass": "herbalis:block/jar_glass",
+        "lid": "herbalis:block/rack_wood",
+    }
+    if weed_texture is not None:
+        elements.insert(0, box([5.5, 0.5, 5.5],
+                               [10.5, 0.5 + content_height, 10.5],
+                               "#weed", uv=FULL_UV))
+        textures["weed"] = f"herbalis:block/{weed_texture}"
+    write(ASSETS / "models" / "block" / f"{name}.json", {
+        "parent": "minecraft:block/block",
+        "textures": textures,
+        "elements": elements,
+    })
+
+
+# ------------------------------------------------------------------
 # Models 3D en main (arrosoir, joint)
 #
 # En inventaire (gui/fixed), l'item definition bascule sur le sprite 2D
@@ -563,7 +591,7 @@ def main() -> None:
 
     for key in ["weed_seed", "watering_can", "fertilizer", "rolling_paper",
                 "pouch_empty", "weed_pouch", "weed_bud_fresh", "weed_dried",
-                "weed_joint"]:
+                "weed_joint", "secateur"]:
         flat_item(key)
         item_definition(key, f"herbalis:item/{key}")
 
@@ -588,6 +616,15 @@ def main() -> None:
     rack_model("drying_rack_full", "rack_bud_fresh")
     rack_model("drying_rack_ready", "rack_bud_dry", shrink=0.8)
     for key in ("drying_rack", "drying_rack_full", "drying_rack_ready"):
+        item_definition(key, f"herbalis:block/{key}")
+
+    # Jarres de curing : le contenu raconte l'affinage.
+    jar_model("curing_jar", None)
+    jar_model("curing_jar_full", "jar_weed_curing")
+    jar_model("curing_jar_ready", "jar_weed_ready", content_height=5.0)
+    jar_model("curing_jar_moldy", "jar_weed_moldy", content_height=5.0)
+    for key in ("curing_jar", "curing_jar_full", "curing_jar_ready",
+                "curing_jar_moldy"):
         item_definition(key, f"herbalis:block/{key}")
 
     fresh = "herbalis:block/plant_weed_parts"
