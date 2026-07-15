@@ -24,6 +24,8 @@ import java.util.UUID;
  * @param dryMillis         temps accumule a sec (hydration a 0)
  * @param fertilizedStage   dernier stage ou un engrais a ete applique (0 = jamais)
  * @param fertilizerUses    nombre total d'engrais appliques
+ * @param seedQuality       qualite de la graine plantee, 1 a 5 (genetique)
+ * @param topping           taille : 0 jamais, 1 reussie, -1 ratee
  * @param state             etat de sante visible
  * @param plantedAt         date de plantation (epoch millis)
  */
@@ -40,16 +42,27 @@ public record Plant(
         long dryMillis,
         int fertilizedStage,
         int fertilizerUses,
+        int seedQuality,
+        int topping,
         PlantState state,
         long plantedAt
 ) {
 
+    /** Qualite de graine neutre (graine commune, sans lignee). */
+    public static final int DEFAULT_SEED_QUALITY = 2;
+
     /** Nouvelle plante fraichement mise en pot, hydratee a 100. */
     public static Plant plant(String drugId, BlockPos pos, long now) {
+        return plant(drugId, pos, now, DEFAULT_SEED_QUALITY);
+    }
+
+    /** Nouvelle plante issue d'une graine de qualite donnee. */
+    public static Plant plant(String drugId, BlockPos pos, long now, int seedQuality) {
         return new Plant(UUID.randomUUID(), drugId, pos,
                 1, 0L, 0L,
                 100.0, 0.0, 0L, 0L,
                 0, 0,
+                Math.clamp(seedQuality, 1, 5), 0,
                 PlantState.HEALTHY, now);
     }
 
@@ -69,16 +82,37 @@ public record Plant(
         return fertilizedStage == stage;
     }
 
+    /** Vrai si la plante a deja ete taillee (reussie ou ratee). */
+    public boolean isToppingAttempted() {
+        return topping != 0;
+    }
+
     public Plant withHydration(double newHydration) {
         return new Plant(id, drugId, pos, stage, stageGrowthMillis, ripenMillis,
                 Math.clamp(newHydration, 0.0, 100.0), hydrationSum, hydrationSamples,
-                dryMillis, fertilizedStage, fertilizerUses, state, plantedAt);
+                dryMillis, fertilizedStage, fertilizerUses, seedQuality, topping,
+                state, plantedAt);
     }
 
     public Plant withFertilizer() {
         return new Plant(id, drugId, pos, stage, stageGrowthMillis, ripenMillis,
                 hydration, hydrationSum, hydrationSamples, dryMillis,
-                stage, fertilizerUses + 1, state, plantedAt);
+                stage, fertilizerUses + 1, seedQuality, topping, state, plantedAt);
+    }
+
+    /** Taille reussie : la coupe rend de la progression au stage. */
+    public Plant topped(long newStageGrowthMillis) {
+        return new Plant(id, drugId, pos, stage,
+                Math.max(0L, newStageGrowthMillis), ripenMillis,
+                hydration, hydrationSum, hydrationSamples, dryMillis,
+                fertilizedStage, fertilizerUses, seedQuality, 1, state, plantedAt);
+    }
+
+    /** Taille ratee : la plante est abimee, la qualite en patira. */
+    public Plant toppingMissed() {
+        return new Plant(id, drugId, pos, stage, stageGrowthMillis, ripenMillis,
+                hydration, hydrationSum, hydrationSamples, dryMillis,
+                fertilizedStage, fertilizerUses, seedQuality, -1, state, plantedAt);
     }
 
     Plant ticked(int newStage, long newStageGrowth, long newRipen,
@@ -86,6 +120,7 @@ public record Plant(
                  long newDryMillis, PlantState newState) {
         return new Plant(id, drugId, pos, newStage, newStageGrowth, newRipen,
                 newHydration, newHydrationSum, newSamples, newDryMillis,
-                fertilizedStage, fertilizerUses, newState, plantedAt);
+                fertilizedStage, fertilizerUses, seedQuality, topping,
+                newState, plantedAt);
     }
 }

@@ -19,6 +19,8 @@ public record DrugType(
         FertilizerProfile fertilizer,
         HarvestWindow harvestWindow,
         DryingProfile drying,
+        ToppingProfile topping,
+        CuringProfile curing,
         EffectProfile effects,
         ConsumptionRules consumption,
         QualityWeights qualityWeights

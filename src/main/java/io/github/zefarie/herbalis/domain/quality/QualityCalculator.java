@@ -4,7 +4,7 @@ import io.github.zefarie.herbalis.domain.drug.DrugType;
 import io.github.zefarie.herbalis.domain.plant.Plant;
 
 /**
- * Calcul de la qualite d'une recolte et des malus post-recolte.
+ * Calcul de la qualite d'une recolte et des malus et bonus post-recolte.
  * Logique pure, entierement testable hors serveur.
  */
 public final class QualityCalculator {
@@ -14,8 +14,9 @@ public final class QualityCalculator {
 
     /**
      * Qualite d'une plante recoltee maintenant. Combine l'hydratation
-     * moyenne sur la vie de la plante, l'usage d'engrais et le timing de
-     * recolte selon les poids du type de drogue.
+     * moyenne sur la vie de la plante, l'usage d'engrais, le timing de
+     * recolte et la genetique de la graine selon les poids du type de
+     * drogue. Une taille ratee coute des etoiles.
      */
     public static Quality harvestQuality(Plant plant, DrugType drug) {
         QualityWeights weights = drug.qualityWeights();
@@ -28,11 +29,19 @@ public final class QualityCalculator {
 
         double timingScore = drug.harvestWindow().timingScore(plant.ripenMillis());
 
+        double geneticsScore = (plant.seedQuality() - Quality.MIN)
+                / (double) (Quality.MAX - Quality.MIN);
+
         double score = weights.hydration() * hydrationScore
                 + weights.fertilizer() * fertilizerScore
-                + weights.timing() * timingScore;
+                + weights.timing() * timingScore
+                + weights.genetics() * geneticsScore;
 
-        return Quality.fromScore(score);
+        Quality quality = Quality.fromScore(score);
+        if (plant.topping() < 0) {
+            quality = Quality.of(quality.stars() - drug.topping().missMalusStars());
+        }
+        return quality;
     }
 
     /**
@@ -47,5 +56,18 @@ public final class QualityCalculator {
         double missing = Math.clamp(1.0 - completionRatio, 0.0, 1.0);
         int malus = (int) Math.round(missing * (Quality.MAX - Quality.MIN));
         return Quality.of(quality.stars() - malus);
+    }
+
+    /**
+     * Qualite apres passage en jarre de curing : bonus si l'affinage est
+     * complet, contenu ruine si la jarre a moisi, inchangee si retiree
+     * avant la fin.
+     */
+    public static Quality afterCuring(Quality quality, boolean cured, boolean moldy,
+                                      int bonusStars) {
+        if (moldy) {
+            return Quality.of(Quality.MIN);
+        }
+        return cured ? Quality.of(quality.stars() + bonusStars) : quality;
     }
 }

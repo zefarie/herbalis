@@ -35,7 +35,7 @@ public final class PlantSeedUseCase {
         this.drugs = drugs;
     }
 
-    public Result execute(BlockPos potPos, String drugId, long now) {
+    public Result execute(BlockPos potPos, String drugId, int seedQuality, long now) {
         if (drugs.byId(drugId).isEmpty()) {
             return new Result.UnknownDrug(drugId);
         }
@@ -45,7 +45,7 @@ public final class PlantSeedUseCase {
         if (plants.at(potPos).isPresent()) {
             return new Result.AlreadyPlanted();
         }
-        Plant plant = Plant.plant(drugId, potPos, now);
+        Plant plant = Plant.plant(drugId, potPos, now, seedQuality);
         plants.put(plant);
         return new Result.Success(plant);
     }

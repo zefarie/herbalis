@@ -1,6 +1,7 @@
 package io.github.zefarie.herbalis.domain;
 
 import io.github.zefarie.herbalis.domain.drug.ConsumptionRules;
+import io.github.zefarie.herbalis.domain.drug.CuringProfile;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
 import io.github.zefarie.herbalis.domain.drug.DryingProfile;
 import io.github.zefarie.herbalis.domain.drug.EffectProfile;
@@ -9,6 +10,7 @@ import io.github.zefarie.herbalis.domain.drug.FertilizerProfile;
 import io.github.zefarie.herbalis.domain.drug.GrowthProfile;
 import io.github.zefarie.herbalis.domain.drug.HarvestWindow;
 import io.github.zefarie.herbalis.domain.drug.HydrationProfile;
+import io.github.zefarie.herbalis.domain.drug.ToppingProfile;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
 import io.github.zefarie.herbalis.domain.quality.QualityWeights;
 
@@ -45,6 +47,9 @@ public final class TestFixtures {
                 new FertilizerProfile(0.5, 0.25),
                 new HarvestWindow(Duration.ofMinutes(10), Duration.ofMinutes(20)),
                 new DryingProfile(Duration.ofMinutes(20), 6),
+                new ToppingProfile(List.of(2, 3), 0.30, 0.60,
+                        Duration.ofMinutes(2), 1, 2, 1),
+                new CuringProfile(Duration.ofMinutes(45), Duration.ofMinutes(90), 1, 6),
                 new EffectProfile(Duration.ofSeconds(15),
                         Duration.ofMinutes(2), Duration.ofMinutes(6), 0.35,
                         List.of(new EffectSpec("minecraft:regeneration", 0, true, false)),
@@ -53,6 +58,6 @@ public final class TestFixtures {
                 new ConsumptionRules(3, Duration.ofMinutes(5), Duration.ofSeconds(30),
                         12.0, 4.0, 0.6,
                         8.0, 1.5, 50.0, Duration.ofMinutes(45)),
-                new QualityWeights(0.45, 0.30, 0.25));
+                new QualityWeights(0.40, 0.25, 0.20, 0.15));
     }
 }

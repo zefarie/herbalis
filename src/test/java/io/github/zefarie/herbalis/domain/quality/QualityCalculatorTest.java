@@ -17,23 +17,30 @@ class QualityCalculatorTest {
 
     private static Plant plantWith(double avgHydration, int fertilizerUses,
                                    long ripenMillis) {
+        return plantWith(avgHydration, fertilizerUses, ripenMillis, 3, 0);
+    }
+
+    private static Plant plantWith(double avgHydration, int fertilizerUses,
+                                   long ripenMillis, int seedQuality, int topping) {
         return new Plant(UUID.randomUUID(), "weed", TestFixtures.pos(),
                 4, 0L, ripenMillis,
                 avgHydration, avgHydration * 100, 100L, 0L,
-                0, fertilizerUses, PlantState.HEALTHY, 0L);
+                0, fertilizerUses, seedQuality, topping, PlantState.HEALTHY, 0L);
     }
 
     @Test
     void cultureParfaiteDonneCinqEtoiles() {
-        Plant plant = plantWith(100.0, 4, 0L);
+        Plant plant = plantWith(100.0, 4, 0L, 5, 0);
         assertEquals(5, QualityCalculator.harvestQuality(plant, weed).stars());
     }
 
     @Test
     void cultureNegligeeDonneUneEtoile() {
-        // Hydratation moyenne quasi nulle, aucun engrais, tres en retard.
+        // Hydratation moyenne quasi nulle, aucun engrais, tres en retard,
+        // graine de fond de tiroir.
         Plant plant = plantWith(2.0, 0, weed.harvestWindow().optimalDuration()
-                .plus(weed.harvestWindow().decayDuration()).toMillis() + 60_000);
+                        .plus(weed.harvestWindow().decayDuration()).toMillis() + 60_000,
+                1, 0);
         assertEquals(1, QualityCalculator.harvestQuality(plant, weed).stars());
     }
 
@@ -45,6 +52,35 @@ class QualityCalculatorTest {
                         + weed.harvestWindow().decayDuration().toMillis());
         assertTrue(QualityCalculator.harvestQuality(late, weed)
                 .compareTo(QualityCalculator.harvestQuality(onTime, weed)) < 0);
+    }
+
+    @Test
+    void laGenetiquePeseSurLaQualite() {
+        // Culture parfaite : seule la graine differe.
+        Plant bonneLignee = plantWith(100.0, 4, 0L, 5, 0);
+        Plant ligneeFaible = plantWith(100.0, 4, 0L, 1, 0);
+        assertEquals(5, QualityCalculator.harvestQuality(bonneLignee, weed).stars());
+        assertEquals(4, QualityCalculator.harvestQuality(ligneeFaible, weed).stars());
+    }
+
+    @Test
+    void uneTailleRateeCouteUneEtoile() {
+        Plant intacte = plantWith(100.0, 4, 0L, 5, 0);
+        Plant abimee = plantWith(100.0, 4, 0L, 5, -1);
+        assertEquals(5, QualityCalculator.harvestQuality(intacte, weed).stars());
+        assertEquals(4, QualityCalculator.harvestQuality(abimee, weed).stars());
+    }
+
+    @Test
+    void curingCompletBonifieEtMoisissureRuine() {
+        assertEquals(4, QualityCalculator.afterCuring(
+                Quality.of(3), true, false, 1).stars());
+        assertEquals(5, QualityCalculator.afterCuring(
+                Quality.of(5), true, false, 1).stars());
+        assertEquals(3, QualityCalculator.afterCuring(
+                Quality.of(3), false, false, 1).stars());
+        assertEquals(1, QualityCalculator.afterCuring(
+                Quality.of(5), true, true, 1).stars());
     }
 
     @Test

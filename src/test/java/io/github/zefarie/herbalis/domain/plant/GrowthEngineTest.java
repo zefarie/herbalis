@@ -117,7 +117,7 @@ class GrowthEngineTest {
     @Test
     void fenetreDeRecolteSeRefermeApresLaDureeOptimale() {
         Plant atFinal = new Plant(java.util.UUID.randomUUID(), "weed",
-                TestFixtures.pos(), 4, 0L, 0L, 100.0, 0.0, 0L, 0L, 0, 0,
+                TestFixtures.pos(), 4, 0L, 0L, 100.0, 0.0, 0L, 0L, 0, 0, 2, 0,
                 PlantState.HEALTHY, 0L);
         // 9 minutes : encore optimal.
         Plant inWindow = tickFor(atFinal, weed, 9 * 60_000, 60_000, 15);
