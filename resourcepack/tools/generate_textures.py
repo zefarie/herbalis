@@ -832,32 +832,6 @@ BUD_DRIED_PALETTE = {
     "p": (190, 120, 50, 255),
 }
 
-SECATEUR_MAP = [
-    "................",
-    "....M......m....",
-    "....MM....mm....",
-    ".....M....m.....",
-    ".....MM..mm.....",
-    "......M..m......",
-    "......MMmm......",
-    ".......PP.......",
-    "......hHHh......",
-    ".....hH..Hh.....",
-    ".....H....H.....",
-    "....hH....Hh....",
-    "....H......H....",
-    "....h......h....",
-    "................",
-    "................",
-]
-SECATEUR_PALETTE = {
-    "M": (226, 232, 240, 255),
-    "m": (148, 163, 184, 255),
-    "P": (71, 85, 105, 255),
-    "H": (146, 64, 40, 255),
-    "h": (110, 46, 28, 255),
-}
-
 JOINT_MAP = [
     "................",
     "................",
@@ -955,7 +929,6 @@ def main() -> None:
 
     # Items.
     save(from_map(SEED_MAP, SEED_PALETTE), "item/weed_seed.png")
-    save(from_map(SECATEUR_MAP, SECATEUR_PALETTE), "item/secateur.png")
     save(from_map(WATERING_CAN_MAP, WATERING_CAN_PALETTE), "item/watering_can.png")
     save(from_map(FERTILIZER_MAP, FERTILIZER_PALETTE), "item/fertilizer.png")
     save(from_map(ROLLING_PAPER_MAP, ROLLING_PAPER_PALETTE), "item/rolling_paper.png")
