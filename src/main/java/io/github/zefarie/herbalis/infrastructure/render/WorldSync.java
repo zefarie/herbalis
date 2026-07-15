@@ -1,8 +1,11 @@
 package io.github.zefarie.herbalis.infrastructure.render;
 
+import io.github.zefarie.herbalis.application.port.JarRepository;
 import io.github.zefarie.herbalis.application.port.PlantRepository;
 import io.github.zefarie.herbalis.application.port.PotRepository;
 import io.github.zefarie.herbalis.application.port.RackRepository;
+import io.github.zefarie.herbalis.domain.curing.CuringJar;
+import io.github.zefarie.herbalis.domain.curing.JarVisualState;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drying.DryingRack;
 import io.github.zefarie.herbalis.domain.drying.RackVisualState;
@@ -25,14 +28,17 @@ public final class WorldSync {
     private final PotRepository pots;
     private final PlantRepository plants;
     private final RackRepository racks;
+    private final JarRepository jars;
     private final DrugRegistry drugs;
 
     public WorldSync(DisplayRenderer renderer, PotRepository pots,
-                     PlantRepository plants, RackRepository racks, DrugRegistry drugs) {
+                     PlantRepository plants, RackRepository racks,
+                     JarRepository jars, DrugRegistry drugs) {
         this.renderer = renderer;
         this.pots = pots;
         this.plants = plants;
         this.racks = racks;
+        this.jars = jars;
         this.drugs = drugs;
     }
 
@@ -61,6 +67,14 @@ public final class WorldSync {
                         .map(drug -> rack.visualState(now, drug.drying().duration()))
                         .orElse(RackVisualState.EMPTY);
                 renderer.showRack(rack.pos(), state);
+            }
+        }
+        for (CuringJar jar : jars.all()) {
+            if (inChunk(jar.pos(), worldId, chunk.getX(), chunk.getZ())) {
+                JarVisualState state = drugs.byId(jar.drugId())
+                        .map(drug -> jar.visualState(now, drug.curing()))
+                        .orElse(JarVisualState.EMPTY);
+                renderer.showJar(jar.pos(), state);
             }
         }
     }

@@ -38,12 +38,29 @@ items:
       - "<!i><color:#9ca3af>Le temps fait le reste.</color>"
       - "<!i><i><color:#71717a>La patience a une odeur.</color></i>"
       - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  curing_jar:
+    nom: "<gradient:#d9c58f:#a1863f>Jarre de curing</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Le verre, l'ombre et le temps</color>"
+      - "<!i><color:#9ca3af>affinent la weed séchée.</color>"
+      - "<!i><color:#f87171>Ne l'oublie pas trop longtemps...</color>"
+      - "<!i><i><color:#71717a>Le secret des connaisseurs.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
   watering_can:
     nom: "<gradient:#7dd3fc:#0ea5e9>Arrosoir</gradient>"
     lore:
       - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
       - "<!i><color:#9ca3af>Se recharge sur un bloc d'eau.</color>"
       - "<!i><i><color:#71717a>La vie coule a petites gouttes.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  secateur:
+    nom: "<gradient:#cbd5e1:#64748b>Sécateur</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Tailler au bon moment renforce</color>"
+      - "<!i><color:#9ca3af>la plante. Au mauvais, l'abîme.</color>"
+      - "<!i><i><color:#71717a>La main verte, ça se prouve.</color></i>"
       - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
   fertilizer:
     nom: "<gradient:#a3e635:#65a30d>Engrais naturel</gradient>"
@@ -72,6 +89,7 @@ items:
     nom: "<gradient:#86efac:#22c55e>Graine de <drogue></gradient>"
     lore:
       - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i>Lignée <etoiles>"
       - "<!i><color:#9ca3af>Clic droit sur un pot de culture</color>"
       - "<!i><color:#9ca3af>pour la planter.</color>"
       - "<!i><i><color:#71717a>Une promesse en miniature.</color></i>"
@@ -130,12 +148,17 @@ hud:
   alerte-soif: " <color:#3f3f46>│</color> <color:#fbbf24><font:herbalis:icons></font> à arroser</color>"
   alerte-assoiffee: " <color:#3f3f46>│</color> <color:#f87171><font:herbalis:icons></font> assoiffée !</color>"
   alerte-recolte-optimale: " <color:#3f3f46>│</color> <color:#4ade80><font:herbalis:icons></font> récolte optimale !</color>"
+  alerte-taille: " <color:#3f3f46>│</color> <color:#7dd3fc><font:herbalis:icons></font> fenêtre de taille !</color>"
   alerte-recolte-tardive: " <color:#3f3f46>│</color> <color:#fbbf24><font:herbalis:icons></font> la qualité décline...</color>"
   plante-morte: "<color:#78716c><b><nom></b></color> <color:#3f3f46>│</color> <color:#f87171>morte de soif</color> <color:#3f3f46>│</color> <color:#9ca3af>clic droit pour l'arracher</color>"
   pot-vide: "<gradient:#e8b64c:#b45309><b>Pot de culture</b></gradient> <color:#3f3f46>│</color> <color:#9ca3af>plantez-y une graine</color>"
   rack-vide: "<gradient:#e8b64c:#92400e><b>Rack de séchage</b></gradient> <color:#3f3f46>│</color> <color:#9ca3af>déposez des têtes fraîches</color>"
   rack-sechage: "<gradient:#e8b64c:#92400e><b>Rack de séchage</b></gradient> <color:#3f3f46>│</color> <color:#fbbf24><font:herbalis:icons></font> séchage <pourcent>%</color> <color:#3f3f46>│</color> <color:#9ca3af><nombre> tête(s)</color>"
   rack-pret: "<gradient:#e8b64c:#92400e><b>Rack de séchage</b></gradient> <color:#3f3f46>│</color> <color:#4ade80><font:herbalis:icons></font> prêt !</color> <color:#3f3f46>│</color> <color:#9ca3af><nombre> tête(s) à récupérer</color>"
+  jarre-vide: "<gradient:#d9c58f:#a1863f><b>Jarre de curing</b></gradient> <color:#3f3f46>│</color> <color:#9ca3af>déposez de la weed séchée</color>"
+  jarre-curing: "<gradient:#d9c58f:#a1863f><b>Jarre de curing</b></gradient> <color:#3f3f46>│</color> <color:#fbbf24><font:herbalis:icons></font> affinage <pourcent>%</color> <color:#3f3f46>│</color> <color:#9ca3af><nombre> tête(s)</color>"
+  jarre-prete: "<gradient:#d9c58f:#a1863f><b>Jarre de curing</b></gradient> <color:#3f3f46>│</color> <color:#4ade80><font:herbalis:icons></font> affinée !</color> <color:#3f3f46>│</color> <color:#9ca3af><nombre> tête(s) bonifiée(s)</color>"
+  jarre-moisie: "<gradient:#d9c58f:#a1863f><b>Jarre de curing</b></gradient> <color:#3f3f46>│</color> <color:#f87171><font:herbalis:icons></font> moisie... tout est perdu</color>"
 
 # --------------------------------------------------------------
 #  Culture
@@ -165,8 +188,14 @@ engrais:
   deja-applique: "<color:#9ca3af>Ce stage a déjà reçu son engrais.</color>"
 
 recolte:
-  optimale: "<color:#4ade80><font:herbalis:icons></font> <nombre> tête(s) récoltée(s) au meilleur moment !</color> <etoiles>"
-  tardive: "<color:#fbbf24><font:herbalis:icons></font> <nombre> tête(s) récoltée(s), un peu tard...</color> <etoiles>"
+  optimale: "<color:#4ade80><font:herbalis:icons></font> <nombre> tête(s) au meilleur moment, +<graines> graine(s) !</color> <etoiles>"
+  tardive: "<color:#fbbf24><font:herbalis:icons></font> <nombre> tête(s) un peu tard, +<graines> graine(s)...</color> <etoiles>"
+
+taille:
+  reussie: "<color:#4ade80><font:herbalis:icons></font> Taille propre. La plante donnera davantage.</color>"
+  ratee: "<color:#f87171><font:herbalis:icons></font> Mauvais moment... la coupe a abîmé la plante.</color>"
+  deja-taillee: "<color:#9ca3af>Cette plante a déjà été taillée.</color>"
+  secateur-casse: "<prefix> <color:#f87171>Le sécateur rend l'âme dans un claquement sec.</color>"
 
 # --------------------------------------------------------------
 #  Sechage et conditionnement
@@ -185,6 +214,17 @@ sechage:
 conditionnement:
   rien-a-emballer: "<color:#f87171>Aucune weed séchée dans l'inventaire.</color>"
   pochon-rempli: "<color:#4ade80>Pochon rempli.</color> <etoiles>"
+
+curing:
+  jarre-posee: "<color:#4ade80>Jarre de curing posée.</color> <color:#9ca3af>L'affinage attend sa matière.</color>"
+  tete-deposee: "<color:#4ade80>Weed mise en jarre</color> <color:#9ca3af>(<nombre>/<capacite>). L'ombre fait son oeuvre.</color>"
+  jarre-pleine: "<color:#f87171>La jarre est pleine.</color>"
+  jarre-moisie-info: "<color:#f87171>Cette jarre a moisi. Vide-la d'abord.</color>"
+  recupere: "<color:#4ade80><font:herbalis:icons></font> Affinage parfait : la qualité s'est bonifiée.</color>"
+  recupere-trop-tot: "<color:#fbbf24>Sortie trop tôt : la weed n'a pas eu le temps de se bonifier.</color>"
+  recupere-moisi: "<color:#f87171><font:herbalis:icons></font> L'odeur te prend à la gorge... tout est moisi.</color>"
+  contenu-rendu: "<color:#fbbf24>Tu ressors la weed de la jarre, affinage interrompu.</color>"
+  jarre-cassee: "<color:#fbbf24>Jarre récupérée.</color>"
 
 # --------------------------------------------------------------
 #  Consommation
@@ -240,7 +280,7 @@ commande:
   usage: "<prefix> <color:#9ca3af>/herbalis give, info, tolerance ou reload</color>"
   give-usage: "<prefix> <color:#9ca3af>/herbalis give (joueur) (item) [quantité] [qualité]</color>"
   give-ok: "<prefix> <color:#4ade80><quantite>x <item> donné(s) à <joueur>.</color>"
-  info-aucune-cible: "<prefix> <color:#9ca3af>Regarde une plante, un pot ou un rack.</color>"
+  info-aucune-cible: "<prefix> <color:#9ca3af>Regarde une plante, un pot, un rack ou une jarre.</color>"
   info-plante: "<prefix> <gradient:#86efac:#22c55e><b><drogue></b></gradient> <color:#9ca3af>stage <stage>/<stages> (<progression>%), hydratation <hydratation>% (moyenne <hydratation_moyenne>%), engrais <engrais>, état <etat>, potentiel</color> <etoiles>"
   tolerance-usage: "<prefix> <color:#9ca3af>/herbalis tolerance (joueur) [reset]</color>"
   tolerance-info: "<prefix> <color:#9ca3af><joueur> : tolérance</color> <color:#fbbf24><tolerance>/100</color><color:#9ca3af>, addiction</color> <color:#f87171><addiction>/100</color>"

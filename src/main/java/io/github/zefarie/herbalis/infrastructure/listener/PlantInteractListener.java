@@ -1,16 +1,22 @@
 package io.github.zefarie.herbalis.infrastructure.listener;
 
+import io.github.zefarie.herbalis.application.port.JarRepository;
 import io.github.zefarie.herbalis.application.port.PlantRepository;
 import io.github.zefarie.herbalis.application.port.RackRepository;
 import io.github.zefarie.herbalis.application.usecase.AddBudToRackUseCase;
+import io.github.zefarie.herbalis.application.usecase.AddToJarUseCase;
+import io.github.zefarie.herbalis.application.usecase.BreakJarUseCase;
 import io.github.zefarie.herbalis.application.usecase.BreakPlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.BreakPotUseCase;
 import io.github.zefarie.herbalis.application.usecase.BreakRackUseCase;
+import io.github.zefarie.herbalis.application.usecase.CollectJarUseCase;
 import io.github.zefarie.herbalis.application.usecase.CollectRackUseCase;
 import io.github.zefarie.herbalis.application.usecase.FertilizePlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.HarvestPlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.PlantSeedUseCase;
+import io.github.zefarie.herbalis.application.usecase.PrunePlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.WaterPlantUseCase;
+import io.github.zefarie.herbalis.domain.curing.JarVisualState;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
 import io.github.zefarie.herbalis.domain.drying.RackVisualState;
@@ -57,26 +63,34 @@ public final class PlantInteractListener implements Listener {
     private final HudService hud;
     private final PlantRepository plants;
     private final RackRepository racks;
+    private final JarRepository jars;
     private final PlantSeedUseCase plantSeed;
     private final WaterPlantUseCase waterPlant;
     private final FertilizePlantUseCase fertilizePlant;
+    private final PrunePlantUseCase prunePlant;
     private final HarvestPlantUseCase harvestPlant;
     private final BreakPlantUseCase breakPlant;
     private final BreakPotUseCase breakPot;
     private final AddBudToRackUseCase addBud;
     private final CollectRackUseCase collectRack;
     private final BreakRackUseCase breakRack;
+    private final AddToJarUseCase addToJar;
+    private final CollectJarUseCase collectJar;
+    private final BreakJarUseCase breakJar;
 
     public PlantInteractListener(Messages messages, Fx fx, ItemFactory items,
                                  DisplayRenderer renderer, DrugRegistry drugs,
                                  HerbalisConfig config, HudService hud,
                                  PlantRepository plants, RackRepository racks,
+                                 JarRepository jars,
                                  PlantSeedUseCase plantSeed, WaterPlantUseCase waterPlant,
                                  FertilizePlantUseCase fertilizePlant,
+                                 PrunePlantUseCase prunePlant,
                                  HarvestPlantUseCase harvestPlant,
                                  BreakPlantUseCase breakPlant, BreakPotUseCase breakPot,
                                  AddBudToRackUseCase addBud, CollectRackUseCase collectRack,
-                                 BreakRackUseCase breakRack) {
+                                 BreakRackUseCase breakRack, AddToJarUseCase addToJar,
+                                 CollectJarUseCase collectJar, BreakJarUseCase breakJar) {
         this.messages = messages;
         this.fx = fx;
         this.items = items;
@@ -86,15 +100,20 @@ public final class PlantInteractListener implements Listener {
         this.hud = hud;
         this.plants = plants;
         this.racks = racks;
+        this.jars = jars;
         this.plantSeed = plantSeed;
         this.waterPlant = waterPlant;
         this.fertilizePlant = fertilizePlant;
+        this.prunePlant = prunePlant;
         this.harvestPlant = harvestPlant;
         this.breakPlant = breakPlant;
         this.breakPot = breakPot;
         this.addBud = addBud;
         this.collectRack = collectRack;
         this.breakRack = breakRack;
+        this.addToJar = addToJar;
+        this.collectJar = collectJar;
+        this.breakJar = breakJar;
     }
 
     // ----------------------------------------------------------------
@@ -119,6 +138,7 @@ public final class PlantInteractListener implements Listener {
         switch (marker.get()) {
             case "pot" -> potRightClick(player, pos.get(), now);
             case "rack" -> rackRightClick(player, pos.get(), now);
+            case "jar" -> jarRightClick(player, pos.get(), now);
             default -> {
             }
         }
@@ -155,6 +175,10 @@ public final class PlantInteractListener implements Listener {
             fertilizeAction(player, pos, held, loc);
             return;
         }
+        if (heldType.filter(t -> t == HerbalisItemType.SECATEUR).isPresent()) {
+            pruneAction(player, pos, held, loc);
+            return;
+        }
         if (plant.isPresent()) {
             DrugType drug = drugs.byId(plant.get().drugId()).orElse(null);
             if (drug != null && io.github.zefarie.herbalis.domain.plant.GrowthEngine
@@ -174,7 +198,9 @@ public final class PlantInteractListener implements Listener {
             return;
         }
         String drugId = ItemKeys.drugOf(seed).orElse("");
-        switch (plantSeed.execute(pos, drugId, now)) {
+        int seedQuality = ItemKeys.qualityOf(seed).map(Quality::stars)
+                .orElse(Plant.DEFAULT_SEED_QUALITY);
+        switch (plantSeed.execute(pos, drugId, seedQuality, now)) {
             case PlantSeedUseCase.Result.Success success -> {
                 seed.subtract();
                 DrugType drug = drugs.byId(drugId).orElseThrow();
@@ -259,11 +285,67 @@ public final class PlantInteractListener implements Listener {
             loc.getWorld().dropItemNaturally(dropAt,
                     items.freshBud(drug, success.quality()));
         }
+        // Genetique : la plante rend des graines heritees de sa qualite.
+        for (Quality seedQuality : success.seeds()) {
+            loc.getWorld().dropItemNaturally(dropAt, items.seed(drug, seedQuality));
+        }
         player.sendActionBar(messages.msg(
                 success.optimal() ? "recolte.optimale" : "recolte.tardive",
                 Messages.ph("nombre", String.valueOf(success.yield())),
+                Messages.ph("graines", String.valueOf(success.seeds().size())),
                 Messages.ph("etoiles",
                         messages.deserialize(items.starsMarkup(success.quality())))));
+    }
+
+    private void pruneAction(Player player, BlockPos pos, ItemStack secateur,
+                             Location loc) {
+        if (!player.hasPermission("herbalis.plant")) {
+            player.sendMessage(messages.msg("erreurs.permission"));
+            return;
+        }
+        PrunePlantUseCase.Result result = prunePlant.execute(pos);
+        switch (result) {
+            case PrunePlantUseCase.Result.Topped success -> {
+                useSecateur(player, secateur);
+                DrugType drug = drugs.byId(success.plant().drugId()).orElse(null);
+                if (drug != null) {
+                    // La coupe se voit : la plante revient un peu en arriere.
+                    renderer.updatePlant(pos,
+                            PlantVisuals.plantModel(success.plant(), drug), true,
+                            PlantVisuals.scaleOf(success.plant(), drug));
+                }
+                fx.pruned(loc);
+                player.sendActionBar(messages.msg("taille.reussie"));
+            }
+            case PrunePlantUseCase.Result.Missed ignored -> {
+                useSecateur(player, secateur);
+                fx.pruneMissed(loc);
+                player.sendActionBar(messages.msg("taille.ratee"));
+            }
+            case PrunePlantUseCase.Result.AlreadyTopped ignored ->
+                    player.sendActionBar(messages.msg("taille.deja-taillee"));
+            case PrunePlantUseCase.Result.PlantDead ignored ->
+                    player.sendActionBar(messages.msg("culture.plante-morte-info"));
+            case PrunePlantUseCase.Result.NoPlant ignored ->
+                    player.sendActionBar(messages.msg("culture.pot-vide-info"));
+        }
+    }
+
+    /** Use le secateur d'un cran; il casse au bout de ses utilisations. */
+    private void useSecateur(Player player, ItemStack secateur) {
+        Integer damage = secateur.getData(DataComponentTypes.DAMAGE);
+        Integer maxDamage = secateur.getData(DataComponentTypes.MAX_DAMAGE);
+        if (damage == null || maxDamage == null) {
+            return;
+        }
+        if (damage + 1 >= maxDamage) {
+            secateur.setAmount(0);
+            player.playSound(player.getLocation(),
+                    "minecraft:entity.item.break", 0.8f, 1.0f);
+            player.sendMessage(messages.msg("taille.secateur-casse"));
+        } else {
+            secateur.setData(DataComponentTypes.DAMAGE, damage + 1);
+        }
     }
 
     private void rackRightClick(Player player, BlockPos pos, long now) {
@@ -332,6 +414,77 @@ public final class PlantInteractListener implements Listener {
                 ? "sechage.recupere-trop-tot" : "sechage.recupere"));
     }
 
+    private void jarRightClick(Player player, BlockPos pos, long now) {
+        ItemStack held = player.getInventory().getItemInMainHand();
+        Optional<HerbalisItemType> heldType = ItemKeys.typeOf(held);
+        Location loc = PosCodec.corner(pos).orElse(null);
+        if (loc == null) {
+            return;
+        }
+
+        if (heldType.filter(t -> t == HerbalisItemType.DRIED).isPresent()) {
+            if (!player.hasPermission("herbalis.harvest")) {
+                player.sendMessage(messages.msg("erreurs.permission"));
+                return;
+            }
+            String drugId = ItemKeys.drugOf(held).orElse("");
+            Quality quality = ItemKeys.qualityOf(held).orElse(Quality.of(1));
+            switch (addToJar.execute(pos, drugId, quality, now)) {
+                case AddToJarUseCase.Result.Success success -> {
+                    held.subtract();
+                    renderer.updateJar(pos, JarVisualState.CURING);
+                    fx.jarAdd(loc);
+                    DrugType drug = drugs.byId(drugId).orElseThrow();
+                    player.sendActionBar(messages.msg("curing.tete-deposee",
+                            Messages.ph("nombre",
+                                    String.valueOf(success.jar().slots().size())),
+                            Messages.ph("capacite",
+                                    String.valueOf(drug.curing().capacity()))));
+                }
+                case AddToJarUseCase.Result.JarFull ignored ->
+                        player.sendActionBar(messages.msg("curing.jarre-pleine"));
+                case AddToJarUseCase.Result.MixedDrugs ignored ->
+                        player.sendActionBar(messages.msg("sechage.melange-interdit"));
+                case AddToJarUseCase.Result.Moldy ignored ->
+                        player.sendActionBar(messages.msg("curing.jarre-moisie-info"));
+                case AddToJarUseCase.Result.NoJar ignored -> {
+                }
+            }
+            return;
+        }
+
+        var jar = jars.at(pos).orElse(null);
+        if (jar == null || jar.isEmpty()) {
+            player.sendActionBar(messages.msg("hud.jarre-vide"));
+            return;
+        }
+        DrugType drug = drugs.byId(jar.drugId()).orElse(null);
+        boolean ready = drug != null && jar.isReady(now, drug.curing());
+        boolean moldy = drug != null && jar.isMoldy(now, drug.curing());
+        if (!ready && !moldy && !player.isSneaking()) {
+            // Affinage en cours : progression, sneak pour forcer.
+            hud.buildLine(pos, now).ifPresent(player::sendActionBar);
+            return;
+        }
+        if (!player.hasPermission("herbalis.harvest")) {
+            player.sendMessage(messages.msg("erreurs.permission"));
+            return;
+        }
+        if (!(collectJar.execute(pos, now) instanceof CollectJarUseCase.Result.Success success)) {
+            return;
+        }
+        DrugType cured = drugs.byId(success.drugId()).orElseThrow();
+        Location dropAt = loc.clone().add(0.5, 0.6, 0.5);
+        for (Quality quality : success.qualities()) {
+            loc.getWorld().dropItemNaturally(dropAt, items.dried(cured, quality));
+        }
+        renderer.updateJar(pos, JarVisualState.EMPTY);
+        fx.jarCollect(loc, success.moldy());
+        String key = success.moldy() ? "curing.recupere-moisi"
+                : success.anyEarly() ? "curing.recupere-trop-tot" : "curing.recupere";
+        player.sendActionBar(messages.msg(key));
+    }
+
     // ----------------------------------------------------------------
     // Clic gauche
     // ----------------------------------------------------------------
@@ -357,6 +510,7 @@ public final class PlantInteractListener implements Listener {
         switch (marker.get()) {
             case "pot" -> potLeftClick(player, pos.get());
             case "rack" -> rackLeftClick(player, pos.get());
+            case "jar" -> jarLeftClick(player, pos.get());
             default -> {
             }
         }
@@ -374,9 +528,12 @@ public final class PlantInteractListener implements Listener {
             renderer.updatePotModel(pos, "pot");
             fx.harvested(loc);
             if (config.dropSeedOnBreak() && !plant.get().isDead()) {
+                // La graine rendue garde la genetique de la plante.
                 drugs.byId(plant.get().drugId()).ifPresent(drug ->
                         loc.getWorld().dropItemNaturally(
-                                loc.clone().add(0.5, 0.6, 0.5), items.seed(drug)));
+                                loc.clone().add(0.5, 0.6, 0.5),
+                                items.seed(drug,
+                                        Quality.of(plant.get().seedQuality()))));
             }
             player.sendActionBar(messages.msg("culture.plante-arrachee"));
             return;
@@ -415,5 +572,33 @@ public final class PlantInteractListener implements Listener {
         fx.rackBroken(loc);
         loc.getWorld().dropItemNaturally(dropAt, items.dryingRack());
         player.sendActionBar(messages.msg("sechage.rack-casse"));
+    }
+
+    private void jarLeftClick(Player player, BlockPos pos) {
+        Location loc = PosCodec.corner(pos).orElse(null);
+        if (loc == null) {
+            return;
+        }
+        var jar = jars.at(pos).orElse(null);
+        if (jar == null) {
+            return;
+        }
+        Location dropAt = loc.clone().add(0.5, 0.5, 0.5);
+        if (!jar.isEmpty()) {
+            // Premier coup : on rend le contenu tel quel (affinage perdu).
+            drugs.byId(jar.drugId()).ifPresent(drug ->
+                    jar.slots().forEach(slot -> loc.getWorld().dropItemNaturally(
+                            dropAt, items.dried(drug, slot.quality()))));
+            jars.put(jar.emptied());
+            renderer.updateJar(pos, JarVisualState.EMPTY);
+            fx.jarCollect(loc, false);
+            player.sendActionBar(messages.msg("curing.contenu-rendu"));
+            return;
+        }
+        breakJar.execute(pos);
+        renderer.removeJarVisual(pos);
+        fx.jarBroken(loc);
+        loc.getWorld().dropItemNaturally(dropAt, items.curingJar());
+        player.sendActionBar(messages.msg("curing.jarre-cassee"));
     }
 }

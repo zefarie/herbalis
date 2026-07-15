@@ -142,6 +142,27 @@ public final class Fx {
         });
     }
 
+    /** Taille reussie : coupe nette, la plante appreciera. */
+    public void pruned(Location loc) {
+        particles(loc, w -> {
+            leaves(w, plantHeart(loc), LEAF_LIGHT, 8);
+            w.spawnParticle(Particle.HAPPY_VILLAGER, plantHeart(loc), 6,
+                    0.2, 0.25, 0.2, 0.0);
+        });
+        sound(loc, "minecraft:entity.sheep.shear", 0.8f, 1.4f);
+        sound(loc, "minecraft:block.azalea.break", 0.7f, 1.2f);
+    }
+
+    /** Taille ratee : la plante encaisse mal. */
+    public void pruneMissed(Location loc) {
+        particles(loc, w -> {
+            leaves(w, plantHeart(loc), LEAF_GREEN, 10);
+            w.spawnParticle(Particle.SMOKE, plantHeart(loc), 5, 0.15, 0.2, 0.15, 0.01);
+        });
+        sound(loc, "minecraft:entity.sheep.shear", 0.8f, 0.7f);
+        sound(loc, "minecraft:block.sweet_berry_bush.break", 0.8f, 0.6f);
+    }
+
     public void broken(Location loc) {
         particles(loc, w -> w.spawnParticle(Particle.BLOCK, center(loc), 16,
                 0.25, 0.2, 0.25, 0.0, Material.DECORATED_POT.createBlockData()));
@@ -184,6 +205,51 @@ public final class Fx {
 
     public void pouchFilled(Player player) {
         sound(player.getLocation(), "minecraft:item.bundle.insert", 0.9f, 1.0f);
+    }
+
+    // ----------------------------------------------------------------
+    // Curing
+    // ----------------------------------------------------------------
+
+    public void jarPlaced(Location loc) {
+        sound(loc, "minecraft:block.decorated_pot.place", 0.9f, 1.2f);
+    }
+
+    public void jarAdd(Location loc) {
+        particles(loc, w -> leaves(w, center(loc), AURA_AMBER, 4));
+        sound(loc, "minecraft:block.decorated_pot.insert", 0.9f, 1.0f);
+    }
+
+    /** Particules ambiantes d'une jarre affinee, visibles de loin. */
+    public void jarReadyAmbient(Location loc) {
+        particles(loc, w -> w.spawnParticle(Particle.END_ROD,
+                center(loc).add(0, 0.15, 0), 1, 0.12, 0.1, 0.12, 0.004));
+    }
+
+    public void jarReadyChime(Location loc) {
+        sound(loc, "minecraft:block.amethyst_block.chime", 0.6f, 1.1f);
+    }
+
+    /** Une jarre moisie suinte : spores discretes. */
+    public void jarMoldyAmbient(Location loc) {
+        particles(loc, w -> w.spawnParticle(Particle.SPORE_BLOSSOM_AIR,
+                center(loc).add(0, 0.2, 0), 2, 0.12, 0.12, 0.12, 0.0));
+    }
+
+    public void jarCollect(Location loc, boolean moldy) {
+        particles(loc, w -> leaves(w, center(loc),
+                moldy ? Color.fromRGB(0x6b, 0x72, 0x5a) : AURA_AMBER, 8));
+        sound(loc, "minecraft:block.decorated_pot.insert_fail", 0.8f,
+                moldy ? 0.6f : 1.2f);
+        if (!moldy) {
+            sound(loc, "minecraft:block.amethyst_block.resonate", 0.5f, 1.3f);
+        }
+    }
+
+    public void jarBroken(Location loc) {
+        particles(loc, w -> w.spawnParticle(Particle.BLOCK, center(loc), 14,
+                0.2, 0.2, 0.2, 0.0, Material.GLASS.createBlockData()));
+        sound(loc, "minecraft:block.decorated_pot.break", 0.8f, 1.3f);
     }
 
     // ----------------------------------------------------------------

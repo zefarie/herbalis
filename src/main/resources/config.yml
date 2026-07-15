@@ -39,6 +39,10 @@ arrosoir:
   # (clic droit sur un bloc d'eau pour recharger).
   charges: 8
 
+secateur:
+  # Nombre de tailles avant que le secateur ne casse.
+  utilisations: 25
+
 plantes:
   # Une plante cassee (coup, explosion, support detruit) rend sa graine.
   drop-graine-si-cassee: true

@@ -1,5 +1,6 @@
 package io.github.zefarie.herbalis.infrastructure.render;
 
+import io.github.zefarie.herbalis.domain.curing.JarVisualState;
 import io.github.zefarie.herbalis.domain.drying.RackVisualState;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
 import io.github.zefarie.herbalis.domain.plant.Plant;
@@ -36,6 +37,7 @@ public final class DisplayRenderer {
     private static final String MARKER_POT = "pot";
     private static final String MARKER_PLANT = "plant";
     private static final String MARKER_RACK = "rack";
+    private static final String MARKER_JAR = "jar";
 
     private record Spawned(UUID potDisplay, UUID plantDisplay, UUID interaction) {
     }
@@ -43,6 +45,7 @@ public final class DisplayRenderer {
     private final Plugin plugin;
     private final Map<BlockPos, Spawned> pots = new HashMap<>();
     private final Map<BlockPos, Spawned> racks = new HashMap<>();
+    private final Map<BlockPos, Spawned> jars = new HashMap<>();
     private final Map<BlockPos, String> potModels = new HashMap<>();
     private final Map<BlockPos, String> plantModels = new HashMap<>();
 
@@ -225,6 +228,40 @@ public final class DisplayRenderer {
     }
 
     // ----------------------------------------------------------------
+    // Jarres de curing
+    // ----------------------------------------------------------------
+
+    public void showJar(BlockPos pos, JarVisualState state) {
+        removeJarVisual(pos);
+        Optional<Location> center = PosCodec.center(pos);
+        if (center.isEmpty()) {
+            return;
+        }
+        ItemDisplay display = spawnDisplay(center.get(), jarModel(state), MARKER_JAR, pos);
+        Interaction interaction = spawnInteraction(pos, MARKER_JAR, 0.75f, 0.7f);
+        jars.put(pos, new Spawned(display.getUniqueId(), null,
+                interaction == null ? null : interaction.getUniqueId()));
+    }
+
+    public void updateJar(BlockPos pos, JarVisualState state) {
+        Spawned current = jars.get(pos);
+        if (current == null) {
+            return;
+        }
+        if (entity(current.potDisplay()) instanceof ItemDisplay display) {
+            display.setItemStack(ItemFactory.displayItem(jarModel(state)));
+        }
+    }
+
+    public void removeJarVisual(BlockPos pos) {
+        Spawned current = jars.remove(pos);
+        if (current != null) {
+            removeEntity(current.potDisplay());
+            removeEntity(current.interaction());
+        }
+    }
+
+    // ----------------------------------------------------------------
     // Cycle de vie des chunks
     // ----------------------------------------------------------------
 
@@ -232,6 +269,7 @@ public final class DisplayRenderer {
     public void forgetChunk(UUID worldId, int chunkX, int chunkZ) {
         pots.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         racks.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
+        jars.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         potModels.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         plantModels.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
     }
@@ -358,6 +396,15 @@ public final class DisplayRenderer {
             case EMPTY -> "drying_rack";
             case DRYING -> "drying_rack_full";
             case READY -> "drying_rack_ready";
+        };
+    }
+
+    private String jarModel(JarVisualState state) {
+        return switch (state) {
+            case EMPTY -> "curing_jar";
+            case CURING -> "curing_jar_full";
+            case READY -> "curing_jar_ready";
+            case MOLDY -> "curing_jar_moldy";
         };
     }
 

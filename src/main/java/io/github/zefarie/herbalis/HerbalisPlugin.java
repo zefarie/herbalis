@@ -1,17 +1,22 @@
 package io.github.zefarie.herbalis;
 
 import io.github.zefarie.herbalis.application.usecase.AddBudToRackUseCase;
+import io.github.zefarie.herbalis.application.usecase.AddToJarUseCase;
+import io.github.zefarie.herbalis.application.usecase.BreakJarUseCase;
 import io.github.zefarie.herbalis.application.usecase.BreakPlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.BreakPotUseCase;
 import io.github.zefarie.herbalis.application.usecase.BreakRackUseCase;
+import io.github.zefarie.herbalis.application.usecase.CollectJarUseCase;
 import io.github.zefarie.herbalis.application.usecase.CollectRackUseCase;
 import io.github.zefarie.herbalis.application.usecase.ConsumeUseCase;
 import io.github.zefarie.herbalis.application.usecase.FertilizePlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.GrowPlantsUseCase;
 import io.github.zefarie.herbalis.application.usecase.HarvestPlantUseCase;
+import io.github.zefarie.herbalis.application.usecase.PlaceJarUseCase;
 import io.github.zefarie.herbalis.application.usecase.PlacePotUseCase;
 import io.github.zefarie.herbalis.application.usecase.PlaceRackUseCase;
 import io.github.zefarie.herbalis.application.usecase.PlantSeedUseCase;
+import io.github.zefarie.herbalis.application.usecase.PrunePlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.WaterPlantUseCase;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.infrastructure.command.HerbalisCommand;
@@ -34,6 +39,7 @@ import io.github.zefarie.herbalis.infrastructure.listener.PlantInteractListener;
 import io.github.zefarie.herbalis.infrastructure.listener.ProtectionListener;
 import io.github.zefarie.herbalis.infrastructure.persistence.Database;
 import io.github.zefarie.herbalis.infrastructure.persistence.SqliteConsumerRepository;
+import io.github.zefarie.herbalis.infrastructure.persistence.SqliteJarRepository;
 import io.github.zefarie.herbalis.infrastructure.persistence.SqlitePlantRepository;
 import io.github.zefarie.herbalis.infrastructure.persistence.SqlitePotRepository;
 import io.github.zefarie.herbalis.infrastructure.persistence.SqliteRackRepository;
@@ -41,6 +47,7 @@ import io.github.zefarie.herbalis.infrastructure.persistence.SqliteSessionStore;
 import io.github.zefarie.herbalis.infrastructure.render.DisplayRenderer;
 import io.github.zefarie.herbalis.infrastructure.render.WorldSync;
 import io.github.zefarie.herbalis.infrastructure.scheduler.GrowthTicker;
+import io.github.zefarie.herbalis.infrastructure.scheduler.JarTicker;
 import io.github.zefarie.herbalis.infrastructure.scheduler.PlantSwayTicker;
 import io.github.zefarie.herbalis.infrastructure.scheduler.PlayerTicker;
 import io.github.zefarie.herbalis.infrastructure.scheduler.RackTicker;
@@ -89,18 +96,21 @@ public final class HerbalisPlugin extends JavaPlugin {
         var potRepo = new SqlitePotRepository(database);
         plantRepo = new SqlitePlantRepository(database);
         var rackRepo = new SqliteRackRepository(database);
+        var jarRepo = new SqliteJarRepository(database);
         var consumerRepo = new SqliteConsumerRepository(database);
         var sessionStore = new SqliteSessionStore(database);
         getLogger().info(potRepo.all().size() + " pot(s), "
                 + plantRepo.all().size() + " plante(s), "
-                + rackRepo.all().size() + " rack(s) charges.");
+                + rackRepo.all().size() + " rack(s), "
+                + jarRepo.all().size() + " jarre(s) charges.");
 
         // Briques d'infrastructure.
         var items = new ItemFactory(messages);
         var fx = new Fx(config);
         var renderer = new DisplayRenderer(this);
         var environment = new BukkitPlantEnvironment();
-        worldSync = new WorldSync(renderer, potRepo, plantRepo, rackRepo, drugs);
+        worldSync = new WorldSync(renderer, potRepo, plantRepo, rackRepo,
+                jarRepo, drugs);
 
         // Cas d'usage.
         long now = System.currentTimeMillis();
@@ -109,13 +119,19 @@ public final class HerbalisPlugin extends JavaPlugin {
         var plantSeed = new PlantSeedUseCase(potRepo, plantRepo, drugs);
         var waterPlant = new WaterPlantUseCase(plantRepo, drugs);
         var fertilizePlant = new FertilizePlantUseCase(plantRepo);
-        var harvestPlant = new HarvestPlantUseCase(plantRepo, drugs);
+        var prunePlant = new PrunePlantUseCase(plantRepo, drugs);
+        var harvestPlant = new HarvestPlantUseCase(plantRepo, drugs,
+                new java.util.Random());
         var breakPlant = new BreakPlantUseCase(plantRepo);
         var growPlants = new GrowPlantsUseCase(plantRepo, drugs, environment, now);
         var placeRack = new PlaceRackUseCase(rackRepo);
         var breakRack = new BreakRackUseCase(rackRepo);
         var addBud = new AddBudToRackUseCase(rackRepo, drugs);
         var collectRack = new CollectRackUseCase(rackRepo, drugs);
+        var placeJar = new PlaceJarUseCase(jarRepo);
+        var breakJar = new BreakJarUseCase(jarRepo);
+        var addToJar = new AddToJarUseCase(jarRepo, drugs);
+        var collectJar = new CollectJarUseCase(jarRepo, drugs);
         var consume = new ConsumeUseCase(consumerRepo, drugs);
 
         // Services.
@@ -123,25 +139,26 @@ public final class HerbalisPlugin extends JavaPlugin {
         var effects = new EffectService(messages, fx, drugs, sessionStore, blackout);
         var withdrawal = new WithdrawalService(consumerRepo, drugs, config, messages, fx);
         var hud = new HudService(config, messages, items, renderer, plantRepo,
-                potRepo, rackRepo, drugs, environment);
+                potRepo, rackRepo, jarRepo, drugs, environment);
 
         // Reprise apres redemarrage : sessions et visuels.
         sessionStore.loadAll().forEach((id, stored) -> effects.restore(id, stored, now));
         worldSync.respawnLoadedChunks();
 
         // Listeners.
-        craftListener = new CraftListener(items, drugs);
+        craftListener = new CraftListener(items, drugs, config);
         craftListener.registerRecipes(this);
         PluginManager pm = getServer().getPluginManager();
         pm.registerEvents(new ItemUseListener(messages, fx, items, renderer, drugs,
-                placePot, placeRack), this);
+                placePot, placeRack, placeJar), this);
         pm.registerEvents(new PlantInteractListener(messages, fx, items, renderer,
-                drugs, config, hud, plantRepo, rackRepo, plantSeed, waterPlant,
-                fertilizePlant, harvestPlant, breakPlant, breakPot, addBud,
-                collectRack, breakRack), this);
+                drugs, config, hud, plantRepo, rackRepo, jarRepo, plantSeed,
+                waterPlant, fertilizePlant, prunePlant, harvestPlant, breakPlant,
+                breakPot, addBud, collectRack, breakRack, addToJar, collectJar,
+                breakJar), this);
         pm.registerEvents(new ProtectionListener(config, messages, fx, items,
-                renderer, drugs, potRepo, plantRepo, rackRepo, breakPlant,
-                breakPot, breakRack), this);
+                renderer, drugs, potRepo, plantRepo, rackRepo, jarRepo, breakPlant,
+                breakPot, breakRack, breakJar), this);
         pm.registerEvents(new ChunkListener(worldSync), this);
         pm.registerEvents(new ConsumeListener(messages, drugs, consume, effects), this);
         pm.registerEvents(new ConnectionListener(blackout, withdrawal), this);
@@ -164,6 +181,8 @@ public final class HerbalisPlugin extends JavaPlugin {
                 new GrowthTicker(growPlants, drugs, renderer, fx), growthPeriod, growthPeriod);
         scheduler.runTaskTimer(this,
                 new RackTicker(rackRepo, drugs, environment, renderer, fx), 60L, 60L);
+        scheduler.runTaskTimer(this,
+                new JarTicker(jarRepo, drugs, environment, renderer, fx), 70L, 60L);
         scheduler.runTaskTimer(this,
                 new PlantSwayTicker(renderer, plantRepo, drugs, config, fx),
                 PlantSwayTicker.PERIOD_TICKS, PlantSwayTicker.PERIOD_TICKS);

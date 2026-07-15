@@ -4,38 +4,47 @@ import com.destroystokyo.paper.event.inventory.PrepareResultEvent;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
 import io.github.zefarie.herbalis.domain.quality.Quality;
+import io.github.zefarie.herbalis.infrastructure.config.HerbalisConfig;
 import io.github.zefarie.herbalis.infrastructure.item.HerbalisItemType;
 import io.github.zefarie.herbalis.infrastructure.item.ItemFactory;
 import io.github.zefarie.herbalis.infrastructure.item.ItemKeys;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
+import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
- * Craft du joint (pochon + feuille a rouler, qualite heritee) et garde-fou
- * contre l'utilisation des items Herbalis dans les recettes vanilla.
+ * Recettes de la pipeline (tout l'outillage se craft, sauf les graines),
+ * craft du joint (pochon + feuille a rouler, qualite heritee) et
+ * garde-fou contre l'utilisation des items Herbalis dans les recettes
+ * vanilla.
  */
 public final class CraftListener implements Listener {
 
     private final ItemFactory items;
     private final DrugRegistry drugs;
+    private final HerbalisConfig config;
 
-    public CraftListener(ItemFactory items, DrugRegistry drugs) {
+    public CraftListener(ItemFactory items, DrugRegistry drugs,
+                         HerbalisConfig config) {
         this.items = items;
         this.drugs = drugs;
+        this.config = config;
     }
 
-    /** Enregistre une recette de joint par drogue (idempotent, reload inclus). */
+    /** Enregistre toutes les recettes (idempotent, reload inclus). */
     public void registerRecipes(Plugin plugin) {
         for (DrugType drug : drugs.all()) {
             NamespacedKey key = new NamespacedKey(plugin, drug.id() + "_joint");
@@ -50,6 +59,58 @@ public final class CraftListener implements Listener {
             recipe.addIngredient(new RecipeChoice.ExactChoice(items.rollingPaper()));
             Bukkit.addRecipe(recipe);
         }
+        registerToolRecipes(plugin);
+    }
+
+    /** L'outillage complet se craft avec des materiaux vanilla. */
+    private void registerToolRecipes(Plugin plugin) {
+        shaped(plugin, "pot", items.pot(),
+                new String[]{"b b", "b b", "bbb"},
+                Map.of('b', Material.BRICK));
+        shaped(plugin, "drying_rack", items.dryingRack(),
+                new String[]{"bbb", "sss", "b b"},
+                Map.of('b', Material.STICK, 's', Material.STRING));
+        shaped(plugin, "curing_jar", items.curingJar(),
+                new String[]{" w ", "g g", "ggg"},
+                Map.of('w', Material.OAK_SLAB, 'g', Material.GLASS));
+        shaped(plugin, "watering_can", items.wateringCan(config.wateringCanCharges()),
+                new String[]{"n  ", "iii", " i "},
+                Map.of('n', Material.IRON_NUGGET, 'i', Material.IRON_INGOT));
+        shaped(plugin, "secateur", items.secateur(config.secateurUses()),
+                new String[]{"i i", " s "},
+                Map.of('i', Material.IRON_INGOT, 's', Material.STICK));
+        shapeless(plugin, "fertilizer", withAmount(items.fertilizer(), 2),
+                Material.BONE_MEAL, Material.BONE_MEAL, Material.DIRT);
+        shapeless(plugin, "rolling_paper", withAmount(items.rollingPaper(), 3),
+                Material.PAPER, Material.SUGAR_CANE);
+        shapeless(plugin, "pouch_empty", withAmount(items.emptyPouch(), 2),
+                Material.LEATHER, Material.STRING);
+    }
+
+    private static void shaped(Plugin plugin, String name, ItemStack result,
+                               String[] rows, Map<Character, Material> ingredients) {
+        NamespacedKey key = new NamespacedKey(plugin, "craft_" + name);
+        Bukkit.removeRecipe(key);
+        ShapedRecipe recipe = new ShapedRecipe(key, result);
+        recipe.shape(rows);
+        ingredients.forEach(recipe::setIngredient);
+        Bukkit.addRecipe(recipe);
+    }
+
+    private static void shapeless(Plugin plugin, String name, ItemStack result,
+                                  Material... ingredients) {
+        NamespacedKey key = new NamespacedKey(plugin, "craft_" + name);
+        Bukkit.removeRecipe(key);
+        ShapelessRecipe recipe = new ShapelessRecipe(key, result);
+        for (Material material : ingredients) {
+            recipe.addIngredient(material);
+        }
+        Bukkit.addRecipe(recipe);
+    }
+
+    private static ItemStack withAmount(ItemStack stack, int amount) {
+        stack.setAmount(amount);
+        return stack;
     }
 
     @EventHandler

@@ -1,14 +1,17 @@
 package io.github.zefarie.herbalis.infrastructure.listener;
 
+import io.github.zefarie.herbalis.application.port.JarRepository;
 import io.github.zefarie.herbalis.application.port.PlantRepository;
 import io.github.zefarie.herbalis.application.port.PotRepository;
 import io.github.zefarie.herbalis.application.port.RackRepository;
+import io.github.zefarie.herbalis.application.usecase.BreakJarUseCase;
 import io.github.zefarie.herbalis.application.usecase.BreakPlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.BreakPotUseCase;
 import io.github.zefarie.herbalis.application.usecase.BreakRackUseCase;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
 import io.github.zefarie.herbalis.domain.plant.Plant;
+import io.github.zefarie.herbalis.domain.quality.Quality;
 import io.github.zefarie.herbalis.infrastructure.config.HerbalisConfig;
 import io.github.zefarie.herbalis.infrastructure.config.Messages;
 import io.github.zefarie.herbalis.infrastructure.fx.Fx;
@@ -45,16 +48,19 @@ public final class ProtectionListener implements Listener {
     private final PotRepository pots;
     private final PlantRepository plants;
     private final RackRepository racks;
+    private final JarRepository jars;
     private final BreakPlantUseCase breakPlant;
     private final BreakPotUseCase breakPot;
     private final BreakRackUseCase breakRack;
+    private final BreakJarUseCase breakJar;
 
     public ProtectionListener(HerbalisConfig config, Messages messages, Fx fx,
                               ItemFactory items, DisplayRenderer renderer,
                               DrugRegistry drugs, PotRepository pots,
                               PlantRepository plants, RackRepository racks,
+                              JarRepository jars,
                               BreakPlantUseCase breakPlant, BreakPotUseCase breakPot,
-                              BreakRackUseCase breakRack) {
+                              BreakRackUseCase breakRack, BreakJarUseCase breakJar) {
         this.config = config;
         this.messages = messages;
         this.fx = fx;
@@ -64,13 +70,16 @@ public final class ProtectionListener implements Listener {
         this.pots = pots;
         this.plants = plants;
         this.racks = racks;
+        this.jars = jars;
         this.breakPlant = breakPlant;
         this.breakPot = breakPot;
         this.breakRack = breakRack;
+        this.breakJar = breakJar;
     }
 
     private boolean occupied(BlockPos pos) {
-        return pots.exists(pos) || racks.at(pos).isPresent();
+        return pots.exists(pos) || racks.at(pos).isPresent()
+                || jars.at(pos).isPresent();
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -128,6 +137,8 @@ public final class ProtectionListener implements Listener {
             popPot(above, config.dropSeedOnBreak());
         } else if (racks.at(above).isPresent()) {
             popRack(above);
+        } else if (jars.at(above).isPresent()) {
+            popJar(above);
         }
     }
 
@@ -149,6 +160,8 @@ public final class ProtectionListener implements Listener {
                 popPot(above, config.dropSeedOnBreak());
             } else if (racks.at(above).isPresent()) {
                 popRack(above);
+            } else if (jars.at(above).isPresent()) {
+                popJar(above);
             }
         }
         if (!config.explosionKillsPlants()) {
@@ -170,7 +183,9 @@ public final class ProtectionListener implements Listener {
                 if (config.dropSeedOnBreak()) {
                     drugs.byId(plant.drugId()).ifPresent(drug ->
                             corner.getWorld().dropItemNaturally(
-                                    corner.clone().add(0.5, 0.6, 0.5), items.seed(drug)));
+                                    corner.clone().add(0.5, 0.6, 0.5),
+                                    items.seed(drug,
+                                            Quality.of(plant.seedQuality()))));
                 }
             });
         }
@@ -188,9 +203,10 @@ public final class ProtectionListener implements Listener {
             loc.getWorld().dropItemNaturally(dropAt, items.pot());
             result.plant()
                     .filter(plant -> dropSeed && !plant.isDead())
-                    .flatMap(plant -> drugs.byId(plant.drugId()))
-                    .ifPresent(drug -> loc.getWorld()
-                            .dropItemNaturally(dropAt, items.seed(drug)));
+                    .ifPresent(plant -> drugs.byId(plant.drugId())
+                            .ifPresent(drug -> loc.getWorld().dropItemNaturally(
+                                    dropAt, items.seed(drug,
+                                            Quality.of(plant.seedQuality())))));
         });
     }
 
@@ -207,6 +223,22 @@ public final class ProtectionListener implements Listener {
             drugs.byId(rack.drugId()).ifPresent(drug ->
                     rack.slots().forEach(slot -> loc.getWorld()
                             .dropItemNaturally(dropAt, items.freshBud(drug, slot.quality()))));
+        });
+    }
+
+    private void popJar(BlockPos pos) {
+        var jar = breakJar.execute(pos).orElse(null);
+        if (jar == null) {
+            return;
+        }
+        renderer.removeJarVisual(pos);
+        PosCodec.corner(pos).ifPresent(loc -> {
+            fx.jarBroken(loc);
+            Location dropAt = loc.clone().add(0.5, 0.4, 0.5);
+            loc.getWorld().dropItemNaturally(dropAt, items.curingJar());
+            drugs.byId(jar.drugId()).ifPresent(drug ->
+                    jar.slots().forEach(slot -> loc.getWorld()
+                            .dropItemNaturally(dropAt, items.dried(drug, slot.quality()))));
         });
     }
 }

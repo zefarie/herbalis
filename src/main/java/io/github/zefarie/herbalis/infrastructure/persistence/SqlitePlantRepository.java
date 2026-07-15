@@ -26,8 +26,9 @@ public final class SqlitePlantRepository implements PlantRepository {
     private static final String UPSERT = """
             INSERT INTO plants (id, world, x, y, z, drug_id, stage, stage_growth_ms,
                                 ripen_ms, hydration, hydration_sum, hydration_samples,
-                                dry_ms, fertilized_stage, fertilizer_uses, state, planted_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                dry_ms, fertilized_stage, fertilizer_uses,
+                                seed_quality, topping, state, planted_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 stage = excluded.stage,
                 stage_growth_ms = excluded.stage_growth_ms,
@@ -38,6 +39,8 @@ public final class SqlitePlantRepository implements PlantRepository {
                 dry_ms = excluded.dry_ms,
                 fertilized_stage = excluded.fertilized_stage,
                 fertilizer_uses = excluded.fertilizer_uses,
+                seed_quality = excluded.seed_quality,
+                topping = excluded.topping,
                 state = excluded.state
             """;
 
@@ -69,6 +72,8 @@ public final class SqlitePlantRepository implements PlantRepository {
                             rs.getLong("dry_ms"),
                             rs.getInt("fertilized_stage"),
                             rs.getInt("fertilizer_uses"),
+                            rs.getInt("seed_quality"),
+                            rs.getInt("topping"),
                             PlantState.valueOf(rs.getString("state")),
                             rs.getLong("planted_at"));
                     plants.put(plant.pos(), plant);
@@ -151,8 +156,10 @@ public final class SqlitePlantRepository implements PlantRepository {
                 statement.setLong(13, plant.dryMillis());
                 statement.setInt(14, plant.fertilizedStage());
                 statement.setInt(15, plant.fertilizerUses());
-                statement.setString(16, plant.state().name());
-                statement.setLong(17, plant.plantedAt());
+                statement.setInt(16, plant.seedQuality());
+                statement.setInt(17, plant.topping());
+                statement.setString(18, plant.state().name());
+                statement.setLong(19, plant.plantedAt());
                 statement.addBatch();
             }
             statement.executeBatch();

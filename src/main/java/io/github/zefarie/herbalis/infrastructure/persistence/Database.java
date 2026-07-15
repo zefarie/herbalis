@@ -74,10 +74,17 @@ public final class Database implements AutoCloseable {
                         dry_ms INTEGER NOT NULL,
                         fertilized_stage INTEGER NOT NULL,
                         fertilizer_uses INTEGER NOT NULL,
+                        seed_quality INTEGER NOT NULL DEFAULT 2,
+                        topping INTEGER NOT NULL DEFAULT 0,
                         state TEXT NOT NULL,
                         planted_at INTEGER NOT NULL,
                         UNIQUE (world, x, y, z)
                     )""");
+            // Migration des bases anterieures a la genetique et a la taille.
+            addColumnIfMissing(statement, "plants",
+                    "seed_quality", "INTEGER NOT NULL DEFAULT 2");
+            addColumnIfMissing(statement, "plants",
+                    "topping", "INTEGER NOT NULL DEFAULT 0");
             statement.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS racks (
                         id TEXT PRIMARY KEY,
@@ -95,6 +102,24 @@ public final class Database implements AutoCloseable {
                         quality INTEGER NOT NULL,
                         started_at INTEGER NOT NULL,
                         PRIMARY KEY (rack_id, slot)
+                    )""");
+            statement.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS jars (
+                        id TEXT PRIMARY KEY,
+                        world TEXT NOT NULL,
+                        x INTEGER NOT NULL,
+                        y INTEGER NOT NULL,
+                        z INTEGER NOT NULL,
+                        drug_id TEXT NOT NULL DEFAULT '',
+                        UNIQUE (world, x, y, z)
+                    )""");
+            statement.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS jar_slots (
+                        jar_id TEXT NOT NULL REFERENCES jars(id) ON DELETE CASCADE,
+                        slot INTEGER NOT NULL,
+                        quality INTEGER NOT NULL,
+                        started_at INTEGER NOT NULL,
+                        PRIMARY KEY (jar_id, slot)
                     )""");
             statement.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS players (
@@ -117,6 +142,21 @@ public final class Database implements AutoCloseable {
                         intensity REAL NOT NULL
                     )""");
         }
+    }
+
+    /** Ajoute une colonne si elle n'existe pas encore (migration douce). */
+    private static void addColumnIfMissing(Statement statement, String table,
+                                           String column, String definition)
+            throws SQLException {
+        try (var rs = statement.executeQuery("PRAGMA table_info(" + table + ")")) {
+            while (rs.next()) {
+                if (column.equalsIgnoreCase(rs.getString("name"))) {
+                    return;
+                }
+            }
+        }
+        statement.executeUpdate("ALTER TABLE " + table
+                + " ADD COLUMN " + column + " " + definition);
     }
 
     /** Execute un travail SQL sur le thread dedie, sans bloquer le serveur. */

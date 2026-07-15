@@ -1,9 +1,12 @@
 package io.github.zefarie.herbalis.infrastructure.hud;
 
+import io.github.zefarie.herbalis.application.port.JarRepository;
 import io.github.zefarie.herbalis.application.port.PlantEnvironment;
 import io.github.zefarie.herbalis.application.port.PlantRepository;
 import io.github.zefarie.herbalis.application.port.PotRepository;
 import io.github.zefarie.herbalis.application.port.RackRepository;
+import io.github.zefarie.herbalis.domain.curing.CuringJar;
+import io.github.zefarie.herbalis.domain.curing.JarVisualState;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
 import io.github.zefarie.herbalis.domain.drying.DryingRack;
@@ -40,13 +43,14 @@ public final class HudService {
     private final PlantRepository plants;
     private final PotRepository pots;
     private final RackRepository racks;
+    private final JarRepository jars;
     private final DrugRegistry drugs;
     private final PlantEnvironment environment;
 
     public HudService(HerbalisConfig config, Messages messages, ItemFactory items,
                       DisplayRenderer renderer, PlantRepository plants,
-                      PotRepository pots, RackRepository racks, DrugRegistry drugs,
-                      PlantEnvironment environment) {
+                      PotRepository pots, RackRepository racks, JarRepository jars,
+                      DrugRegistry drugs, PlantEnvironment environment) {
         this.config = config;
         this.messages = messages;
         this.items = items;
@@ -54,6 +58,7 @@ public final class HudService {
         this.plants = plants;
         this.pots = pots;
         this.racks = racks;
+        this.jars = jars;
         this.drugs = drugs;
         this.environment = environment;
     }
@@ -96,6 +101,10 @@ public final class HudService {
         Optional<DryingRack> rack = racks.at(pos);
         if (rack.isPresent()) {
             return rackLine(rack.get(), now);
+        }
+        Optional<CuringJar> jar = jars.at(pos);
+        if (jar.isPresent()) {
+            return jarLine(jar.get(), now);
         }
         return Optional.empty();
     }
@@ -146,6 +155,26 @@ public final class HudService {
         });
     }
 
+    private Optional<Component> jarLine(CuringJar jar, long now) {
+        DrugType drug = drugs.byId(jar.drugId()).orElse(null);
+        JarVisualState state = drug == null
+                ? JarVisualState.EMPTY
+                : jar.visualState(now, drug.curing());
+        return Optional.of(switch (state) {
+            case EMPTY -> messages.msg("hud.jarre-vide");
+            case CURING -> {
+                int percent = (int) Math.round(
+                        jar.overallProgress(now, drug.curing()) * 100);
+                yield messages.msg("hud.jarre-curing",
+                        Messages.ph("pourcent", String.valueOf(percent)),
+                        Messages.ph("nombre", String.valueOf(jar.slots().size())));
+            }
+            case READY -> messages.msg("hud.jarre-prete",
+                    Messages.ph("nombre", String.valueOf(jar.slots().size())));
+            case MOLDY -> messages.msg("hud.jarre-moisie");
+        });
+    }
+
     private String segments(int stage, int stageCount) {
         String full = messages.raw("hud.segment-plein", "<color:#4ade80>▰</color>");
         String hollow = messages.raw("hud.segment-vide", "<color:#374151>▱</color>");
@@ -175,6 +204,16 @@ public final class HudService {
         if (plant.hydration() <= drug.hydration().thirstyThreshold()) {
             return "hud.alerte-soif";
         }
+        if (!plant.isToppingAttempted() && drug.topping().isWindowOpen(
+                plant.stage(), stageProgress(plant, drug))) {
+            return "hud.alerte-taille";
+        }
         return "";
+    }
+
+    private static double stageProgress(Plant plant, DrugType drug) {
+        long total = Math.max(1,
+                drug.growth().durationOf(plant.stage()).toMillis());
+        return plant.stageGrowthMillis() / (double) total;
     }
 }

@@ -1,7 +1,9 @@
 package io.github.zefarie.herbalis.infrastructure.listener;
 
+import io.github.zefarie.herbalis.application.usecase.PlaceJarUseCase;
 import io.github.zefarie.herbalis.application.usecase.PlacePotUseCase;
 import io.github.zefarie.herbalis.application.usecase.PlaceRackUseCase;
+import io.github.zefarie.herbalis.domain.curing.JarVisualState;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drying.RackVisualState;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
@@ -42,10 +44,12 @@ public final class ItemUseListener implements Listener {
     private final DrugRegistry drugs;
     private final PlacePotUseCase placePot;
     private final PlaceRackUseCase placeRack;
+    private final PlaceJarUseCase placeJar;
 
     public ItemUseListener(Messages messages, Fx fx, ItemFactory items,
                            DisplayRenderer renderer, DrugRegistry drugs,
-                           PlacePotUseCase placePot, PlaceRackUseCase placeRack) {
+                           PlacePotUseCase placePot, PlaceRackUseCase placeRack,
+                           PlaceJarUseCase placeJar) {
         this.messages = messages;
         this.fx = fx;
         this.items = items;
@@ -53,6 +57,7 @@ public final class ItemUseListener implements Listener {
         this.drugs = drugs;
         this.placePot = placePot;
         this.placeRack = placeRack;
+        this.placeJar = placeJar;
     }
 
     @EventHandler
@@ -68,7 +73,7 @@ public final class ItemUseListener implements Listener {
         Player player = event.getPlayer();
 
         switch (type.get()) {
-            case POT, DRYING_RACK -> {
+            case POT, DRYING_RACK, CURING_JAR -> {
                 if (event.getAction() != Action.RIGHT_CLICK_BLOCK
                         || event.getClickedBlock() == null) {
                     return;
@@ -119,9 +124,12 @@ public final class ItemUseListener implements Listener {
         }
         BlockPos pos = PosCodec.of(target);
 
-        boolean placed = type == HerbalisItemType.POT
-                ? placePot.execute(pos)
-                : placeRack.execute(pos).isPresent();
+        boolean placed = switch (type) {
+            case POT -> placePot.execute(pos);
+            case DRYING_RACK -> placeRack.execute(pos).isPresent();
+            case CURING_JAR -> placeJar.execute(pos).isPresent();
+            default -> false;
+        };
         if (!placed) {
             player.sendActionBar(messages.msg("culture.pose-place-occupee"));
             return;
@@ -129,14 +137,24 @@ public final class ItemUseListener implements Listener {
 
         held.subtract();
         PosCodec.corner(pos).ifPresent(loc -> {
-            if (type == HerbalisItemType.POT) {
-                renderer.showPot(pos, Optional.empty(), "", "pot", 1.0f);
-                fx.potPlaced(loc);
-                player.sendActionBar(messages.msg("culture.pot-pose"));
-            } else {
-                renderer.showRack(pos, RackVisualState.EMPTY);
-                fx.rackPlaced(loc);
-                player.sendActionBar(messages.msg("sechage.rack-pose"));
+            switch (type) {
+                case POT -> {
+                    renderer.showPot(pos, Optional.empty(), "", "pot", 1.0f);
+                    fx.potPlaced(loc);
+                    player.sendActionBar(messages.msg("culture.pot-pose"));
+                }
+                case DRYING_RACK -> {
+                    renderer.showRack(pos, RackVisualState.EMPTY);
+                    fx.rackPlaced(loc);
+                    player.sendActionBar(messages.msg("sechage.rack-pose"));
+                }
+                case CURING_JAR -> {
+                    renderer.showJar(pos, JarVisualState.EMPTY);
+                    fx.jarPlaced(loc);
+                    player.sendActionBar(messages.msg("curing.jarre-posee"));
+                }
+                default -> {
+                }
             }
         });
         player.swingMainHand();

@@ -1,8 +1,10 @@
 package io.github.zefarie.herbalis.infrastructure.config;
 
 import io.github.zefarie.herbalis.domain.drug.ConsumptionRules;
+import io.github.zefarie.herbalis.domain.drug.CuringProfile;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
 import io.github.zefarie.herbalis.domain.drug.DryingProfile;
+import io.github.zefarie.herbalis.domain.drug.ToppingProfile;
 import io.github.zefarie.herbalis.domain.drug.EffectProfile;
 import io.github.zefarie.herbalis.domain.drug.EffectSpec;
 import io.github.zefarie.herbalis.domain.drug.FertilizerProfile;
@@ -88,6 +90,31 @@ public final class DrugConfigLoader {
                 DurationParser.parse(drying.getString("duree", "20m")),
                 drying.getInt("capacite", 6));
 
+        // Taille et curing : sections optionnelles, defauts raisonnables
+        // pour les configs anterieures.
+        ToppingProfile toppingProfile = ToppingProfile.DEFAULT;
+        ConfigurationSection topping = yaml.getConfigurationSection("taille");
+        if (topping != null) {
+            List<Integer> stages = topping.getIntegerList("stages");
+            toppingProfile = new ToppingProfile(
+                    stages.isEmpty() ? ToppingProfile.DEFAULT.stages() : stages,
+                    topping.getDouble("fenetre-debut", 0.30),
+                    topping.getDouble("fenetre-fin", 0.60),
+                    DurationParser.parse(topping.getString("rallonge", "2m")),
+                    topping.getInt("bonus-tetes-min", 1),
+                    topping.getInt("bonus-tetes-max", 2),
+                    topping.getInt("malus-etoiles-rate", 1));
+        }
+        CuringProfile curingProfile = CuringProfile.DEFAULT;
+        ConfigurationSection curing = yaml.getConfigurationSection("curing");
+        if (curing != null) {
+            curingProfile = new CuringProfile(
+                    DurationParser.parse(curing.getString("duree", "45m")),
+                    DurationParser.parse(curing.getString("delai-moisissure", "90m")),
+                    curing.getInt("bonus-etoiles", 1),
+                    curing.getInt("capacite", 6));
+        }
+
         ConfigurationSection effects = section(yaml, "effets");
         EffectProfile effectProfile = new EffectProfile(
                 DurationParser.parse(effects.getString("montee", "15s")),
@@ -110,15 +137,18 @@ public final class DrugConfigLoader {
                 consumption.getDouble("addiction-seuil", 50.0),
                 DurationParser.parse(consumption.getString("delai-manque", "45m")));
 
+        // genetique vaut 0 par defaut : les configs anterieures (trois
+        // poids sommant a 1) restent valides sans modification.
         ConfigurationSection weights = section(yaml, "poids-qualite");
         QualityWeights qualityWeights = new QualityWeights(
-                weights.getDouble("hydratation", 0.45),
-                weights.getDouble("engrais", 0.30),
-                weights.getDouble("timing", 0.25));
+                weights.getDouble("hydratation", 0.40),
+                weights.getDouble("engrais", 0.25),
+                weights.getDouble("timing", 0.20),
+                weights.getDouble("genetique", 0.0));
 
         return new DrugType(id, displayName, growthProfile, hydrationProfile,
-                fertilizerProfile, harvestWindow, dryingProfile, effectProfile,
-                rules, qualityWeights);
+                fertilizerProfile, harvestWindow, dryingProfile, toppingProfile,
+                curingProfile, effectProfile, rules, qualityWeights);
     }
 
     private static List<EffectSpec> effectSpecs(List<Map<?, ?>> raw) {

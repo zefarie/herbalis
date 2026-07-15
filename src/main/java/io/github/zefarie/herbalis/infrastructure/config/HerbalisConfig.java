@@ -19,6 +19,7 @@ public final class HerbalisConfig {
             boolean hudEnabled,
             double hudRange,
             int wateringCanCharges,
+            int secateurUses,
             boolean dropSeedOnBreak,
             boolean explosionKillsPlants,
             double explosionRadius,
@@ -51,6 +52,7 @@ public final class HerbalisConfig {
                 config.getBoolean("hud.actif", true),
                 config.getDouble("hud.portee", 5.0),
                 Math.max(1, config.getInt("arrosoir.charges", 8)),
+                Math.max(1, config.getInt("secateur.utilisations", 25)),
                 config.getBoolean("plantes.drop-graine-si-cassee", true),
                 config.getBoolean("plantes.explosion-detruit", true),
                 config.getDouble("plantes.rayon-explosion", 4.0),
@@ -89,6 +91,10 @@ public final class HerbalisConfig {
 
     public int wateringCanCharges() {
         return data.wateringCanCharges();
+    }
+
+    public int secateurUses() {
+        return data.secateurUses();
     }
 
     public boolean dropSeedOnBreak() {

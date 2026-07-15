@@ -1,6 +1,7 @@
 package io.github.zefarie.herbalis.infrastructure.item;
 
 import io.github.zefarie.herbalis.domain.drug.DrugType;
+import io.github.zefarie.herbalis.domain.plant.Plant;
 import io.github.zefarie.herbalis.domain.quality.Quality;
 import io.github.zefarie.herbalis.infrastructure.config.Messages;
 import io.papermc.paper.datacomponent.DataComponentTypes;
@@ -43,6 +44,10 @@ public final class ItemFactory {
         return generic(HerbalisItemType.DRYING_RACK, 16);
     }
 
+    public ItemStack curingJar() {
+        return generic(HerbalisItemType.CURING_JAR, 16);
+    }
+
     public ItemStack fertilizer() {
         return generic(HerbalisItemType.FERTILIZER, 16);
     }
@@ -64,14 +69,27 @@ public final class ItemFactory {
         return stack;
     }
 
+    /** Secateur : s'use a chaque taille, barre de durabilite. */
+    public ItemStack secateur(int maxUses) {
+        ItemStack stack = base(HerbalisItemType.SECATEUR, null, null);
+        stack.setData(DataComponentTypes.MAX_STACK_SIZE, 1);
+        stack.setData(DataComponentTypes.MAX_DAMAGE, maxUses);
+        stack.setData(DataComponentTypes.DAMAGE, 0);
+        return stack;
+    }
+
     // ----------------------------------------------------------------
     // Items lies a une drogue
     // ----------------------------------------------------------------
 
+    /** Graine commune, sans lignee particuliere. */
     public ItemStack seed(DrugType drug) {
-        ItemStack stack = base(HerbalisItemType.SEED, drug, null);
-        stack.setData(DataComponentTypes.MAX_STACK_SIZE, 16);
-        return stack;
+        return seed(drug, Quality.of(Plant.DEFAULT_SEED_QUALITY));
+    }
+
+    /** Graine issue d'une lignee : sa qualite pese sur la recolte. */
+    public ItemStack seed(DrugType drug, Quality quality) {
+        return qualityItem(HerbalisItemType.SEED, drug, quality);
     }
 
     public ItemStack freshBud(DrugType drug, Quality quality) {
@@ -113,11 +131,13 @@ public final class ItemFactory {
      * Reconstruit l'item de reference d'un type donne (pour comparaison
      * de recettes ou /herbalis give).
      */
-    public Optional<ItemStack> byId(String itemId, List<DrugType> drugs, int maxCharges) {
+    public Optional<ItemStack> byId(String itemId, List<DrugType> drugs,
+                                    int maxCharges, int secateurUses) {
         for (HerbalisItemType type : HerbalisItemType.values()) {
             if (!type.isDrugScoped() && type.id().equals(itemId)) {
                 return Optional.of(switch (type) {
                     case WATERING_CAN -> wateringCan(maxCharges);
+                    case SECATEUR -> secateur(secateurUses);
                     default -> generic(type, 16);
                 });
             }
@@ -143,6 +163,7 @@ public final class ItemFactory {
     public ItemStack withQuality(ItemStack stack, DrugType drug, Quality quality) {
         HerbalisItemType type = ItemKeys.typeOf(stack).orElseThrow();
         return switch (type) {
+            case SEED -> seed(drug, quality);
             case BUD_FRESH -> freshBud(drug, quality);
             case DRIED -> dried(drug, quality);
             case POUCH -> pouch(drug, quality);
