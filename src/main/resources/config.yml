@@ -1,8 +1,9 @@
 # ==============================================================
 #  Herbalis : configuration generale
 #
-#  Toutes les durees acceptent les formats "30s", "8m", "1h30m"
-#  ou un nombre brut en secondes.
+#  Toutes les durees acceptent les formats "30s", "8m", "1h30m",
+#  "2d" ou "1j12h" (j et d valent un jour), ou un nombre brut
+#  en secondes.
 #
 #  Les parametres propres a chaque drogue (durees de croissance,
 #  hydratation, effets, tolerance...) vivent dans drugs/<id>.yml.

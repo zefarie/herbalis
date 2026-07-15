@@ -5,6 +5,12 @@
 #  ajouter une autre, dupliquez-le sous drugs/<id>.yml, ajustez
 #  les valeurs et fournissez les modeles correspondants dans le
 #  resource pack (plant_<id>_stage_1 a 4, <id>_seed, etc).
+#
+#  Les durees par defaut visent le rythme d'une vraie culture :
+#  environ une semaine reelle de la graine au joint (4 jours de
+#  pousse, 12 h de fenetre de recolte, 1 jour de sechage, 2 jours
+#  de curing). Tout se raccourcit ici si votre serveur prefere
+#  un rythme arcade.
 # ==============================================================
 
 id: weed
@@ -12,8 +18,11 @@ nom: Weed
 
 croissance:
   # Duree de chaque stage (4 stages : pousse, jeune plant,
-  # plant mature, plant en fleur).
-  durees-stages: [8m, 8m, 8m, 8m]
+  # plant mature, plant en fleur). La croissance suit le temps
+  # reel et rattrape son retard : chunk decharge ou serveur
+  # eteint, la plante continue de vivre. Environ 4 jours pour
+  # atteindre la floraison, engrais non compris.
+  durees-stages: [1d, 1d12h, 1d12h, 1d]
   # Niveau de lumiere minimum (0 a 15). En dessous, la
   # croissance est figee et le HUD le signale.
   lumiere-minimum: 12
@@ -23,15 +32,18 @@ croissance:
 
 hydratation:
   # Points d'hydratation perdus par minute (jauge de 0 a 100).
-  perte-par-minute: 2.5
+  # A 0.07, la jauge pleine tient environ une journee : comme
+  # une vraie plante, elle s'arrose une a deux fois par jour.
+  perte-par-minute: 0.07
   # Points rendus par arrosage.
   restauration-arrosage: 40.0
   # Sous ce seuil, la croissance est figee.
   seuil-soif: 25.0
   # Temps a sec (jauge a 0) avant jaunissement du plant.
-  delai-jaunissement: 4m
+  delai-jaunissement: 6h
   # Temps a sec avant la mort du plant (le pot reste).
-  delai-mort: 12m
+  # Jauge pleine + delai : environ 2 jours de negligence.
+  delai-mort: 1d
 
 engrais:
   # Acceleration du stage en cours (0.5 = 50 pour cent plus vite).
@@ -42,26 +54,26 @@ engrais:
 
 fenetre-recolte:
   # Au stade final, duree de la fenetre de recolte optimale.
-  duree-optimale: 10m
+  duree-optimale: 12h
   # Apres la fenetre, la qualite decline lineairement sur cette duree.
-  duree-declin: 20m
+  duree-declin: 1d
 
 sechage:
   # Duree de sechage complete d'une tete (temps reel, continue
   # meme serveur eteint).
-  duree: 20m
+  duree: 1d
   # Nombre de tetes par rack.
   capacite: 6
 
 taille:
-  # Stages ou la taille au secateur est possible.
+  # Stages ou la taille aux cisailles est possible.
   stages: [2, 3]
   # Fenetre de taille, en fraction de progression du stage
   # (0.30 a 0.60 = du tiers aux deux tiers du stage).
   fenetre-debut: 0.30
   fenetre-fin: 0.60
   # Progression de stage perdue par la coupe (la plante encaisse).
-  rallonge: 2m
+  rallonge: 3h
   # Tetes supplementaires a la recolte si la taille est reussie.
   bonus-tetes-min: 1
   bonus-tetes-max: 2
@@ -71,10 +83,10 @@ taille:
 curing:
   # Duree d'affinage complet en jarre (temps reel, continue
   # meme serveur eteint).
-  duree: 45m
+  duree: 2d
   # Delai apres affinage avant que la jarre ne moisisse
   # (contenu ruine : 1 etoile).
-  delai-moisissure: 90m
+  delai-moisissure: 2d
   # Etoiles gagnees par un affinage complet.
   bonus-etoiles: 1
   # Nombre de tetes par jarre.

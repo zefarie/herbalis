@@ -5,11 +5,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Parse les durees de la config : "30s", "8m", "2h", "1h30m", "90" (secondes).
+ * Parse les durees de la config : "30s", "8m", "2h", "1h30m", "2d",
+ * "1j12h" (j et d valent tous deux un jour), "90" (secondes).
  */
 public final class DurationParser {
 
-    private static final Pattern PART = Pattern.compile("(\\d+)([hms])");
+    private static final Pattern PART = Pattern.compile("(\\d+)([djhms])");
 
     private DurationParser() {
     }
@@ -32,6 +33,7 @@ public final class DurationParser {
             consumed = matcher.end();
             long amount = Long.parseLong(matcher.group(1));
             seconds += switch (matcher.group(2)) {
+                case "d", "j" -> amount * 86_400;
                 case "h" -> amount * 3600;
                 case "m" -> amount * 60;
                 default -> amount;

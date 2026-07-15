@@ -19,8 +19,10 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Fixtures du domaine : une weed de test aux valeurs par defaut de la
- * config livree.
+ * Fixtures du domaine : une weed de test aux durees courtes (minutes)
+ * pour des tests lisibles. La config livree vise l'echelle reelle
+ * (environ une semaine de la graine au joint); le domaine est
+ * indifferent a l'echelle.
  */
 public final class TestFixtures {
 
