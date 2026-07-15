@@ -8,13 +8,16 @@ des assets, zéro refonte).
 Le plugin mise tout sur l'immersion : plantes sculptées en volumes 3D
 (vraies feuilles de cannabis dentelées à 5-7 folioles, branches
 latérales étagées aux stages avancés, colas à pistils) qui grandissent
-en continu et se balancent doucement, terreau qui raconte le soin
-(humide, sec et craquelé, fertilisé), scintillement des plants en
-fenêtre de récolte optimale, arrosoir et joint en vrais models 3D en
-main, particules et sons sur chaque action (fumée de joint en
-spirale), HUD en action bar avec une font d'icônes dessinée pour le
-pack, effets de consommation cinématiques (montée, plateau, descente,
-blackout), tolérance et manque persistants.
+en continu, se balancent et respirent doucement, chaque plant avec son
+orientation et sa taille propres. Le terreau raconte le soin (humide,
+sec et craquelé, fertilisé), les buds givrent de trichomes et
+scintillent en fenêtre de récolte optimale, une feuille se détache
+parfois des plants matures, des gouttes perlent après l'arrosage.
+Arrosoir et joint en vrais models 3D en main, particules et sons sur
+chaque action (fumée de joint en spirale), HUD en action bar avec une
+font d'icônes dessinée pour le pack, effets de consommation
+cinématiques (montée, plateau, descente, blackout), tolérance et
+manque persistants.
 
 ## Installation
 
@@ -69,8 +72,9 @@ par le serveur au premier démarrage.
    bar : stage en segments, hydratation, qualité potentielle en étoiles,
    alertes.
 5. **Récolter** : au stade final, clic droit main vide. Une fenêtre
-   optimale de 10 minutes s'ouvre à la floraison : récolter dedans
-   maximise la qualité, après elle décline. La qualité (1 à 5 étoiles)
+   optimale de 10 minutes s'ouvre à la floraison : les buds givrent de
+   trichomes blancs et la plante scintille. Récolter dedans maximise
+   la qualité, après elle décline. La qualité (1 à 5 étoiles)
    combine hydratation moyenne, engrais et timing de récolte.
 6. **Sécher** : poser un rack de séchage, y suspendre jusqu'à 6 têtes
    fraîches (clic droit). 20 minutes en temps réel, le séchage continue
@@ -159,7 +163,8 @@ Items pour `give` : `pot`, `drying_rack`, `watering_can`, `fertilizer`,
 1. Dupliquer `drugs/weed.yml` en `drugs/<id>.yml` et ajuster.
 2. Ajouter les assets au resource pack : `<id>_seed`, `<id>_bud_fresh`,
    `<id>_dried`, `<id>_pouch`, `<id>_joint` (items), et les models
-   `plant_<id>_stage_1` à `4`, variantes `_dry` (stages 2 à 4) et
+   `plant_<id>_stage_1` à `4`, variantes `_dry` (stages 2 à 4), la
+   variante `_prime` du stade final (buds givrés, fenêtre optimale) et
    `plant_<id>_dead`.
 3. `/herbalis reload`. Aucun code à toucher.
 
@@ -203,7 +208,9 @@ Structure dans `resourcepack/`, format 75 (1.21.11).
   dentelées à 5-7 folioles (deux silhouettes alternées, nervure claire,
   atlas 64x), rosettes au sol et, aux stages 3-4, branches latérales
   inclinées asymétriques portant bouquets de feuilles et colas à
-  pistils, cola apical segmenté au stade final. Pot conique par étages
+  pistils, cola apical segmenté au stade final, variante givrée de
+  trichomes pendant la fenêtre de récolte optimale. Pot conique par
+  étages
   avec trois terreaux (humide, sec, fertilisé), rack avec bouquets
   suspendus en volume qui se resserrent en séchant. Textures 32x pour
   les blocs, 16x pour les items (cohérence vanilla en inventaire).
