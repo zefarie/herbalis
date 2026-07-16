@@ -27,8 +27,9 @@ public final class SqlitePlantRepository implements PlantRepository {
             INSERT INTO plants (id, world, x, y, z, drug_id, stage, stage_growth_ms,
                                 ripen_ms, hydration, hydration_sum, hydration_samples,
                                 dry_ms, fertilized_stage, fertilizer_uses,
-                                seed_quality, topping, state, planted_at, last_tick_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                seed_quality, topping, pest_ms, pest_damage,
+                                state, planted_at, last_tick_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 stage = excluded.stage,
                 stage_growth_ms = excluded.stage_growth_ms,
@@ -41,6 +42,8 @@ public final class SqlitePlantRepository implements PlantRepository {
                 fertilizer_uses = excluded.fertilizer_uses,
                 seed_quality = excluded.seed_quality,
                 topping = excluded.topping,
+                pest_ms = excluded.pest_ms,
+                pest_damage = excluded.pest_damage,
                 state = excluded.state,
                 last_tick_at = excluded.last_tick_at
             """;
@@ -79,6 +82,8 @@ public final class SqlitePlantRepository implements PlantRepository {
                             rs.getInt("fertilizer_uses"),
                             rs.getInt("seed_quality"),
                             rs.getInt("topping"),
+                            rs.getLong("pest_ms"),
+                            rs.getInt("pest_damage"),
                             PlantState.valueOf(rs.getString("state")),
                             rs.getLong("planted_at"),
                             lastTickAt > 0 ? lastTickAt : loadedAt);
@@ -164,9 +169,11 @@ public final class SqlitePlantRepository implements PlantRepository {
                 statement.setInt(15, plant.fertilizerUses());
                 statement.setInt(16, plant.seedQuality());
                 statement.setInt(17, plant.topping());
-                statement.setString(18, plant.state().name());
-                statement.setLong(19, plant.plantedAt());
-                statement.setLong(20, plant.lastTickAt());
+                statement.setLong(18, plant.pestMillis());
+                statement.setInt(19, plant.pestDamage());
+                statement.setString(20, plant.state().name());
+                statement.setLong(21, plant.plantedAt());
+                statement.setLong(22, plant.lastTickAt());
                 statement.addBatch();
             }
             statement.executeBatch();

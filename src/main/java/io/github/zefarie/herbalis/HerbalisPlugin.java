@@ -17,6 +17,7 @@ import io.github.zefarie.herbalis.application.usecase.PlacePotUseCase;
 import io.github.zefarie.herbalis.application.usecase.PlaceRackUseCase;
 import io.github.zefarie.herbalis.application.usecase.PlantSeedUseCase;
 import io.github.zefarie.herbalis.application.usecase.PrunePlantUseCase;
+import io.github.zefarie.herbalis.application.usecase.TreatPlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.WaterPlantUseCase;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.infrastructure.command.HerbalisCommand;
@@ -120,10 +121,12 @@ public final class HerbalisPlugin extends JavaPlugin {
         var waterPlant = new WaterPlantUseCase(plantRepo, drugs);
         var fertilizePlant = new FertilizePlantUseCase(plantRepo);
         var prunePlant = new PrunePlantUseCase(plantRepo, drugs);
+        var treatPlant = new TreatPlantUseCase(plantRepo);
         var harvestPlant = new HarvestPlantUseCase(plantRepo, drugs,
                 new java.util.Random());
         var breakPlant = new BreakPlantUseCase(plantRepo);
-        var growPlants = new GrowPlantsUseCase(plantRepo, drugs, environment);
+        var growPlants = new GrowPlantsUseCase(plantRepo, drugs, environment,
+                new java.util.Random());
         var placeRack = new PlaceRackUseCase(rackRepo);
         var breakRack = new BreakRackUseCase(rackRepo);
         var addBud = new AddBudToRackUseCase(rackRepo, drugs);
@@ -153,9 +156,9 @@ public final class HerbalisPlugin extends JavaPlugin {
                 placePot, placeRack, placeJar), this);
         pm.registerEvents(new PlantInteractListener(messages, fx, items, renderer,
                 drugs, config, hud, plantRepo, rackRepo, jarRepo, plantSeed,
-                waterPlant, fertilizePlant, prunePlant, harvestPlant, breakPlant,
-                breakPot, addBud, collectRack, breakRack, addToJar, collectJar,
-                breakJar), this);
+                waterPlant, fertilizePlant, prunePlant, treatPlant, harvestPlant,
+                breakPlant, breakPot, addBud, collectRack, breakRack, addToJar,
+                collectJar, breakJar), this);
         pm.registerEvents(new ProtectionListener(config, messages, fx, items,
                 renderer, drugs, potRepo, plantRepo, rackRepo, jarRepo, breakPlant,
                 breakPot, breakRack, breakJar), this);

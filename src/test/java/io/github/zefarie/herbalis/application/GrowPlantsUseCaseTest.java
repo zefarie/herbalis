@@ -80,8 +80,8 @@ class GrowPlantsUseCaseTest {
     private final DrugRegistry drugs = new DrugRegistry();
     private final InMemoryPlants plants = new InMemoryPlants();
     private final FakeEnvironment environment = new FakeEnvironment();
-    private final GrowPlantsUseCase grow =
-            new GrowPlantsUseCase(plants, drugs, environment);
+    private final GrowPlantsUseCase grow = new GrowPlantsUseCase(
+            plants, drugs, environment, new java.util.Random(42));
 
     GrowPlantsUseCaseTest() {
         drugs.register(TestFixtures.weed());

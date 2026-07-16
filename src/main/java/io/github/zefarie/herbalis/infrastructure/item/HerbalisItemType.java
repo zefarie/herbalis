@@ -13,6 +13,7 @@ public enum HerbalisItemType {
     DRYING_RACK("drying_rack", false),
     CURING_JAR("curing_jar", false),
     WATERING_CAN("watering_can", false),
+    SPRAYER("sprayer", false),
     FERTILIZER("fertilizer", false),
     ROLLING_PAPER("rolling_paper", false),
     POUCH_EMPTY("pouch_empty", false),

@@ -15,6 +15,7 @@ import io.github.zefarie.herbalis.application.usecase.FertilizePlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.HarvestPlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.PlantSeedUseCase;
 import io.github.zefarie.herbalis.application.usecase.PrunePlantUseCase;
+import io.github.zefarie.herbalis.application.usecase.TreatPlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.WaterPlantUseCase;
 import io.github.zefarie.herbalis.domain.curing.JarVisualState;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
@@ -70,6 +71,7 @@ public final class PlantInteractListener implements Listener {
     private final WaterPlantUseCase waterPlant;
     private final FertilizePlantUseCase fertilizePlant;
     private final PrunePlantUseCase prunePlant;
+    private final TreatPlantUseCase treatPlant;
     private final HarvestPlantUseCase harvestPlant;
     private final BreakPlantUseCase breakPlant;
     private final BreakPotUseCase breakPot;
@@ -88,6 +90,7 @@ public final class PlantInteractListener implements Listener {
                                  PlantSeedUseCase plantSeed, WaterPlantUseCase waterPlant,
                                  FertilizePlantUseCase fertilizePlant,
                                  PrunePlantUseCase prunePlant,
+                                 TreatPlantUseCase treatPlant,
                                  HarvestPlantUseCase harvestPlant,
                                  BreakPlantUseCase breakPlant, BreakPotUseCase breakPot,
                                  AddBudToRackUseCase addBud, CollectRackUseCase collectRack,
@@ -107,6 +110,7 @@ public final class PlantInteractListener implements Listener {
         this.waterPlant = waterPlant;
         this.fertilizePlant = fertilizePlant;
         this.prunePlant = prunePlant;
+        this.treatPlant = treatPlant;
         this.harvestPlant = harvestPlant;
         this.breakPlant = breakPlant;
         this.breakPot = breakPot;
@@ -175,6 +179,10 @@ public final class PlantInteractListener implements Listener {
         }
         if (heldType.filter(t -> t == HerbalisItemType.FERTILIZER).isPresent()) {
             fertilizeAction(player, pos, held, loc);
+            return;
+        }
+        if (heldType.filter(t -> t == HerbalisItemType.SPRAYER).isPresent()) {
+            sprayAction(player, pos, held, loc);
             return;
         }
         // Cisailles vanilla : on taille, sauf au stade final ou elles
@@ -295,6 +303,32 @@ public final class PlantInteractListener implements Listener {
                 Messages.ph("graines", String.valueOf(success.seeds().size())),
                 Messages.ph("etoiles",
                         messages.deserialize(items.starsMarkup(success.quality())))));
+    }
+
+    private void sprayAction(Player player, BlockPos pos, ItemStack sprayer,
+                             Location loc) {
+        Integer damage = sprayer.getData(DataComponentTypes.DAMAGE);
+        Integer maxDamage = sprayer.getData(DataComponentTypes.MAX_DAMAGE);
+        if (damage != null && maxDamage != null && damage >= maxDamage) {
+            player.sendActionBar(messages.msg("nuisibles.pulverisateur-vide"));
+            return;
+        }
+        switch (treatPlant.execute(pos)) {
+            case TreatPlantUseCase.Result.Treated ignored -> {
+                if (damage != null) {
+                    sprayer.setData(DataComponentTypes.DAMAGE, damage + 1);
+                }
+                renderer.pulsePlant(pos);
+                fx.sprayed(loc);
+                player.sendActionBar(messages.msg("nuisibles.traitee"));
+            }
+            case TreatPlantUseCase.Result.NotInfested ignored ->
+                    player.sendActionBar(messages.msg("nuisibles.plante-saine"));
+            case TreatPlantUseCase.Result.NoPlant ignored ->
+                    player.sendActionBar(messages.msg("culture.pot-vide-info"));
+            case TreatPlantUseCase.Result.PlantDead ignored ->
+                    player.sendActionBar(messages.msg("culture.plante-morte-info"));
+        }
     }
 
     private boolean isHarvestable(Optional<Plant> plant) {

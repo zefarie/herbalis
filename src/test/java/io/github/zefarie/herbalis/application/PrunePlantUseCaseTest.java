@@ -63,7 +63,7 @@ class PrunePlantUseCaseTest {
         long growth = (long) (progress
                 * weed.growth().durationOf(stage).toMillis());
         return new Plant(UUID.randomUUID(), "weed", TestFixtures.pos(),
-                stage, growth, 0L, 100.0, 0.0, 0L, 0L, 0, 0, 3, 0,
+                stage, growth, 0L, 100.0, 0.0, 0L, 0L, 0, 0, 3, 0, 0L, 0,
                 PlantState.HEALTHY, 0L, 0L);
     }
 
@@ -108,7 +108,7 @@ class PrunePlantUseCaseTest {
     @Test
     void laRecolteRendDesGrainesHeriteesEtLeBonusDeTaille() {
         Plant plant = new Plant(UUID.randomUUID(), "weed", TestFixtures.pos(),
-                4, 0L, 0L, 100.0, 10_000.0, 100L, 0L, 4, 4, 5, 1,
+                4, 0L, 0L, 100.0, 10_000.0, 100L, 0L, 4, 4, 5, 1, 0L, 0,
                 PlantState.HEALTHY, 0L, 0L);
         plants.put(plant);
         var harvest = new HarvestPlantUseCase(plants, drugs, new Random(42));

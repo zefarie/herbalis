@@ -82,7 +82,7 @@ public final class ItemUseListener implements Listener {
                 placeStructure(player, held, type.get(),
                         event.getClickedBlock(), event.getBlockFace());
             }
-            case WATERING_CAN -> {
+            case WATERING_CAN, SPRAYER -> {
                 if (event.getAction() != Action.RIGHT_CLICK_BLOCK
                         || event.getClickedBlock() == null) {
                     return;
@@ -90,7 +90,7 @@ public final class ItemUseListener implements Listener {
                 if (isWater(event.getClickedBlock())
                         || isWater(event.getClickedBlock().getRelative(event.getBlockFace()))) {
                     event.setCancelled(true);
-                    refillCan(player, held);
+                    refill(player, held);
                 }
             }
             case POUCH_EMPTY -> {
@@ -160,13 +160,14 @@ public final class ItemUseListener implements Listener {
         player.swingMainHand();
     }
 
-    private void refillCan(Player player, ItemStack can) {
-        Integer damage = can.getData(DataComponentTypes.DAMAGE);
+    /** Arrosoir ou pulverisateur : un plein d'eau remet les charges. */
+    private void refill(Player player, ItemStack tool) {
+        Integer damage = tool.getData(DataComponentTypes.DAMAGE);
         if (damage == null || damage == 0) {
             player.sendActionBar(messages.msg("arrosage.deja-plein"));
             return;
         }
-        can.setData(DataComponentTypes.DAMAGE, 0);
+        tool.setData(DataComponentTypes.DAMAGE, 0);
         fx.canRefilled(player.getLocation());
         player.sendActionBar(messages.msg("arrosage.rempli"));
         player.swingMainHand();

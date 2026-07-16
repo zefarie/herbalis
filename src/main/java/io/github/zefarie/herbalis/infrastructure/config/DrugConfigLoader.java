@@ -11,6 +11,7 @@ import io.github.zefarie.herbalis.domain.drug.FertilizerProfile;
 import io.github.zefarie.herbalis.domain.drug.GrowthProfile;
 import io.github.zefarie.herbalis.domain.drug.HarvestWindow;
 import io.github.zefarie.herbalis.domain.drug.HydrationProfile;
+import io.github.zefarie.herbalis.domain.drug.PestProfile;
 import io.github.zefarie.herbalis.domain.quality.QualityWeights;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -115,6 +116,18 @@ public final class DrugConfigLoader {
                     curing.getInt("capacite", 6));
         }
 
+        // Nuisibles : desactives si la section est absente, pour ne pas
+        // surprendre une config anterieure.
+        PestProfile pestProfile = PestProfile.DISABLED;
+        ConfigurationSection pests = yaml.getConfigurationSection("nuisibles");
+        if (pests != null) {
+            pestProfile = new PestProfile(
+                    pests.getDouble("chance-par-jour", PestProfile.DEFAULT.dailyChance()),
+                    pests.getDouble("ralentissement", PestProfile.DEFAULT.slowdown()),
+                    DurationParser.parse(pests.getString("delai-degats", "12h")),
+                    pests.getInt("malus-etoiles", PestProfile.DEFAULT.damageStars()));
+        }
+
         ConfigurationSection effects = section(yaml, "effets");
         EffectProfile effectProfile = new EffectProfile(
                 DurationParser.parse(effects.getString("montee", "15s")),
@@ -148,7 +161,7 @@ public final class DrugConfigLoader {
 
         return new DrugType(id, displayName, growthProfile, hydrationProfile,
                 fertilizerProfile, harvestWindow, dryingProfile, toppingProfile,
-                curingProfile, effectProfile, rules, qualityWeights);
+                curingProfile, pestProfile, effectProfile, rules, qualityWeights);
     }
 
     private static List<EffectSpec> effectSpecs(List<Map<?, ?>> raw) {

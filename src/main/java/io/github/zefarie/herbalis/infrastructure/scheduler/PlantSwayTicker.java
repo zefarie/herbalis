@@ -113,6 +113,11 @@ public final class PlantSwayTicker implements Runnable {
                     && ThreadLocalRandom.current().nextInt(LEAF_FALL_ODDS) == 0) {
                 PosCodec.corner(pos).ifPresent(fx::leafFall);
             }
+
+            // Plante infestee : moucherons visibles de loin.
+            if (plant.isInfested()) {
+                PosCodec.corner(pos).ifPresent(fx::pestAmbient);
+            }
         });
     }
 }

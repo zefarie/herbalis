@@ -76,6 +76,10 @@ public final class CraftListener implements Listener {
         shaped(plugin, "watering_can", items.wateringCan(config.wateringCanCharges()),
                 new String[]{"n  ", "iii", " i "},
                 Map.of('n', Material.IRON_NUGGET, 'i', Material.IRON_INGOT));
+        shaped(plugin, "sprayer", items.sprayer(config.sprayerCharges()),
+                new String[]{"n", "i", "b"},
+                Map.of('n', Material.IRON_NUGGET, 'i', Material.IRON_INGOT,
+                        'b', Material.GLASS_BOTTLE));
         shapeless(plugin, "fertilizer", withAmount(items.fertilizer(), 2),
                 Material.BONE_MEAL, Material.BONE_MEAL, Material.DIRT);
         shapeless(plugin, "rolling_paper", withAmount(items.rollingPaper(), 3),

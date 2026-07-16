@@ -10,6 +10,7 @@ import io.github.zefarie.herbalis.domain.drug.FertilizerProfile;
 import io.github.zefarie.herbalis.domain.drug.GrowthProfile;
 import io.github.zefarie.herbalis.domain.drug.HarvestWindow;
 import io.github.zefarie.herbalis.domain.drug.HydrationProfile;
+import io.github.zefarie.herbalis.domain.drug.PestProfile;
 import io.github.zefarie.herbalis.domain.drug.ToppingProfile;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
 import io.github.zefarie.herbalis.domain.quality.QualityWeights;
@@ -52,6 +53,7 @@ public final class TestFixtures {
                 new ToppingProfile(List.of(2, 3), 0.30, 0.60,
                         Duration.ofMinutes(2), 1, 2, 1),
                 new CuringProfile(Duration.ofMinutes(45), Duration.ofMinutes(90), 1, 6),
+                new PestProfile(0.15, 0.5, Duration.ofMinutes(10), 1),
                 new EffectProfile(Duration.ofSeconds(15),
                         Duration.ofMinutes(2), Duration.ofMinutes(6), 0.35,
                         List.of(new EffectSpec("minecraft:regeneration", 0, true, false)),

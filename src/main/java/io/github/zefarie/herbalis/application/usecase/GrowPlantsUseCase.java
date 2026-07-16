@@ -12,6 +12,7 @@ import io.github.zefarie.herbalis.domain.plant.PlantEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.random.RandomGenerator;
 
 /**
  * Tick global de croissance en temps reel. Chaque plante avance de son
@@ -36,12 +37,14 @@ public final class GrowPlantsUseCase {
     private final PlantRepository plants;
     private final DrugRegistry drugs;
     private final PlantEnvironment environment;
+    private final RandomGenerator random;
 
     public GrowPlantsUseCase(PlantRepository plants, DrugRegistry drugs,
-                             PlantEnvironment environment) {
+                             PlantEnvironment environment, RandomGenerator random) {
         this.plants = plants;
         this.drugs = drugs;
         this.environment = environment;
+        this.random = random;
     }
 
     /**
@@ -83,7 +86,8 @@ public final class GrowPlantsUseCase {
                         ? (slice++ % 2 == 0 ? dayLight : blockLight)
                         : liveLight;
                 GrowthEngine.GrowthTick result = GrowthEngine.tick(
-                        current, drug, new GrowthConditions(light, step));
+                        current, drug, new GrowthConditions(light, step,
+                                random.nextDouble(), 1.0));
                 current = result.plant();
                 events.addAll(result.events());
             }

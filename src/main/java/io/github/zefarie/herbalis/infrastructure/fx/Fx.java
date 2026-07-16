@@ -163,6 +163,42 @@ public final class Fx {
         sound(loc, "minecraft:block.sweet_berry_bush.break", 0.8f, 0.6f);
     }
 
+    /** Des nuisibles s'installent : nuage de moucherons et bruissement. */
+    public void pestAppeared(Location loc) {
+        particles(loc, w -> {
+            w.spawnParticle(Particle.MYCELIUM, plantHeart(loc), 18, 0.3, 0.3, 0.3, 0.02);
+            w.spawnParticle(Particle.SMOKE, plantHeart(loc), 4, 0.2, 0.2, 0.2, 0.01);
+        });
+        sound(loc, "minecraft:block.azalea_leaves.step", 0.9f, 0.6f);
+        sound(loc, "minecraft:entity.silverfish.ambient", 0.4f, 1.6f);
+    }
+
+    /** Moucherons discrets d'une plante infestee, visibles de loin. */
+    public void pestAmbient(Location loc) {
+        particles(loc, w -> w.spawnParticle(Particle.MYCELIUM,
+                plantHeart(loc), 4, 0.28, 0.25, 0.28, 0.015));
+    }
+
+    /** L'infestation vient d'abimer la plante. */
+    public void pestDamaged(Location loc) {
+        particles(loc, w -> {
+            w.spawnParticle(Particle.SMOKE, plantHeart(loc), 10, 0.2, 0.25, 0.2, 0.02);
+            leaves(w, plantHeart(loc), Color.fromRGB(0x8a, 0x93, 0x4a), 8);
+        });
+        sound(loc, "minecraft:block.sweet_berry_bush.break", 0.8f, 0.55f);
+    }
+
+    /** Coup de pulverisateur : brume et nuisibles disperses. */
+    public void sprayed(Location loc) {
+        particles(loc, w -> {
+            w.spawnParticle(Particle.CLOUD, plantHeart(loc), 12, 0.25, 0.25, 0.25, 0.02);
+            w.spawnParticle(Particle.HAPPY_VILLAGER, plantHeart(loc), 6,
+                    0.2, 0.25, 0.2, 0.0);
+        });
+        sound(loc, "minecraft:block.lava.extinguish", 0.4f, 1.8f);
+        sound(loc, "minecraft:entity.player.splash", 0.5f, 1.5f);
+    }
+
     public void broken(Location loc) {
         particles(loc, w -> w.spawnParticle(Particle.BLOCK, center(loc), 16,
                 0.25, 0.2, 0.25, 0.0, Material.DECORATED_POT.createBlockData()));

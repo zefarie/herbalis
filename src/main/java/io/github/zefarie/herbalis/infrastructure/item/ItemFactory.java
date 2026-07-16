@@ -62,7 +62,16 @@ public final class ItemFactory {
 
     /** Arrosoir : les charges restantes s'affichent via la barre de durabilite. */
     public ItemStack wateringCan(int maxCharges) {
-        ItemStack stack = base(HerbalisItemType.WATERING_CAN, null, null);
+        return charged(HerbalisItemType.WATERING_CAN, maxCharges);
+    }
+
+    /** Pulverisateur anti-nuisibles : charges en barre, se recharge sur l'eau. */
+    public ItemStack sprayer(int maxCharges) {
+        return charged(HerbalisItemType.SPRAYER, maxCharges);
+    }
+
+    private ItemStack charged(HerbalisItemType type, int maxCharges) {
+        ItemStack stack = base(type, null, null);
         stack.setData(DataComponentTypes.MAX_STACK_SIZE, 1);
         stack.setData(DataComponentTypes.MAX_DAMAGE, maxCharges);
         stack.setData(DataComponentTypes.DAMAGE, 0);
@@ -123,11 +132,12 @@ public final class ItemFactory {
      * de recettes ou /herbalis give).
      */
     public Optional<ItemStack> byId(String itemId, List<DrugType> drugs,
-                                    int maxCharges) {
+                                    int canCharges, int sprayerCharges) {
         for (HerbalisItemType type : HerbalisItemType.values()) {
             if (!type.isDrugScoped() && type.id().equals(itemId)) {
                 return Optional.of(switch (type) {
-                    case WATERING_CAN -> wateringCan(maxCharges);
+                    case WATERING_CAN -> wateringCan(canCharges);
+                    case SPRAYER -> sprayer(sprayerCharges);
                     default -> generic(type, 16);
                 });
             }

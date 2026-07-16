@@ -192,6 +192,9 @@ public final class HudService {
         if (plant.state() == PlantState.WITHERED) {
             return "hud.alerte-assoiffee";
         }
+        if (plant.isInfested()) {
+            return "hud.alerte-nuisibles";
+        }
         if (GrowthEngine.isHarvestable(plant, drug)) {
             return drug.harvestWindow().isOptimal(plant.ripenMillis())
                     ? "hud.alerte-recolte-optimale"

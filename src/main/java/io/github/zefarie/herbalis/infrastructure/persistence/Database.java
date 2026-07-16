@@ -76,6 +76,8 @@ public final class Database implements AutoCloseable {
                         fertilizer_uses INTEGER NOT NULL,
                         seed_quality INTEGER NOT NULL DEFAULT 2,
                         topping INTEGER NOT NULL DEFAULT 0,
+                        pest_ms INTEGER NOT NULL DEFAULT 0,
+                        pest_damage INTEGER NOT NULL DEFAULT 0,
                         state TEXT NOT NULL,
                         planted_at INTEGER NOT NULL,
                         last_tick_at INTEGER NOT NULL DEFAULT 0,
@@ -90,6 +92,11 @@ public final class Database implements AutoCloseable {
             // le chargement repart de l'instant present).
             addColumnIfMissing(statement, "plants",
                     "last_tick_at", "INTEGER NOT NULL DEFAULT 0");
+            // Migration vers les nuisibles.
+            addColumnIfMissing(statement, "plants",
+                    "pest_ms", "INTEGER NOT NULL DEFAULT 0");
+            addColumnIfMissing(statement, "plants",
+                    "pest_damage", "INTEGER NOT NULL DEFAULT 0");
             statement.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS racks (
                         id TEXT PRIMARY KEY,

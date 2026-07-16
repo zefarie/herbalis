@@ -54,6 +54,14 @@ items:
       - "<!i><color:#9ca3af>Se recharge sur un bloc d'eau.</color>"
       - "<!i><i><color:#71717a>La vie coule a petites gouttes.</color></i>"
       - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  sprayer:
+    nom: "<gradient:#a7f3d0:#10b981>Pulvérisateur</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Chasse les nuisibles d'un nuage</color>"
+      - "<!i><color:#9ca3af>fin. Se recharge sur l'eau.</color>"
+      - "<!i><i><color:#71717a>Pschitt, et la paix revient.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
   fertilizer:
     nom: "<gradient:#a3e635:#65a30d>Engrais naturel</gradient>"
     lore:
@@ -139,6 +147,7 @@ hud:
   alerte-lumiere: " <color:#3f3f46>│</color> <color:#f87171><font:herbalis:icons></font> manque de lumière</color>"
   alerte-soif: " <color:#3f3f46>│</color> <color:#fbbf24><font:herbalis:icons></font> à arroser</color>"
   alerte-assoiffee: " <color:#3f3f46>│</color> <color:#f87171><font:herbalis:icons></font> assoiffée !</color>"
+  alerte-nuisibles: " <color:#3f3f46>│</color> <color:#fb923c><font:herbalis:icons></font> nuisibles ! au pulvérisateur</color>"
   alerte-recolte-optimale: " <color:#3f3f46>│</color> <color:#4ade80><font:herbalis:icons></font> récolte optimale !</color>"
   alerte-taille: " <color:#3f3f46>│</color> <color:#7dd3fc><font:herbalis:icons></font> fenêtre de taille !</color>"
   alerte-recolte-tardive: " <color:#3f3f46>│</color> <color:#fbbf24><font:herbalis:icons></font> la qualité décline...</color>"
@@ -205,6 +214,11 @@ sechage:
 conditionnement:
   rien-a-emballer: "<color:#f87171>Aucune weed séchée dans l'inventaire.</color>"
   pochon-rempli: "<color:#4ade80>Pochon rempli.</color> <etoiles>"
+
+nuisibles:
+  traitee: "<color:#4ade80><font:herbalis:icons></font> Nuage de traitement... les nuisibles se dispersent.</color>"
+  plante-saine: "<color:#9ca3af>Aucun nuisible sur cette plante.</color>"
+  pulverisateur-vide: "<color:#fbbf24>Pulvérisateur vide : rechargez-le sur un bloc d'eau.</color>"
 
 curing:
   jarre-posee: "<color:#4ade80>Jarre de curing posée.</color> <color:#9ca3af>L'affinage attend sa matière.</color>"

@@ -71,6 +71,8 @@ public final class GrowthTicker implements Runnable {
                     case PlantEvent.HarvestWindowClosed ignored -> {
                         // Silencieux : le HUD signale la fenetre depassee.
                     }
+                    case PlantEvent.PestAppeared ignored -> fx.pestAppeared(loc);
+                    case PlantEvent.PestDamaged ignored -> fx.pestDamaged(loc);
                 }
             }
             // Le terreau suit l'etat (sec, fertilise, arrose).

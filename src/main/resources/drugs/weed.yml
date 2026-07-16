@@ -80,6 +80,18 @@ taille:
   # Etoiles perdues si la taille est faite au mauvais moment.
   malus-etoiles-rate: 1
 
+nuisibles:
+  # Chance qu'une plante etablie (stage 2 et plus) attrape des
+  # nuisibles, par jour. 0 desactive les nuisibles.
+  chance-par-jour: 0.15
+  # Croissance multipliee pendant l'infestation (0.5 = deux fois
+  # plus lent). Traitez au pulverisateur, craftable.
+  ralentissement: 0.5
+  # Sans traitement au bout de ce delai, la plante est abimee.
+  delai-degats: 12h
+  # Etoiles perdues a la recolte si la plante a ete abimee.
+  malus-etoiles: 1
+
 curing:
   # Duree d'affinage complet en jarre (temps reel, continue
   # meme serveur eteint).

@@ -2,6 +2,7 @@ package io.github.zefarie.herbalis.domain.plant;
 
 import io.github.zefarie.herbalis.domain.drug.DrugType;
 import io.github.zefarie.herbalis.domain.drug.HydrationProfile;
+import io.github.zefarie.herbalis.domain.drug.PestProfile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,12 +45,34 @@ public final class GrowthEngine {
         HydrationProfile hydrationProfile = drug.hydration();
         long delta = conditions.deltaMillis();
 
-        // Hydratation : decroissance, puis echantillon pondere par la duree
-        // du tick (les ticks de rattrapage pesent leur juste poids).
+        // Hydratation : decroissance (ralentie par un goutte-a-goutte),
+        // puis echantillon pondere par la duree du tick (les ticks de
+        // rattrapage pesent leur juste poids).
         double hydration = Math.max(0.0,
-                plant.hydration() - hydrationProfile.decayPerMinute() * delta / 60_000.0);
+                plant.hydration() - hydrationProfile.decayPerMinute()
+                        * conditions.hydrationFactor() * delta / 60_000.0);
         double hydrationSum = plant.hydrationSum() + hydration * delta;
         long samples = plant.hydrationSamples() + delta;
+
+        // Nuisibles : tirage d'infestation sur les plants etablis, puis
+        // progression vers les degats tant que rien n'est traite.
+        PestProfile pests = drug.pests();
+        long pestMillis = plant.pestMillis();
+        int pestDamage = plant.pestDamage();
+        if (pestMillis <= 0) {
+            if (pests.isEnabled() && plant.stage() >= 2
+                    && conditions.pestRoll() < pests.chanceOver(delta)) {
+                pestMillis = 1L;
+                events.add(new PlantEvent.PestAppeared());
+            }
+        } else {
+            pestMillis += delta;
+            if (pestDamage == 0
+                    && pestMillis >= pests.damageDelay().toMillis()) {
+                pestDamage = 1;
+                events.add(new PlantEvent.PestDamaged());
+            }
+        }
 
         // Secheresse : jaunissement puis mort.
         long dryMillis = hydration <= 0.0 ? plant.dryMillis() + delta : 0L;
@@ -57,7 +80,7 @@ public final class GrowthEngine {
         if (dryMillis >= hydrationProfile.deathDelay().toMillis()) {
             Plant dead = plant.ticked(plant.stage(), plant.stageGrowthMillis(),
                     plant.ripenMillis(), hydration, hydrationSum, samples,
-                    dryMillis, PlantState.DEAD);
+                    dryMillis, pestMillis, pestDamage, PlantState.DEAD);
             return new GrowthTick(dead, List.of(new PlantEvent.Died()));
         }
         if (dryMillis >= hydrationProfile.witherDelay().toMillis()) {
@@ -88,6 +111,9 @@ public final class GrowthEngine {
             double multiplier = plant.isFertilizedThisStage()
                     ? drug.fertilizer().speedMultiplier()
                     : 1.0;
+            if (pestMillis > 0) {
+                multiplier *= pests.slowdown();
+            }
             stageGrowth += Math.round(delta * multiplier);
 
             long needed = drug.growth().durationOf(stage).toMillis();
@@ -100,7 +126,8 @@ public final class GrowthEngine {
         }
 
         Plant next = plant.ticked(stage, stageGrowth, ripen,
-                hydration, hydrationSum, samples, dryMillis, state);
+                hydration, hydrationSum, samples, dryMillis,
+                pestMillis, pestDamage, state);
         return new GrowthTick(next, List.copyOf(events));
     }
 

@@ -16,7 +16,8 @@ public final class QualityCalculator {
      * Qualite d'une plante recoltee maintenant. Combine l'hydratation
      * moyenne sur la vie de la plante, l'usage d'engrais, le timing de
      * recolte et la genetique de la graine selon les poids du type de
-     * drogue. Une taille ratee coute des etoiles.
+     * drogue. Une taille ratee ou une infestation non traitee coutent
+     * des etoiles.
      */
     public static Quality harvestQuality(Plant plant, DrugType drug) {
         QualityWeights weights = drug.qualityWeights();
@@ -40,6 +41,9 @@ public final class QualityCalculator {
         Quality quality = Quality.fromScore(score);
         if (plant.topping() < 0) {
             quality = Quality.of(quality.stars() - drug.topping().missMalusStars());
+        }
+        if (plant.pestDamage() > 0) {
+            quality = Quality.of(quality.stars() - drug.pests().damageStars());
         }
         return quality;
     }

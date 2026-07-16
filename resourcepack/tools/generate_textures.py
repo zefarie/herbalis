@@ -832,6 +832,36 @@ BUD_DRIED_PALETTE = {
     "p": (190, 120, 50, 255),
 }
 
+SPRAYER_MAP = [
+    "................",
+    "................",
+    "...w............",
+    "..w.nNN.........",
+    "...w...M........",
+    ".......M........",
+    "......mMMm......",
+    ".....GggggG.....",
+    ".....Gg..gG.....",
+    ".....GllllG.....",
+    ".....GllllG.....",
+    ".....GLllLG.....",
+    ".....GLLLLG.....",
+    "......GGGG......",
+    "................",
+    "................",
+]
+SPRAYER_PALETTE = {
+    "N": (232, 238, 244, 255),
+    "n": (148, 163, 184, 255),
+    "M": (203, 213, 225, 255),
+    "m": (100, 116, 139, 255),
+    "G": (134, 160, 172, 255),
+    "g": (196, 219, 226, 255),
+    "l": (110, 231, 152, 255),
+    "L": (64, 180, 108, 255),
+    "w": (125, 211, 252, 255),
+}
+
 JOINT_MAP = [
     "................",
     "................",
@@ -929,6 +959,7 @@ def main() -> None:
 
     # Items.
     save(from_map(SEED_MAP, SEED_PALETTE), "item/weed_seed.png")
+    save(from_map(SPRAYER_MAP, SPRAYER_PALETTE), "item/sprayer.png")
     save(from_map(WATERING_CAN_MAP, WATERING_CAN_PALETTE), "item/watering_can.png")
     save(from_map(FERTILIZER_MAP, FERTILIZER_PALETTE), "item/fertilizer.png")
     save(from_map(ROLLING_PAPER_MAP, ROLLING_PAPER_PALETTE), "item/rolling_paper.png")

@@ -21,12 +21,14 @@ import java.util.UUID;
  * @param ripenMillis       temps accumule au stade final (fenetre de recolte)
  * @param hydration         jauge d'hydratation, 0 a 100
  * @param hydrationSum      somme des echantillons d'hydratation (pour la moyenne)
- * @param hydrationSamples  nombre d'echantillons d'hydratation
+ * @param hydrationSamples  poids total des echantillons d'hydratation
  * @param dryMillis         temps accumule a sec (hydration a 0)
  * @param fertilizedStage   dernier stage ou un engrais a ete applique (0 = jamais)
  * @param fertilizerUses    nombre total d'engrais appliques
  * @param seedQuality       qualite de la graine plantee, 1 a 5 (genetique)
  * @param topping           taille : 0 jamais, 1 reussie, -1 ratee
+ * @param pestMillis        duree d'infestation en cours (0 = plante saine)
+ * @param pestDamage        1 si une infestation a abime la plante (definitif)
  * @param state             etat de sante visible
  * @param plantedAt         date de plantation (epoch millis)
  * @param lastTickAt        date du dernier tick de croissance (epoch millis)
@@ -46,6 +48,8 @@ public record Plant(
         int fertilizerUses,
         int seedQuality,
         int topping,
+        long pestMillis,
+        int pestDamage,
         PlantState state,
         long plantedAt,
         long lastTickAt
@@ -66,6 +70,7 @@ public record Plant(
                 100.0, 0.0, 0L, 0L,
                 0, 0,
                 Math.clamp(seedQuality, 1, 5), 0,
+                0L, 0,
                 PlantState.HEALTHY, now, now);
     }
 
@@ -90,18 +95,23 @@ public record Plant(
         return topping != 0;
     }
 
+    /** Vrai si des nuisibles infestent actuellement la plante. */
+    public boolean isInfested() {
+        return pestMillis > 0;
+    }
+
     public Plant withHydration(double newHydration) {
         return new Plant(id, drugId, pos, stage, stageGrowthMillis, ripenMillis,
                 Math.clamp(newHydration, 0.0, 100.0), hydrationSum, hydrationSamples,
                 dryMillis, fertilizedStage, fertilizerUses, seedQuality, topping,
-                state, plantedAt, lastTickAt);
+                pestMillis, pestDamage, state, plantedAt, lastTickAt);
     }
 
     public Plant withFertilizer() {
         return new Plant(id, drugId, pos, stage, stageGrowthMillis, ripenMillis,
                 hydration, hydrationSum, hydrationSamples, dryMillis,
-                stage, fertilizerUses + 1, seedQuality, topping, state,
-                plantedAt, lastTickAt);
+                stage, fertilizerUses + 1, seedQuality, topping,
+                pestMillis, pestDamage, state, plantedAt, lastTickAt);
     }
 
     /** Marque la plante comme avancee jusqu'a cette date. */
@@ -109,7 +119,7 @@ public record Plant(
         return new Plant(id, drugId, pos, stage, stageGrowthMillis, ripenMillis,
                 hydration, hydrationSum, hydrationSamples, dryMillis,
                 fertilizedStage, fertilizerUses, seedQuality, topping,
-                state, plantedAt, now);
+                pestMillis, pestDamage, state, plantedAt, now);
     }
 
     /** Taille reussie : la coupe rend de la progression au stage. */
@@ -117,24 +127,36 @@ public record Plant(
         return new Plant(id, drugId, pos, stage,
                 Math.max(0L, newStageGrowthMillis), ripenMillis,
                 hydration, hydrationSum, hydrationSamples, dryMillis,
-                fertilizedStage, fertilizerUses, seedQuality, 1, state,
-                plantedAt, lastTickAt);
+                fertilizedStage, fertilizerUses, seedQuality, 1,
+                pestMillis, pestDamage, state, plantedAt, lastTickAt);
     }
 
     /** Taille ratee : la plante est abimee, la qualite en patira. */
     public Plant toppingMissed() {
         return new Plant(id, drugId, pos, stage, stageGrowthMillis, ripenMillis,
                 hydration, hydrationSum, hydrationSamples, dryMillis,
-                fertilizedStage, fertilizerUses, seedQuality, -1, state,
-                plantedAt, lastTickAt);
+                fertilizedStage, fertilizerUses, seedQuality, -1,
+                pestMillis, pestDamage, state, plantedAt, lastTickAt);
+    }
+
+    /**
+     * Traitement au pulverisateur : l'infestation disparait. Les degats
+     * deja subis, eux, restent.
+     */
+    public Plant pestTreated() {
+        return new Plant(id, drugId, pos, stage, stageGrowthMillis, ripenMillis,
+                hydration, hydrationSum, hydrationSamples, dryMillis,
+                fertilizedStage, fertilizerUses, seedQuality, topping,
+                0L, pestDamage, state, plantedAt, lastTickAt);
     }
 
     Plant ticked(int newStage, long newStageGrowth, long newRipen,
                  double newHydration, double newHydrationSum, long newSamples,
-                 long newDryMillis, PlantState newState) {
+                 long newDryMillis, long newPestMillis, int newPestDamage,
+                 PlantState newState) {
         return new Plant(id, drugId, pos, newStage, newStageGrowth, newRipen,
                 newHydration, newHydrationSum, newSamples, newDryMillis,
                 fertilizedStage, fertilizerUses, seedQuality, topping,
-                newState, plantedAt, lastTickAt);
+                newPestMillis, newPestDamage, newState, plantedAt, lastTickAt);
     }
 }

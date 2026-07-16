@@ -40,6 +40,11 @@ arrosoir:
   # (clic droit sur un bloc d'eau pour recharger).
   charges: 8
 
+pulverisateur:
+  # Nombre de traitements anti-nuisibles avant de devoir recharger
+  # le pulverisateur (clic droit sur un bloc d'eau).
+  charges: 6
+
 taille:
   # Points de durabilite perdus par les cisailles (l'outil vanilla)
   # a chaque taille. 0 = aucune usure.

@@ -115,10 +115,61 @@ class GrowthEngineTest {
     }
 
     @Test
+    void lesNuisiblesApparaissentRalentissentPuisAbiment() {
+        // Stage 2 etabli, tirage perdant : infestation.
+        Plant plant = fresh().withHydration(100);
+        plant = GrowthEngine.tick(plant, weed, new GrowthConditions(
+                15, weed.growth().durationOf(1).toMillis())).plant();
+        assertEquals(2, plant.stage());
+
+        GrowthEngine.GrowthTick infested = GrowthEngine.tick(
+                plant.withHydration(100), weed,
+                new GrowthConditions(15, 60_000, 0.0, 1.0));
+        assertTrue(infested.plant().isInfested());
+        assertTrue(infested.events().stream()
+                .anyMatch(e -> e instanceof PlantEvent.PestAppeared));
+
+        // Croissance a moitie ralentie pendant l'infestation.
+        long before = infested.plant().stageGrowthMillis();
+        Plant slowed = GrowthEngine.tick(infested.plant().withHydration(100),
+                weed, new GrowthConditions(15, 60_000)).plant();
+        assertEquals(before + 30_000, slowed.stageGrowthMillis());
+
+        // Sans traitement, degats au bout du delai (10 min en test).
+        Plant damaged = tickFor(slowed, weed, 11 * 60_000, 60_000, 15);
+        assertEquals(1, damaged.pestDamage());
+
+        // Le traitement chasse les nuisibles mais ne repare rien.
+        Plant treated = damaged.pestTreated();
+        assertFalse(treated.isInfested());
+        assertEquals(1, treated.pestDamage());
+    }
+
+    @Test
+    void pasDeNuisiblesSurUnePousseNiSansTirage() {
+        // Stage 1 : jamais de nuisibles, meme avec un tirage perdant.
+        Plant seedling = fresh().withHydration(100);
+        assertFalse(GrowthEngine.tick(seedling, weed,
+                new GrowthConditions(15, 60_000, 0.0, 1.0))
+                .plant().isInfested());
+    }
+
+    @Test
+    void leGoutteAGoutteRalentitLaPerteDeau() {
+        Plant plant = fresh().withHydration(100);
+        Plant sans = GrowthEngine.tick(plant, weed,
+                new GrowthConditions(15, 60_000)).plant();
+        Plant avec = GrowthEngine.tick(plant, weed,
+                new GrowthConditions(15, 60_000, 1.0, 0.5)).plant();
+        assertEquals(100.0 - 2.5, sans.hydration(), 0.001);
+        assertEquals(100.0 - 1.25, avec.hydration(), 0.001);
+    }
+
+    @Test
     void fenetreDeRecolteSeRefermeApresLaDureeOptimale() {
         Plant atFinal = new Plant(java.util.UUID.randomUUID(), "weed",
                 TestFixtures.pos(), 4, 0L, 0L, 100.0, 0.0, 0L, 0L, 0, 0, 2, 0,
-                PlantState.HEALTHY, 0L, 0L);
+                0L, 0, PlantState.HEALTHY, 0L, 0L);
         // 9 minutes : encore optimal.
         Plant inWindow = tickFor(atFinal, weed, 9 * 60_000, 60_000, 15);
         assertTrue(weed.harvestWindow().isOptimal(inWindow.ripenMillis()));

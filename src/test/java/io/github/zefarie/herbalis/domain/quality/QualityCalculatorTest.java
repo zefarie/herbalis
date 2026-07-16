@@ -25,7 +25,7 @@ class QualityCalculatorTest {
         return new Plant(UUID.randomUUID(), "weed", TestFixtures.pos(),
                 4, 0L, ripenMillis,
                 avgHydration, avgHydration * 100, 100L, 0L,
-                0, fertilizerUses, seedQuality, topping,
+                0, fertilizerUses, seedQuality, topping, 0L, 0,
                 PlantState.HEALTHY, 0L, 0L);
     }
 
@@ -69,6 +69,16 @@ class QualityCalculatorTest {
         Plant intacte = plantWith(100.0, 4, 0L, 5, 0);
         Plant abimee = plantWith(100.0, 4, 0L, 5, -1);
         assertEquals(5, QualityCalculator.harvestQuality(intacte, weed).stars());
+        assertEquals(4, QualityCalculator.harvestQuality(abimee, weed).stars());
+    }
+
+    @Test
+    void uneInfestationNonTraiteeCouteUneEtoile() {
+        Plant saine = plantWith(100.0, 4, 0L, 5, 0);
+        Plant abimee = new Plant(UUID.randomUUID(), "weed", TestFixtures.pos(),
+                4, 0L, 0L, 100.0, 100.0 * 100, 100L, 0L,
+                0, 4, 5, 0, 0L, 1, PlantState.HEALTHY, 0L, 0L);
+        assertEquals(5, QualityCalculator.harvestQuality(saine, weed).stars());
         assertEquals(4, QualityCalculator.harvestQuality(abimee, weed).stars());
     }
 

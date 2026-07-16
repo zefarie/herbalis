@@ -21,6 +21,7 @@ public record DrugType(
         DryingProfile drying,
         ToppingProfile topping,
         CuringProfile curing,
+        PestProfile pests,
         EffectProfile effects,
         ConsumptionRules consumption,
         QualityWeights qualityWeights

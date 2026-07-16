@@ -589,9 +589,9 @@ def font_json() -> None:
 def main() -> None:
     print("Models :")
 
-    for key in ["weed_seed", "watering_can", "fertilizer", "rolling_paper",
-                "pouch_empty", "weed_pouch", "weed_bud_fresh", "weed_dried",
-                "weed_joint"]:
+    for key in ["weed_seed", "watering_can", "sprayer", "fertilizer",
+                "rolling_paper", "pouch_empty", "weed_pouch", "weed_bud_fresh",
+                "weed_dried", "weed_joint"]:
         flat_item(key)
         item_definition(key, f"herbalis:item/{key}")
 

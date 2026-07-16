@@ -25,4 +25,12 @@ public sealed interface PlantEvent {
     /** La fenetre de recolte optimale vient de se refermer. */
     record HarvestWindowClosed() implements PlantEvent {
     }
+
+    /** Des nuisibles viennent d'infester la plante. */
+    record PestAppeared() implements PlantEvent {
+    }
+
+    /** L'infestation non traitee vient d'abimer la plante. */
+    record PestDamaged() implements PlantEvent {
+    }
 }
