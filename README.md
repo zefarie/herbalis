@@ -17,8 +17,10 @@ Arrosoir et joint en vrais models 3D en main, particules et sons sur
 chaque action (fumée de joint en spirale), HUD en action bar avec une
 font d'icônes dessinée pour le pack, effets de consommation
 cinématiques (montée, plateau, descente, blackout), tolérance et
-manque persistants. Et de la profondeur de jeu : taille au sécateur
-dans une fenêtre précise, affinage en jarre de curing (avec
+manque persistants. Et de la profondeur de jeu : une culture au rythme
+d'une vraie plante (environ une semaine réelle de la graine au joint,
+la croissance continue chunk déchargé et serveur éteint), taille aux
+cisailles dans une fenêtre précise, affinage en jarre de curing (avec
 moisissure punitive), génétique des graines sur plusieurs
 générations, toute la pipeline craftable.
 
@@ -63,25 +65,33 @@ par le serveur au premier démarrage.
    - **Lumière** : niveau 12 minimum (configurable), sinon la
      croissance est figée et le HUD l'indique. Une serre éclairée
      pousse la nuit.
-   - **Arrosage** : l'hydratation baisse avec le temps. Arrosoir en
-     main, clic droit sur la plante. L'arrosoir a 8 charges et se
-     recharge d'un clic droit sur un bloc d'eau. Une plante à sec
-     arrête de pousser, jaunit, puis meurt (le pot reste).
+   - **Arrosage** : l'hydratation baisse avec le temps (la jauge
+     pleine tient environ une journée : comme une vraie plante, elle
+     s'arrose une à deux fois par jour). Arrosoir en main, clic droit
+     sur la plante. L'arrosoir a 8 charges et se recharge d'un clic
+     droit sur un bloc d'eau. Une plante à sec arrête de pousser,
+     jaunit (6 h), puis meurt (24 h de plus, le pot reste) : environ
+     deux jours de négligence lui sont fatals.
    - **Engrais** : un par stage, accélère le stage en cours et
      améliore la qualité potentielle.
-   - **Taille (topping)** : un coup de sécateur aux stages 2 ou 3,
-     dans la fenêtre du milieu de stage (le HUD affiche des ciseaux
-     quand c'est le moment) : +1 à 2 têtes à la récolte, mais la
-     plante encaisse la coupe et perd un peu de progression. Hors
-     fenêtre, la coupe abîme la plante (-1 étoile). Une seule taille
-     par plante, et le sécateur s'use.
+   - **Taille (topping)** : un coup de cisailles (l'outil vanilla)
+     aux stages 2 ou 3, dans la fenêtre du milieu de stage (le HUD
+     affiche des ciseaux quand c'est le moment) : +1 à 2 têtes à la
+     récolte, mais la plante encaisse la coupe et perd quelques
+     heures de progression. Hors fenêtre, la coupe abîme la plante
+     (-1 étoile). Une seule taille par plante, et les cisailles
+     s'usent (durabilité vanilla, configurable).
 4. **Croissance** : 4 stages (pousse, jeune plant, plant mature, plant
-   en fleur), 8 minutes par stage par défaut, transitions animées par
-   interpolation. Regarder la plante affiche son état complet en action
+   en fleur), environ 4 jours réels jusqu'à la floraison par défaut,
+   transitions animées par interpolation. La croissance suit le temps
+   réel : chunk déchargé ou serveur éteint, la plante rattrape tout
+   son retard au retour (elle continue aussi de boire, revenez
+   l'arroser). Regarder la plante affiche son état complet en action
    bar : stage en segments, hydratation, qualité potentielle en étoiles,
    alertes.
-5. **Récolter** : au stade final, clic droit main vide. Une fenêtre
-   optimale de 10 minutes s'ouvre à la floraison : les buds givrent de
+5. **Récolter** : au stade final, clic droit main vide (ou aux
+   cisailles). Une fenêtre
+   optimale de 12 heures s'ouvre à la floraison : les buds givrent de
    trichomes blancs et la plante scintille. Récolter dedans maximise
    la qualité, après elle décline. La qualité (1 à 5 étoiles) combine
    hydratation moyenne, engrais, timing de récolte et génétique de la
@@ -89,14 +99,14 @@ par le serveur au premier démarrage.
    plupart gardent les étoiles de la plante mère, certaines dérivent
    d'une étoile. On sélectionne sa lignée au fil des générations.
 6. **Sécher** : poser un rack de séchage, y suspendre jusqu'à 6 têtes
-   fraîches (clic droit). 20 minutes en temps réel, le séchage continue
+   fraîches (clic droit). Un jour en temps réel, le séchage continue
    serveur éteint. Le modèle du rack change selon son état et des
    particules discrètes signalent de loin qu'il est prêt. Retirer trop
    tôt (sneak + clic droit) coûte de la qualité.
 7. **Affiner (curing, optionnel)** : déposer la weed séchée dans une
    jarre de curing (jusqu'à 6 têtes, contenu visible à travers le
-   verre). 45 minutes en temps réel (continue serveur éteint) :
-   +1 étoile. Mais une jarre oubliée moisit 90 minutes après la fin
+   verre). Deux jours en temps réel (continue serveur éteint) :
+   +1 étoile. Mais une jarre oubliée moisit deux jours après la fin
    d'affinage : tout le contenu est ruiné (1 étoile), et une seule
    tête moisie contamine la jarre entière.
 8. **Conditionner** : pochon vide en main, clic droit : la meilleure
@@ -130,7 +140,7 @@ graines (récolte, casse de plante ou `/herbalis give` uniquement).
 | Pot de culture | 7 briques (forme pot) | Se pose au sol, socle de la plante |
 | Graine de weed | Pas de craft : récolte ou give | Clic droit sur un pot, porte sa lignée (étoiles) |
 | Arrosoir | 1 pépite (bec) + 4 lingots de fer | Arrose (8 charges), se recharge sur l'eau |
-| Sécateur | 2 lingots de fer + 1 bâton | Taille aux stages 2-3 (25 utilisations) |
+| Cisailles | Craft vanilla (2 lingots de fer) | Taille aux stages 2-3, usure vanilla configurable |
 | Engrais naturel | 2 poudres d'os + 1 terre (x2) | Un par stage, boost vitesse et qualité |
 | Tête fraîche | Récolte | Se suspend au rack de séchage |
 | Rack de séchage | 3 bâtons + 3 ficelles + 2 bâtons | Sèche jusqu'à 6 têtes |
@@ -157,8 +167,9 @@ l'item ; pleins, ils rendent d'abord leur contenu.
 Tab completion complète sur tout. Alias : `/herb`.
 
 Items pour `give` : `pot`, `drying_rack`, `curing_jar`, `watering_can`,
-`secateur`, `fertilizer`, `rolling_paper`, `pouch_empty`, `weed_seed`,
-`weed_bud_fresh`, `weed_dried`, `weed_pouch`, `weed_joint`.
+`fertilizer`, `rolling_paper`, `pouch_empty`, `weed_seed`,
+`weed_bud_fresh`, `weed_dried`, `weed_pouch`, `weed_joint`. La taille
+se fait aux cisailles vanilla.
 
 ## Permissions
 
@@ -173,16 +184,19 @@ Items pour `give` : `pot`, `drying_rack`, `curing_jar`, `watering_can`,
 ## Configuration
 
 - `config.yml` : tick de croissance, autosave, particules et sons,
-  HUD, charges de l'arrosoir, utilisations du sécateur, drops,
+  HUD, charges de l'arrosoir, usure des cisailles à la taille, drops,
   explosions, cadence du manque. Tout est commenté en français.
 - `drugs/weed.yml` : la définition complète de la weed : durées de
   stages, lumière minimum, hydratation, engrais, fenêtre de récolte,
   séchage, taille (stages, fenêtre, bonus, malus), curing (durée,
   moisissure, bonus), effets (montée, plateau, descente), blackout,
   tolérance, addiction, poids du calcul de qualité (dont la
-  génétique). Les sections `taille` et `curing` sont optionnelles :
-  une config antérieure reste valide (défauts raisonnables, génétique
-  à 0 tant que le poids n'est pas déclaré).
+  génétique). Les durées acceptent `30s`, `8m`, `1h30m`, `2d` ou
+  `1j12h` ; les défauts visent le rythme d'une vraie culture
+  (environ une semaine de la graine au joint), tout se raccourcit
+  pour un serveur au rythme arcade. Les sections `taille` et `curing`
+  sont optionnelles : une config antérieure reste valide (défauts
+  raisonnables, génétique à 0 tant que le poids n'est pas déclaré).
 - `messages.yml` : 100 % des textes joueur, en MiniMessage.
 
 ### Ajouter une drogue
@@ -222,8 +236,12 @@ Choix techniques notables :
   orphelines sont purgées. Un crash ne laisse aucun fantôme.
 - **Un scheduler global par préoccupation** (croissance, racks,
   joueurs, HUD, autosave), jamais une task par plante.
-- **Timestamps, pas des ticks comptés** : séchage, tolérance, addiction
-  et sessions d'effets survivent aux redémarrages et aux déconnexions.
+- **Timestamps, pas des ticks comptés** : séchage, curing, tolérance,
+  addiction et sessions d'effets survivent aux redémarrages et aux
+  déconnexions. La croissance aussi : chaque plante garde la date de
+  son dernier tick et rattrape son retard par tranches au retour du
+  chunk, si bien qu'une absence de trois jours se simule fidèlement
+  (assoiffement, passages de stage, mort) en une fraction de seconde.
 - **Composants 1.21.x** : `item_model` (pas de custom_model_data
   legacy), `consumable` pour l'animation de fumage, `max_damage` pour
   la jauge de l'arrosoir.
@@ -271,9 +289,10 @@ python3 -m venv .venv && .venv/bin/pip install pillow
 ./gradlew test
 ```
 
-47 tests unitaires sur le domaine et les cas d'usage : progression de
-croissance, lumière, sécheresse et mort, calcul de qualité (dont
+55 tests unitaires sur le domaine et les cas d'usage : progression de
+croissance, rattrapage hors ligne (stages, mort au bon moment, chunk
+déchargé), lumière, sécheresse et mort, calcul de qualité (dont
 génétique et malus de taille), malus de séchage, curing (affinage,
 moisissure, contamination), fenêtre de taille, graines héritées,
 tolérance, fenêtre de blackout, seuils de manque, chronologie des
-effets.
+effets, parsing des durées (jours inclus).
