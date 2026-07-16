@@ -27,4 +27,22 @@ public final class BukkitPlantEnvironment implements PlantEnvironment {
         }
         return world.getBlockAt(pos.x(), pos.y(), pos.z()).getLightLevel();
     }
+
+    @Override
+    public int blockLightLevel(BlockPos pos) {
+        World world = Bukkit.getWorld(pos.worldId());
+        if (world == null) {
+            return 0;
+        }
+        return world.getBlockAt(pos.x(), pos.y(), pos.z()).getLightFromBlocks();
+    }
+
+    @Override
+    public int skyLightLevel(BlockPos pos) {
+        World world = Bukkit.getWorld(pos.worldId());
+        if (world == null) {
+            return 0;
+        }
+        return world.getBlockAt(pos.x(), pos.y(), pos.z()).getLightFromSky();
+    }
 }

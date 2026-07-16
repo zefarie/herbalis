@@ -64,14 +64,24 @@ public final class GrowPlantsUseCase {
             if (remaining <= 0) {
                 continue;
             }
-            // La lumiere du rattrapage est celle du moment : approximation
-            // honnete, une serre eclairee reste eclairee.
-            int light = environment.lightLevel(pos);
+            // Lumiere : en jeu, celle du moment. En rattrapage, on simule
+            // l'alternance jour/nuit en alternant les tranches entre plein
+            // acces au ciel et lumiere des blocs seule : une serre eclairee
+            // pousse en continu, une plante en exterieur au rythme du soleil.
+            boolean catchingUp = remaining > SLICE_MILLIS;
+            int liveLight = environment.lightLevel(pos);
+            int blockLight = catchingUp ? environment.blockLightLevel(pos) : 0;
+            int dayLight = catchingUp
+                    ? Math.max(blockLight, environment.skyLightLevel(pos)) : 0;
             List<PlantEvent> events = new ArrayList<>(2);
             Plant current = plant;
+            int slice = 0;
             while (remaining > 0 && !current.isDead()) {
                 long step = Math.min(remaining, SLICE_MILLIS);
                 remaining -= step;
+                int light = catchingUp
+                        ? (slice++ % 2 == 0 ? dayLight : blockLight)
+                        : liveLight;
                 GrowthEngine.GrowthTick result = GrowthEngine.tick(
                         current, drug, new GrowthConditions(light, step));
                 current = result.plant();

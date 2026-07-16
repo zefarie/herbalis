@@ -53,6 +53,8 @@ class GrowPlantsUseCaseTest {
     private static final class FakeEnvironment implements PlantEnvironment {
         boolean loaded = true;
         int light = 15;
+        int blockLight = 15;
+        int skyLight = 15;
 
         @Override
         public boolean isLoaded(BlockPos pos) {
@@ -62,6 +64,16 @@ class GrowPlantsUseCaseTest {
         @Override
         public int lightLevel(BlockPos pos) {
             return light;
+        }
+
+        @Override
+        public int blockLightLevel(BlockPos pos) {
+            return blockLight;
+        }
+
+        @Override
+        public int skyLightLevel(BlockPos pos) {
+            return skyLight;
         }
     }
 
@@ -112,6 +124,22 @@ class GrowPlantsUseCaseTest {
         environment.loaded = true;
         grow.tick(20 * 60_000L);
         assertEquals(3, plants.at(TestFixtures.pos()).orElseThrow().stage());
+    }
+
+    @Test
+    void laPlanteSousCielPousseAuRythmeDuSoleilPendantLeRattrapage() {
+        // Exterieur : aucun bloc lumineux, plein ciel, chunk recharge de
+        // nuit. Le rattrapage alterne jour/nuit : la moitie du temps
+        // pousse, l'autre non.
+        plants.put(Plant.plant("weed", TestFixtures.pos(), 0L));
+        environment.blockLight = 0;
+        environment.skyLight = 15;
+        environment.light = 4;
+        grow.tick(32 * 60_000L);
+
+        // 32 min dont ~la moitie de jour : un seul stage franchi, la ou
+        // une serre eclairee en aurait franchi trois.
+        assertEquals(2, plants.at(TestFixtures.pos()).orElseThrow().stage());
     }
 
     @Test

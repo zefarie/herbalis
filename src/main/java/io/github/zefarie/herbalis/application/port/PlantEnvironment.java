@@ -13,4 +13,13 @@ public interface PlantEnvironment {
 
     /** Niveau de lumiere au bloc donne, 0 a 15. */
     int lightLevel(BlockPos pos);
+
+    /** Lumiere venant des blocs seuls (torches, lampes), 0 a 15. */
+    int blockLightLevel(BlockPos pos);
+
+    /**
+     * Acces au ciel : lumiere du ciel structurelle, independante de
+     * l'heure (15 = plein ciel), 0 a 15.
+     */
+    int skyLightLevel(BlockPos pos);
 }
