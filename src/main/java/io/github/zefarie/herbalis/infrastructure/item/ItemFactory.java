@@ -109,9 +109,19 @@ public final class ItemFactory {
         return qualityItem(HerbalisItemType.POUCH, drug, quality);
     }
 
-    /** Joint : consommable vanilla, animation portee a la bouche. */
+    /** Joint frais : toutes ses taffes, consommable vanilla. */
     public ItemStack joint(DrugType drug, Quality quality) {
-        ItemStack stack = qualityItem(HerbalisItemType.JOINT, drug, quality);
+        return joint(drug, quality, drug.consumption().puffsPerJoint());
+    }
+
+    /** Joint entame : chaque taffe consommee rend le joint diminue. */
+    public ItemStack joint(DrugType drug, Quality quality, int puffs) {
+        ItemStack stack = base(HerbalisItemType.JOINT, drug, quality,
+                Messages.ph("taffes", puffs + "/"
+                        + drug.consumption().puffsPerJoint()));
+        stack.setData(DataComponentTypes.MAX_STACK_SIZE, 16);
+        stack.editMeta(meta -> meta.getPersistentDataContainer()
+                .set(ItemKeys.PUFFS, PersistentDataType.INTEGER, puffs));
         stack.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable()
                 .consumeSeconds(2.8f)
                 .animation(ItemUseAnimation.TOOT_HORN)
@@ -201,7 +211,8 @@ public final class ItemFactory {
         return stack;
     }
 
-    private ItemStack base(HerbalisItemType type, DrugType drug, Quality quality) {
+    private ItemStack base(HerbalisItemType type, DrugType drug, Quality quality,
+                           TagResolver... extraTags) {
         ItemStack stack = ItemStack.of(Material.PAPER);
 
         String modelKey = drug == null
@@ -216,6 +227,7 @@ public final class ItemFactory {
         if (quality != null) {
             resolvers.add(Messages.ph("etoiles", messages.deserialize(starsMarkup(quality))));
         }
+        resolvers.addAll(List.of(extraTags));
         TagResolver[] tags = resolvers.toArray(TagResolver[]::new);
 
         Component name = messages.msg("items." + type.id() + ".nom", tags);

@@ -3,9 +3,12 @@ package io.github.zefarie.herbalis.domain.drug;
 import java.time.Duration;
 
 /**
- * Regles de consommation : abus, tolerance et addiction.
+ * Regles de consommation : abus, tolerance et addiction. L'unite de
+ * consommation est la taffe (un joint en contient plusieurs, et peut
+ * circuler de main en main).
  *
- * @param blackoutCount        nombre de consommations dans la fenetre declenchant le blackout
+ * @param puffsPerJoint        nombre de taffes par joint fraichement roule
+ * @param blackoutCount        nombre de taffes dans la fenetre declenchant le blackout
  * @param blackoutWindow       fenetre glissante de detection de l'abus
  * @param blackoutDuration     duree du blackout
  * @param toleranceGainPerUse  points de tolerance gagnes par consommation (jauge 0 a 100)
@@ -17,6 +20,7 @@ import java.time.Duration;
  * @param withdrawalDelay      delai sans consommer avant l'apparition du manque
  */
 public record ConsumptionRules(
+        int puffsPerJoint,
         int blackoutCount,
         Duration blackoutWindow,
         Duration blackoutDuration,
@@ -30,6 +34,9 @@ public record ConsumptionRules(
 ) {
 
     public ConsumptionRules {
+        if (puffsPerJoint < 1) {
+            throw new IllegalArgumentException("puffsPerJoint doit etre au moins 1");
+        }
         if (blackoutCount < 2) {
             throw new IllegalArgumentException("blackoutCount doit etre au moins 2");
         }

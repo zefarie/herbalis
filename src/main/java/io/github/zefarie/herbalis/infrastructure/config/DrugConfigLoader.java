@@ -139,6 +139,7 @@ public final class DrugConfigLoader {
 
         ConfigurationSection consumption = section(yaml, "consommation");
         ConsumptionRules rules = new ConsumptionRules(
+                Math.max(1, consumption.getInt("taffes-par-joint", 3)),
                 consumption.getInt("blackout-nombre", 3),
                 DurationParser.parse(consumption.getString("blackout-fenetre", "5m")),
                 DurationParser.parse(consumption.getString("blackout-duree", "30s")),

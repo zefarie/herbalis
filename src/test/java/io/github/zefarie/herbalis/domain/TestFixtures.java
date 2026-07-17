@@ -59,7 +59,7 @@ public final class TestFixtures {
                         List.of(new EffectSpec("minecraft:regeneration", 0, true, false)),
                         List.of(new EffectSpec("minecraft:slowness", 0, false, false),
                                 new EffectSpec("minecraft:nausea", 0, false, true))),
-                new ConsumptionRules(3, Duration.ofMinutes(5), Duration.ofSeconds(30),
+                new ConsumptionRules(3, 3, Duration.ofMinutes(5), Duration.ofSeconds(30),
                         12.0, 4.0, 0.6,
                         8.0, 1.5, 50.0, Duration.ofMinutes(45)),
                 new QualityWeights(0.40, 0.25, 0.20, 0.15));

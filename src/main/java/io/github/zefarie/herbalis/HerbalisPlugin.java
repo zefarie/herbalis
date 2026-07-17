@@ -166,7 +166,8 @@ public final class HerbalisPlugin extends JavaPlugin {
                 renderer, drugs, potRepo, plantRepo, rackRepo, jarRepo, breakPlant,
                 breakPot, breakRack, breakJar), this);
         pm.registerEvents(new ChunkListener(worldSync), this);
-        pm.registerEvents(new ConsumeListener(messages, drugs, consume, effects), this);
+        pm.registerEvents(new ConsumeListener(messages, drugs, items, fx,
+                consume, effects), this);
         pm.registerEvents(new ConnectionListener(blackout, withdrawal,
                 holograms), this);
         pm.registerEvents(new MoveListener(blackout), this);

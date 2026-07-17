@@ -309,6 +309,15 @@ public final class Fx {
     // Consommation
     // ----------------------------------------------------------------
 
+    /** Le joint passe de main en main : petit geste, petite fumee. */
+    public void jointPassed(Player giver, Player receiver) {
+        Location between = giver.getLocation().add(
+                receiver.getLocation()).multiply(0.5).add(0, 1.4, 0);
+        particles(giver.getLocation(), w -> w.spawnParticle(
+                Particle.CAMPFIRE_COSY_SMOKE, between, 2, 0.08, 0.08, 0.08, 0.004));
+        sound(giver.getLocation(), "minecraft:item.armor.equip_leather", 0.7f, 1.3f);
+    }
+
     public void jointLit(Player player) {
         sound(player.getLocation(), "minecraft:item.flintandsteel.use", 0.7f, 1.2f);
         sound(player.getLocation(), "minecraft:block.campfire.crackle", 1.0f, 1.0f);

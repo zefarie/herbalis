@@ -23,6 +23,8 @@ public final class ItemKeys {
     public static final NamespacedKey QUALITY = key("quality");
     /** Charges restantes de l'arrosoir. */
     public static final NamespacedKey CHARGES = key("charges");
+    /** Taffes restantes d'un joint. */
+    public static final NamespacedKey PUFFS = key("puffs");
     /** Marqueur d'entite : "pot", "plant" ou "rack". */
     public static final NamespacedKey MARKER = key("marker");
     /** Position du bloc porteur, encodee "monde;x;y;z". */
@@ -59,6 +61,15 @@ public final class ItemKeys {
         Integer stars = stack.getItemMeta()
                 .getPersistentDataContainer().get(QUALITY, PersistentDataType.INTEGER);
         return stars == null ? Optional.empty() : Optional.of(Quality.of(stars));
+    }
+
+    /** Taffes restantes d'un joint (vide pour les joints anterieurs). */
+    public static Optional<Integer> puffsOf(ItemStack stack) {
+        if (stack == null || !stack.hasItemMeta()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(stack.getItemMeta()
+                .getPersistentDataContainer().get(PUFFS, PersistentDataType.INTEGER));
     }
 
     public static boolean isHerbalisItem(ItemStack stack) {

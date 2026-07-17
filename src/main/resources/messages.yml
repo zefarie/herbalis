@@ -133,7 +133,9 @@ items:
     lore:
       - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
       - "<!i>Qualité <etoiles>"
-      - "<!i><color:#9ca3af>Maintenir clic droit pour fumer.</color>"
+      - "<!i><color:#9ca3af>Taffes restantes : <taffes></color>"
+      - "<!i><color:#9ca3af>Maintenir clic droit pour fumer,</color>"
+      - "<!i><color:#9ca3af>clic droit sur un ami pour le passer.</color>"
       - "<!i><i><color:#71717a>Roulé serré, comme il faut.</color></i>"
       - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
 
@@ -263,6 +265,8 @@ curing:
 # --------------------------------------------------------------
 
 consommation:
+  joint-passe: "<color:#a8a29e><font:herbalis:icons></font> Tu passes le joint à <color:#e5e7eb><joueur></color>.</color>"
+  joint-recu: "<color:#a8a29e><font:herbalis:icons></font> <color:#e5e7eb><joueur></color> te passe le joint.</color>"
   allumage: "<color:#9ca3af><font:herbalis:icons></font> <i>La braise crépite doucement...</i></color>"
   montee-1: "<i><color:#9ca3af>Une chaleur douce se répand dans ta poitrine...</color></i>"
   montee-2: "<i><color:#c4b5fd>Le monde commence à onduler doucement...</color></i>"
