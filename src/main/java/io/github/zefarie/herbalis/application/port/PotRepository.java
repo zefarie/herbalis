@@ -16,4 +16,9 @@ public interface PotRepository {
     void remove(BlockPos pos);
 
     Collection<BlockPos> all();
+
+    /** Vrai si un goutte-a-goutte est installe sur ce pot. */
+    boolean hasDripper(BlockPos pos);
+
+    void setDripper(BlockPos pos, boolean installed);
 }

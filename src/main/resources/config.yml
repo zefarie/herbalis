@@ -45,6 +45,12 @@ pulverisateur:
   # le pulverisateur (clic droit sur un bloc d'eau).
   charges: 6
 
+goutte-a-goutte:
+  # Multiplicateur de la perte d'hydratation quand un goutte-a-goutte
+  # est installe sur le pot (0.5 = l'eau tient deux fois plus
+  # longtemps, pratique pour les cultivateurs peu presents).
+  facteur-perte: 0.5
+
 taille:
   # Points de durabilite perdus par les cisailles (l'outil vanilla)
   # a chaque taille. 0 = aucune usure.

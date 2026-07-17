@@ -460,6 +460,21 @@ def jar_glass() -> Image.Image:
     return img
 
 
+def drip_water() -> Image.Image:
+    """Eau du reservoir du goutte-a-goutte : bleu calme, reflets fins."""
+    img = new(16)
+    rng = random.Random(11)
+    for y in range(16):
+        for x in range(16):
+            base = (64, 132, 208, 255)
+            if rng.random() < 0.14:
+                base = (96, 165, 250, 255)
+            elif rng.random() < 0.06:
+                base = (147, 197, 253, 255)
+            img.putpixel((x, y), base)
+    return img
+
+
 def jar_weed(kind: str) -> Image.Image:
     """Contenu de la jarre : masse de tetes, teinte selon l'etat."""
     if kind == "curing":
@@ -862,6 +877,32 @@ SPRAYER_PALETTE = {
     "w": (125, 211, 252, 255),
 }
 
+DRIPPER_MAP = [
+    "................",
+    "....GGGGG.......",
+    "...GwwwwwG......",
+    "...GwwwwwG......",
+    "...GWwwwWG......",
+    "....GGGGG.......",
+    "......r.........",
+    "......r.........",
+    "......rrrrr.....",
+    "..........r.....",
+    "..........r.....",
+    "..........d.....",
+    "................",
+    "..........d.....",
+    "................",
+    "................",
+]
+DRIPPER_PALETTE = {
+    "G": (134, 160, 172, 255),
+    "w": (96, 165, 250, 255),
+    "W": (147, 197, 253, 255),
+    "r": (146, 116, 68, 255),
+    "d": (125, 211, 252, 255),
+}
+
 JOINT_MAP = [
     "................",
     "................",
@@ -949,6 +990,7 @@ def main() -> None:
 
     # Jarre de curing : verre, contenus (affinage, pret, moisi).
     save(jar_glass(), "block/jar_glass.png")
+    save(drip_water(), "block/drip_water.png")
     save(jar_weed("curing"), "block/jar_weed_curing.png")
     save(jar_weed("ready"), "block/jar_weed_ready.png")
     save(jar_weed("moldy"), "block/jar_weed_moldy.png")
@@ -960,6 +1002,7 @@ def main() -> None:
     # Items.
     save(from_map(SEED_MAP, SEED_PALETTE), "item/weed_seed.png")
     save(from_map(SPRAYER_MAP, SPRAYER_PALETTE), "item/sprayer.png")
+    save(from_map(DRIPPER_MAP, DRIPPER_PALETTE), "item/dripper.png")
     save(from_map(WATERING_CAN_MAP, WATERING_CAN_PALETTE), "item/watering_can.png")
     save(from_map(FERTILIZER_MAP, FERTILIZER_PALETTE), "item/fertilizer.png")
     save(from_map(ROLLING_PAPER_MAP, ROLLING_PAPER_PALETTE), "item/rolling_paper.png")

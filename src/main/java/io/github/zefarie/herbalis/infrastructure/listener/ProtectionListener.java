@@ -192,6 +192,7 @@ public final class ProtectionListener implements Listener {
     }
 
     private void popPot(BlockPos pos, boolean dropSeed) {
+        boolean hadDripper = pots.hasDripper(pos);
         BreakPotUseCase.Result result = breakPot.execute(pos);
         if (!result.potExisted()) {
             return;
@@ -201,6 +202,9 @@ public final class ProtectionListener implements Listener {
             fx.broken(loc);
             Location dropAt = loc.clone().add(0.5, 0.4, 0.5);
             loc.getWorld().dropItemNaturally(dropAt, items.pot());
+            if (hadDripper) {
+                loc.getWorld().dropItemNaturally(dropAt, items.dripper());
+            }
             result.plant()
                     .filter(plant -> dropSeed && !plant.isDead())
                     .ifPresent(plant -> drugs.byId(plant.drugId())

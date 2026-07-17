@@ -1,5 +1,6 @@
 package io.github.zefarie.herbalis.infrastructure.scheduler;
 
+import io.github.zefarie.herbalis.application.port.PotRepository;
 import io.github.zefarie.herbalis.application.usecase.GrowPlantsUseCase;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
@@ -22,13 +23,15 @@ public final class GrowthTicker implements Runnable {
 
     private final GrowPlantsUseCase growPlants;
     private final DrugRegistry drugs;
+    private final PotRepository pots;
     private final DisplayRenderer renderer;
     private final Fx fx;
 
     public GrowthTicker(GrowPlantsUseCase growPlants, DrugRegistry drugs,
-                        DisplayRenderer renderer, Fx fx) {
+                        PotRepository pots, DisplayRenderer renderer, Fx fx) {
         this.growPlants = growPlants;
         this.drugs = drugs;
+        this.pots = pots;
         this.renderer = renderer;
         this.fx = fx;
     }
@@ -77,7 +80,7 @@ public final class GrowthTicker implements Runnable {
             }
             // Le terreau suit l'etat (sec, fertilise, arrose).
             renderer.updatePotModel(pos, PlantVisuals.potModel(
-                    Optional.of(plant), Optional.of(drug)));
+                    Optional.of(plant), Optional.of(drug), pots.hasDripper(pos)));
         }
     }
 }

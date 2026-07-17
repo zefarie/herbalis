@@ -1,6 +1,7 @@
 package io.github.zefarie.herbalis.infrastructure.scheduler;
 
 import io.github.zefarie.herbalis.application.port.PlantRepository;
+import io.github.zefarie.herbalis.application.port.PotRepository;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
 import io.github.zefarie.herbalis.domain.plant.GrowthEngine;
@@ -39,15 +40,18 @@ public final class PlantSwayTicker implements Runnable {
 
     private final DisplayRenderer renderer;
     private final PlantRepository plants;
+    private final PotRepository pots;
     private final DrugRegistry drugs;
     private final HerbalisConfig config;
     private final Fx fx;
     private int cycle;
 
     public PlantSwayTicker(DisplayRenderer renderer, PlantRepository plants,
-                           DrugRegistry drugs, HerbalisConfig config, Fx fx) {
+                           PotRepository pots, DrugRegistry drugs,
+                           HerbalisConfig config, Fx fx) {
         this.renderer = renderer;
         this.plants = plants;
+        this.pots = pots;
         this.drugs = drugs;
         this.config = config;
         this.fx = fx;
@@ -97,8 +101,9 @@ public final class PlantSwayTicker implements Runnable {
                     new Quaternionf()));
 
             // Le terreau suit l'etat courant, meme sans evenement.
+            boolean dripper = pots.hasDripper(pos);
             renderer.updatePotModel(pos, PlantVisuals.potModel(
-                    Optional.of(plant), Optional.of(drug)));
+                    Optional.of(plant), Optional.of(drug), dripper));
 
             // Fenetre optimale : la plante scintille, visible de loin.
             if (GrowthEngine.isHarvestable(plant, drug)
@@ -117,6 +122,11 @@ public final class PlantSwayTicker implements Runnable {
             // Plante infestee : moucherons visibles de loin.
             if (plant.isInfested()) {
                 PosCodec.corner(pos).ifPresent(fx::pestAmbient);
+            }
+
+            // Goutte-a-goutte : une goutte perle du tuyau de temps en temps.
+            if (dripper && (cycle + (hash & 3)) % 4 == 0) {
+                PosCodec.corner(pos).ifPresent(fx::dripAmbient);
             }
         });
     }

@@ -55,8 +55,12 @@ public final class Database implements AutoCloseable {
                         x INTEGER NOT NULL,
                         y INTEGER NOT NULL,
                         z INTEGER NOT NULL,
+                        dripper INTEGER NOT NULL DEFAULT 0,
                         PRIMARY KEY (world, x, y, z)
                     )""");
+            // Migration vers le goutte-a-goutte.
+            addColumnIfMissing(statement, "pots",
+                    "dripper", "INTEGER NOT NULL DEFAULT 0");
             statement.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS plants (
                         id TEXT PRIMARY KEY,

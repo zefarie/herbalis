@@ -20,6 +20,7 @@ public final class SqlitePotRepository implements PotRepository {
 
     private final Database database;
     private final Set<BlockPos> pots = ConcurrentHashMap.newKeySet();
+    private final Set<BlockPos> drippers = ConcurrentHashMap.newKeySet();
 
     public SqlitePotRepository(Database database) {
         this.database = database;
@@ -29,10 +30,15 @@ public final class SqlitePotRepository implements PotRepository {
     private void loadAll() {
         database.sync(connection -> {
             try (Statement statement = connection.createStatement();
-                 ResultSet rs = statement.executeQuery("SELECT world, x, y, z FROM pots")) {
+                 ResultSet rs = statement.executeQuery(
+                         "SELECT world, x, y, z, dripper FROM pots")) {
                 while (rs.next()) {
-                    pots.add(new BlockPos(UUID.fromString(rs.getString(1)),
-                            rs.getInt(2), rs.getInt(3), rs.getInt(4)));
+                    BlockPos pos = new BlockPos(UUID.fromString(rs.getString(1)),
+                            rs.getInt(2), rs.getInt(3), rs.getInt(4));
+                    pots.add(pos);
+                    if (rs.getInt(5) != 0) {
+                        drippers.add(pos);
+                    }
                 }
             }
         });
@@ -59,6 +65,7 @@ public final class SqlitePotRepository implements PotRepository {
 
     @Override
     public void remove(BlockPos pos) {
+        drippers.remove(pos);
         if (!pots.remove(pos)) {
             return;
         }
@@ -74,6 +81,31 @@ public final class SqlitePotRepository implements PotRepository {
     @Override
     public Collection<BlockPos> all() {
         return List.copyOf(pots);
+    }
+
+    @Override
+    public boolean hasDripper(BlockPos pos) {
+        return drippers.contains(pos);
+    }
+
+    @Override
+    public void setDripper(BlockPos pos, boolean installed) {
+        if (installed) {
+            drippers.add(pos);
+        } else {
+            drippers.remove(pos);
+        }
+        database.async(connection -> {
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "UPDATE pots SET dripper = ? WHERE world = ? AND x = ? AND y = ? AND z = ?")) {
+                statement.setInt(1, installed ? 1 : 0);
+                statement.setString(2, pos.worldId().toString());
+                statement.setInt(3, pos.x());
+                statement.setInt(4, pos.y());
+                statement.setInt(5, pos.z());
+                statement.executeUpdate();
+            }
+        });
     }
 
     private static void bind(PreparedStatement statement, BlockPos pos)

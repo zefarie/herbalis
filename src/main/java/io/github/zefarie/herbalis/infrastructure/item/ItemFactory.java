@@ -52,6 +52,11 @@ public final class ItemFactory {
         return generic(HerbalisItemType.FERTILIZER, 16);
     }
 
+    /** Goutte-a-goutte : s'installe sur un pot, ralentit la perte d'eau. */
+    public ItemStack dripper() {
+        return generic(HerbalisItemType.DRIPPER, 16);
+    }
+
     public ItemStack rollingPaper() {
         return generic(HerbalisItemType.ROLLING_PAPER, 16);
     }

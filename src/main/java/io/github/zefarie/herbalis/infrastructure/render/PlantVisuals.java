@@ -80,20 +80,23 @@ public final class PlantVisuals {
 
     /**
      * Modele du pot selon l'etat de la plante : terreau humide par
-     * defaut, pale et craquele a sec, mouchete apres engrais.
+     * defaut, pale et craquele a sec, mouchete apres engrais. Avec un
+     * goutte-a-goutte, la variante _drip ajoute le reservoir au coin.
      */
-    public static String potModel(Optional<Plant> plant, Optional<DrugType> drug) {
+    public static String potModel(Optional<Plant> plant, Optional<DrugType> drug,
+                                  boolean dripper) {
+        String base = dripper ? "pot_drip" : "pot";
         if (plant.isEmpty() || drug.isEmpty()) {
-            return "pot";
+            return base;
         }
         Plant p = plant.get();
         if (p.state() == PlantState.DEAD || p.state() == PlantState.WITHERED
                 || p.hydration() <= drug.get().hydration().thirstyThreshold()) {
-            return "pot_dry";
+            return base + "_dry";
         }
         if (p.isFertilizedThisStage()) {
-            return "pot_fert";
+            return base + "_fert";
         }
-        return "pot";
+        return base;
     }
 }

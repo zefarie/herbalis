@@ -340,8 +340,12 @@ def plant_model(name: str, elements: list[dict], parts_texture: str) -> None:
 # Pot de culture (conique, par etages)
 # ------------------------------------------------------------------
 
-def pot_model(name: str, soil_texture: str) -> None:
-    """Le terreau raconte l'etat de la plante : humide, sec ou fertilise."""
+def pot_model(name: str, soil_texture: str, dripper: bool = False) -> None:
+    """Le terreau raconte l'etat de la plante : humide, sec ou fertilise.
+
+    dripper : ajoute le goutte-a-goutte au coin du pot (piquet en bois,
+    petit reservoir en verre plein d'eau, tuyau de corde vers le terreau).
+    """
     foot = box([5.2, 0, 5.2], [10.8, 1.8, 10.8], "#side")
     foot["faces"]["down"] = {"uv": [5.2, 5.2, 10.8, 10.8], "texture": "#bottom"}
     mid = box([4.1, 1.8, 4.1], [11.9, 4.0, 11.9], "#side")
@@ -355,16 +359,39 @@ def pot_model(name: str, soil_texture: str) -> None:
         box([2.6, 5.2, 2.6], [3.9, 6.6, 13.4], "#rim"),
         box([12.1, 5.2, 2.6], [13.4, 6.6, 13.4], "#rim"),
     ]
+    elements = [foot, mid, top, soil, *rim]
+    textures = {
+        "particle": "herbalis:block/pot_side",
+        "side": "herbalis:block/pot_side",
+        "rim": "herbalis:block/pot_rim",
+        "soil": f"herbalis:block/{soil_texture}",
+        "bottom": "herbalis:block/pot_bottom",
+    }
+    if dripper:
+        elements += [
+            # Piquet plante contre le coin nord-est du pot.
+            box([13.9, 0, 0.9], [15.1, 10.4, 2.1], "#wood"),
+            # Reservoir en verre perche, eau visible a travers.
+            box([13.3, 10.8, 0.3], [15.7, 12.6, 2.7], "#water",
+                uv=[2, 2, 14, 14]),
+            box([12.9, 10.4, -0.1], [16.1, 13.2, 3.1], "#glass", uv=FULL_UV),
+            # Tuyau de corde : descend du reservoir, court vers l'ouest,
+            # tourne au-dessus du pot et pique vers le terreau.
+            box([13.9, 9.4, 1.2], [14.5, 10.4, 1.8], "#rope"),
+            box([8.6, 8.8, 1.2], [14.5, 9.4, 1.8], "#rope"),
+            box([8.6, 8.8, 1.8], [9.2, 9.4, 4.6], "#rope"),
+            box([8.6, 6.4, 4.0], [9.2, 8.8, 4.6], "#rope"),
+        ]
+        textures |= {
+            "wood": "herbalis:block/rack_wood",
+            "glass": "herbalis:block/jar_glass",
+            "water": "herbalis:block/drip_water",
+            "rope": "herbalis:block/rack_rope",
+        }
     write(ASSETS / "models" / "block" / f"{name}.json", {
         "parent": "minecraft:block/block",
-        "textures": {
-            "particle": "herbalis:block/pot_side",
-            "side": "herbalis:block/pot_side",
-            "rim": "herbalis:block/pot_rim",
-            "soil": f"herbalis:block/{soil_texture}",
-            "bottom": "herbalis:block/pot_bottom",
-        },
-        "elements": [foot, mid, top, soil, *rim],
+        "textures": textures,
+        "elements": elements,
     })
 
 
@@ -589,9 +616,9 @@ def font_json() -> None:
 def main() -> None:
     print("Models :")
 
-    for key in ["weed_seed", "watering_can", "sprayer", "fertilizer",
-                "rolling_paper", "pouch_empty", "weed_pouch", "weed_bud_fresh",
-                "weed_dried", "weed_joint"]:
+    for key in ["weed_seed", "watering_can", "sprayer", "dripper",
+                "fertilizer", "rolling_paper", "pouch_empty", "weed_pouch",
+                "weed_bud_fresh", "weed_dried", "weed_joint"]:
         flat_item(key)
         item_definition(key, f"herbalis:item/{key}")
 
@@ -609,7 +636,11 @@ def main() -> None:
     pot_model("pot", "pot_soil")
     pot_model("pot_dry", "pot_soil_dry")
     pot_model("pot_fert", "pot_soil_fert")
-    for key in ("pot", "pot_dry", "pot_fert"):
+    pot_model("pot_drip", "pot_soil", dripper=True)
+    pot_model("pot_drip_dry", "pot_soil_dry", dripper=True)
+    pot_model("pot_drip_fert", "pot_soil_fert", dripper=True)
+    for key in ("pot", "pot_dry", "pot_fert",
+                "pot_drip", "pot_drip_dry", "pot_drip_fert"):
         item_definition(key, f"herbalis:block/{key}")
 
     rack_model("drying_rack", None)

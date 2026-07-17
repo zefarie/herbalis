@@ -2,6 +2,7 @@ package io.github.zefarie.herbalis.infrastructure.listener;
 
 import io.github.zefarie.herbalis.application.port.JarRepository;
 import io.github.zefarie.herbalis.application.port.PlantRepository;
+import io.github.zefarie.herbalis.application.port.PotRepository;
 import io.github.zefarie.herbalis.application.port.RackRepository;
 import io.github.zefarie.herbalis.application.usecase.AddBudToRackUseCase;
 import io.github.zefarie.herbalis.application.usecase.AddToJarUseCase;
@@ -65,6 +66,7 @@ public final class PlantInteractListener implements Listener {
     private final HerbalisConfig config;
     private final HudService hud;
     private final PlantRepository plants;
+    private final PotRepository pots;
     private final RackRepository racks;
     private final JarRepository jars;
     private final PlantSeedUseCase plantSeed;
@@ -85,8 +87,8 @@ public final class PlantInteractListener implements Listener {
     public PlantInteractListener(Messages messages, Fx fx, ItemFactory items,
                                  DisplayRenderer renderer, DrugRegistry drugs,
                                  HerbalisConfig config, HudService hud,
-                                 PlantRepository plants, RackRepository racks,
-                                 JarRepository jars,
+                                 PlantRepository plants, PotRepository pots,
+                                 RackRepository racks, JarRepository jars,
                                  PlantSeedUseCase plantSeed, WaterPlantUseCase waterPlant,
                                  FertilizePlantUseCase fertilizePlant,
                                  PrunePlantUseCase prunePlant,
@@ -104,6 +106,7 @@ public final class PlantInteractListener implements Listener {
         this.config = config;
         this.hud = hud;
         this.plants = plants;
+        this.pots = pots;
         this.racks = racks;
         this.jars = jars;
         this.plantSeed = plantSeed;
@@ -163,7 +166,7 @@ public final class PlantInteractListener implements Listener {
         if (plant.isPresent() && plant.get().isDead()) {
             breakPlant.execute(pos);
             renderer.removePlantVisual(pos);
-            renderer.updatePotModel(pos, "pot");
+            renderer.updatePotModel(pos, emptyPotModel(pos));
             fx.died(loc);
             player.sendActionBar(messages.msg("culture.plante-morte-arrachee"));
             return;
@@ -183,6 +186,10 @@ public final class PlantInteractListener implements Listener {
         }
         if (heldType.filter(t -> t == HerbalisItemType.SPRAYER).isPresent()) {
             sprayAction(player, pos, held, loc);
+            return;
+        }
+        if (heldType.filter(t -> t == HerbalisItemType.DRIPPER).isPresent()) {
+            installDripperAction(player, pos, held, loc, plant);
             return;
         }
         // Cisailles vanilla : on taille, sauf au stade final ou elles
@@ -242,7 +249,8 @@ public final class PlantInteractListener implements Listener {
                 // Le terreau fonce immediatement, le soin se voit.
                 renderer.updatePotModel(pos, PlantVisuals.potModel(
                         Optional.of(success.plant()),
-                        drugs.byId(success.plant().drugId())));
+                        drugs.byId(success.plant().drugId()),
+                        pots.hasDripper(pos)));
                 fx.watered(loc);
                 player.sendActionBar(messages.msg("arrosage.arrosee"));
             }
@@ -263,7 +271,8 @@ public final class PlantInteractListener implements Listener {
                 renderer.pulsePlant(pos);
                 renderer.updatePotModel(pos, PlantVisuals.potModel(
                         Optional.of(success.plant()),
-                        drugs.byId(success.plant().drugId())));
+                        drugs.byId(success.plant().drugId()),
+                        pots.hasDripper(pos)));
                 fx.fertilized(loc);
                 player.sendActionBar(messages.msg("engrais.applique"));
             }
@@ -286,7 +295,7 @@ public final class PlantInteractListener implements Listener {
         }
         DrugType drug = drugs.byId(success.drugId()).orElseThrow();
         renderer.removePlantVisual(pos);
-        renderer.updatePotModel(pos, "pot");
+        renderer.updatePotModel(pos, emptyPotModel(pos));
         fx.harvested(loc);
         Location dropAt = loc.clone().add(0.5, 0.8, 0.5);
         for (int i = 0; i < success.yield(); i++) {
@@ -303,6 +312,25 @@ public final class PlantInteractListener implements Listener {
                 Messages.ph("graines", String.valueOf(success.seeds().size())),
                 Messages.ph("etoiles",
                         messages.deserialize(items.starsMarkup(success.quality())))));
+    }
+
+    /** Installe le goutte-a-goutte : la perte d'eau du pot ralentit. */
+    private void installDripperAction(Player player, BlockPos pos, ItemStack dripper,
+                                      Location loc, Optional<Plant> plant) {
+        if (!player.hasPermission("herbalis.plant")) {
+            player.sendMessage(messages.msg("erreurs.permission"));
+            return;
+        }
+        if (pots.hasDripper(pos)) {
+            player.sendActionBar(messages.msg("culture.goutte-deja"));
+            return;
+        }
+        pots.setDripper(pos, true);
+        dripper.subtract();
+        renderer.updatePotModel(pos, PlantVisuals.potModel(
+                plant, plant.flatMap(p -> drugs.byId(p.drugId())), true));
+        fx.dripperInstalled(loc);
+        player.sendActionBar(messages.msg("culture.goutte-installee"));
     }
 
     private void sprayAction(Player player, BlockPos pos, ItemStack sprayer,
@@ -335,6 +363,12 @@ public final class PlantInteractListener implements Listener {
         return plant.isPresent() && drugs.byId(plant.get().drugId())
                 .map(drug -> GrowthEngine.isHarvestable(plant.get(), drug))
                 .orElse(false);
+    }
+
+    /** Modele d'un pot vide, goutte-a-goutte compris. */
+    private String emptyPotModel(BlockPos pos) {
+        return PlantVisuals.potModel(Optional.empty(), Optional.empty(),
+                pots.hasDripper(pos));
     }
 
     private void pruneAction(Player player, BlockPos pos, ItemStack shears,
@@ -556,7 +590,7 @@ public final class PlantInteractListener implements Listener {
         if (plant.isPresent()) {
             breakPlant.execute(pos);
             renderer.removePlantVisual(pos);
-            renderer.updatePotModel(pos, "pot");
+            renderer.updatePotModel(pos, emptyPotModel(pos));
             fx.harvested(loc);
             if (config.dropSeedOnBreak() && !plant.get().isDead()) {
                 // La graine rendue garde la genetique de la plante.
@@ -569,10 +603,15 @@ public final class PlantInteractListener implements Listener {
             player.sendActionBar(messages.msg("culture.plante-arrachee"));
             return;
         }
+        boolean hadDripper = pots.hasDripper(pos);
         breakPot.execute(pos);
         renderer.removePotVisual(pos);
         fx.broken(loc);
-        loc.getWorld().dropItemNaturally(loc.clone().add(0.5, 0.4, 0.5), items.pot());
+        Location potDrop = loc.clone().add(0.5, 0.4, 0.5);
+        loc.getWorld().dropItemNaturally(potDrop, items.pot());
+        if (hadDripper) {
+            loc.getWorld().dropItemNaturally(potDrop, items.dripper());
+        }
         player.sendActionBar(messages.msg("culture.pot-casse"));
     }
 

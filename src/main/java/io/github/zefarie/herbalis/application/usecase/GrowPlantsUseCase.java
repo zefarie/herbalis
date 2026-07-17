@@ -2,6 +2,7 @@ package io.github.zefarie.herbalis.application.usecase;
 
 import io.github.zefarie.herbalis.application.port.PlantEnvironment;
 import io.github.zefarie.herbalis.application.port.PlantRepository;
+import io.github.zefarie.herbalis.application.port.PotRepository;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
@@ -35,16 +36,21 @@ public final class GrowPlantsUseCase {
     }
 
     private final PlantRepository plants;
+    private final PotRepository pots;
     private final DrugRegistry drugs;
     private final PlantEnvironment environment;
     private final RandomGenerator random;
+    private final double dripperDecayFactor;
 
-    public GrowPlantsUseCase(PlantRepository plants, DrugRegistry drugs,
-                             PlantEnvironment environment, RandomGenerator random) {
+    public GrowPlantsUseCase(PlantRepository plants, PotRepository pots,
+                             DrugRegistry drugs, PlantEnvironment environment,
+                             RandomGenerator random, double dripperDecayFactor) {
         this.plants = plants;
+        this.pots = pots;
         this.drugs = drugs;
         this.environment = environment;
         this.random = random;
+        this.dripperDecayFactor = dripperDecayFactor;
     }
 
     /**
@@ -76,6 +82,8 @@ public final class GrowPlantsUseCase {
             int blockLight = catchingUp ? environment.blockLightLevel(pos) : 0;
             int dayLight = catchingUp
                     ? Math.max(blockLight, environment.skyLightLevel(pos)) : 0;
+            double hydrationFactor = pots.hasDripper(pos)
+                    ? dripperDecayFactor : 1.0;
             List<PlantEvent> events = new ArrayList<>(2);
             Plant current = plant;
             int slice = 0;
@@ -87,7 +95,7 @@ public final class GrowPlantsUseCase {
                         : liveLight;
                 GrowthEngine.GrowthTick result = GrowthEngine.tick(
                         current, drug, new GrowthConditions(light, step,
-                                random.nextDouble(), 1.0));
+                                random.nextDouble(), hydrationFactor));
                 current = result.plant();
                 events.addAll(result.events());
             }

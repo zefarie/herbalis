@@ -188,6 +188,23 @@ public final class Fx {
         sound(loc, "minecraft:block.sweet_berry_bush.break", 0.8f, 0.55f);
     }
 
+    /** Goutte-a-goutte installe : eclaboussure et petit declic. */
+    public void dripperInstalled(Location loc) {
+        particles(loc, w -> {
+            w.spawnParticle(Particle.SPLASH, dripSpout(loc), 10, 0.1, 0.1, 0.1, 0.0);
+            w.spawnParticle(Particle.HAPPY_VILLAGER, center(loc), 5,
+                    0.2, 0.2, 0.2, 0.0);
+        });
+        sound(loc, "minecraft:block.copper_grate.place", 0.8f, 1.3f);
+        sound(loc, "minecraft:item.bucket.empty", 0.5f, 1.5f);
+    }
+
+    /** Une goutte perle du tuyau du goutte-a-goutte. */
+    public void dripAmbient(Location loc) {
+        particles(loc, w -> w.spawnParticle(Particle.DRIPPING_WATER,
+                dripSpout(loc), 1, 0.02, 0.05, 0.02, 0.0));
+    }
+
     /** Coup de pulverisateur : brume et nuisibles disperses. */
     public void sprayed(Location loc) {
         particles(loc, w -> {
@@ -390,5 +407,10 @@ public final class Fx {
 
     private static Location plantHeart(Location loc) {
         return loc.clone().add(0.5, 0.85, 0.5);
+    }
+
+    /** Bout du tuyau du goutte-a-goutte, au-dessus du terreau. */
+    private static Location dripSpout(Location loc) {
+        return loc.clone().add(0.56, 0.42, 0.27);
     }
 }

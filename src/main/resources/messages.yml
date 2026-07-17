@@ -62,6 +62,14 @@ items:
       - "<!i><color:#9ca3af>fin. Se recharge sur l'eau.</color>"
       - "<!i><i><color:#71717a>Pschitt, et la paix revient.</color></i>"
       - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  dripper:
+    nom: "<gradient:#93c5fd:#3b82f6>Goutte-à-goutte</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>S'installe sur un pot : l'eau</color>"
+      - "<!i><color:#9ca3af>tient deux fois plus longtemps.</color>"
+      - "<!i><i><color:#71717a>Pour les jardiniers qui voyagent.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
   fertilizer:
     nom: "<gradient:#a3e635:#65a30d>Engrais naturel</gradient>"
     lore:
@@ -173,6 +181,8 @@ culture:
   pose-place-occupee: "<color:#f87171>Il y a déjà quelque chose ici.</color>"
   plante-arrachee: "<color:#fbbf24>Plante arrachée.</color>"
   pot-casse: "<color:#fbbf24>Pot récupéré.</color>"
+  goutte-installee: "<color:#7dd3fc>Goutte-à-goutte installé. L'eau tiendra bien plus longtemps.</color>"
+  goutte-deja: "<color:#9ca3af>Ce pot a déjà son goutte-à-goutte.</color>"
   plante-morte-arrachee: "<color:#9ca3af>Tu arraches les restes secs de la plante...</color>"
   pot-vide-info: "<color:#9ca3af>Ce pot est vide.</color>"
   plante-morte-info: "<color:#f87171>Cette plante est morte.</color>"

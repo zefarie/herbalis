@@ -80,6 +80,10 @@ public final class CraftListener implements Listener {
                 new String[]{"n", "i", "b"},
                 Map.of('n', Material.IRON_NUGGET, 'i', Material.IRON_INGOT,
                         'b', Material.GLASS_BOTTLE));
+        shaped(plugin, "dripper", items.dripper(),
+                new String[]{"ggg", " s ", " r "},
+                Map.of('g', Material.GLASS, 's', Material.STICK,
+                        'r', Material.STRING));
         shapeless(plugin, "fertilizer", withAmount(items.fertilizer(), 2),
                 Material.BONE_MEAL, Material.BONE_MEAL, Material.DIRT);
         shapeless(plugin, "rolling_paper", withAmount(items.rollingPaper(), 3),

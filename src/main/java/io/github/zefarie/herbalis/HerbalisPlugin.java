@@ -125,8 +125,8 @@ public final class HerbalisPlugin extends JavaPlugin {
         var harvestPlant = new HarvestPlantUseCase(plantRepo, drugs,
                 new java.util.Random());
         var breakPlant = new BreakPlantUseCase(plantRepo);
-        var growPlants = new GrowPlantsUseCase(plantRepo, drugs, environment,
-                new java.util.Random());
+        var growPlants = new GrowPlantsUseCase(plantRepo, potRepo, drugs,
+                environment, new java.util.Random(), config.dripperDecayFactor());
         var placeRack = new PlaceRackUseCase(rackRepo);
         var breakRack = new BreakRackUseCase(rackRepo);
         var addBud = new AddBudToRackUseCase(rackRepo, drugs);
@@ -155,10 +155,10 @@ public final class HerbalisPlugin extends JavaPlugin {
         pm.registerEvents(new ItemUseListener(messages, fx, items, renderer, drugs,
                 placePot, placeRack, placeJar), this);
         pm.registerEvents(new PlantInteractListener(messages, fx, items, renderer,
-                drugs, config, hud, plantRepo, rackRepo, jarRepo, plantSeed,
-                waterPlant, fertilizePlant, prunePlant, treatPlant, harvestPlant,
-                breakPlant, breakPot, addBud, collectRack, breakRack, addToJar,
-                collectJar, breakJar), this);
+                drugs, config, hud, plantRepo, potRepo, rackRepo, jarRepo,
+                plantSeed, waterPlant, fertilizePlant, prunePlant, treatPlant,
+                harvestPlant, breakPlant, breakPot, addBud, collectRack,
+                breakRack, addToJar, collectJar, breakJar), this);
         pm.registerEvents(new ProtectionListener(config, messages, fx, items,
                 renderer, drugs, potRepo, plantRepo, rackRepo, jarRepo, breakPlant,
                 breakPot, breakRack, breakJar), this);
@@ -181,13 +181,14 @@ public final class HerbalisPlugin extends JavaPlugin {
         var scheduler = getServer().getScheduler();
         long growthPeriod = 20L * config.growthTickSeconds();
         scheduler.runTaskTimer(this,
-                new GrowthTicker(growPlants, drugs, renderer, fx), growthPeriod, growthPeriod);
+                new GrowthTicker(growPlants, drugs, potRepo, renderer, fx),
+                growthPeriod, growthPeriod);
         scheduler.runTaskTimer(this,
                 new RackTicker(rackRepo, drugs, environment, renderer, fx), 60L, 60L);
         scheduler.runTaskTimer(this,
                 new JarTicker(jarRepo, drugs, environment, renderer, fx), 70L, 60L);
         scheduler.runTaskTimer(this,
-                new PlantSwayTicker(renderer, plantRepo, drugs, config, fx),
+                new PlantSwayTicker(renderer, plantRepo, potRepo, drugs, config, fx),
                 PlantSwayTicker.PERIOD_TICKS, PlantSwayTicker.PERIOD_TICKS);
         scheduler.runTaskTimer(this,
                 new PlayerTicker(effects, withdrawal), 20L, 20L);

@@ -2,6 +2,7 @@ package io.github.zefarie.herbalis.application;
 
 import io.github.zefarie.herbalis.application.port.PlantEnvironment;
 import io.github.zefarie.herbalis.application.port.PlantRepository;
+import io.github.zefarie.herbalis.application.port.PotRepository;
 import io.github.zefarie.herbalis.application.usecase.GrowPlantsUseCase;
 import io.github.zefarie.herbalis.domain.TestFixtures;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
@@ -13,9 +14,11 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -77,11 +80,52 @@ class GrowPlantsUseCaseTest {
         }
     }
 
+    private static final class InMemoryPots implements PotRepository {
+        final Set<BlockPos> pots = new HashSet<>();
+        final Set<BlockPos> drippers = new HashSet<>();
+
+        @Override
+        public boolean exists(BlockPos pos) {
+            return pots.contains(pos);
+        }
+
+        @Override
+        public void add(BlockPos pos) {
+            pots.add(pos);
+        }
+
+        @Override
+        public void remove(BlockPos pos) {
+            pots.remove(pos);
+            drippers.remove(pos);
+        }
+
+        @Override
+        public Collection<BlockPos> all() {
+            return List.copyOf(pots);
+        }
+
+        @Override
+        public boolean hasDripper(BlockPos pos) {
+            return drippers.contains(pos);
+        }
+
+        @Override
+        public void setDripper(BlockPos pos, boolean installed) {
+            if (installed) {
+                drippers.add(pos);
+            } else {
+                drippers.remove(pos);
+            }
+        }
+    }
+
     private final DrugRegistry drugs = new DrugRegistry();
     private final InMemoryPlants plants = new InMemoryPlants();
+    private final InMemoryPots pots = new InMemoryPots();
     private final FakeEnvironment environment = new FakeEnvironment();
     private final GrowPlantsUseCase grow = new GrowPlantsUseCase(
-            plants, drugs, environment, new java.util.Random(42));
+            plants, pots, drugs, environment, new java.util.Random(42), 0.5);
 
     GrowPlantsUseCaseTest() {
         drugs.register(TestFixtures.weed());
@@ -140,6 +184,17 @@ class GrowPlantsUseCaseTest {
         // 32 min dont ~la moitie de jour : un seul stage franchi, la ou
         // une serre eclairee en aurait franchi trois.
         assertEquals(2, plants.at(TestFixtures.pos()).orElseThrow().stage());
+    }
+
+    @Test
+    void leGoutteAGoutteEconomiseLeauPendantLeRattrapage() {
+        plants.put(Plant.plant("weed", TestFixtures.pos(), 0L));
+        pots.setDripper(TestFixtures.pos(), true);
+        grow.tick(10 * 60_000L);
+
+        // Perte 2.5/min divisee par deux : 12.5 points en 10 minutes.
+        Plant after = plants.at(TestFixtures.pos()).orElseThrow();
+        assertEquals(100.0 - 12.5, after.hydration(), 0.01);
     }
 
     @Test

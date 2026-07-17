@@ -58,7 +58,8 @@ public final class WorldSync {
                 renderer.showPot(pos, plant,
                         plant.map(p -> PlantVisuals.plantModel(
                                 p, drug.orElse(null))).orElse(""),
-                        PlantVisuals.potModel(plant, drug), scale);
+                        PlantVisuals.potModel(plant, drug,
+                                pots.hasDripper(pos)), scale);
             }
         }
         for (DryingRack rack : racks.all()) {
