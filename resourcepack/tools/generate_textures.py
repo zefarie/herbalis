@@ -521,6 +521,17 @@ def rack_bud(dry: bool) -> Image.Image:
 # ------------------------------------------------------------------
 
 GLYPHS: dict[str, list[str]] = {
+    #  terreau (monticule de terre, pointe de pousse)
+    "soil": [
+        "........",
+        "...X....",
+        "........",
+        "..XXX...",
+        ".XXXXX..",
+        "XXXXXXX.",
+        "XX.XX.X.",
+        "XXXXXXX.",
+    ],
     #  feuille
     "leaf": [
         "...X....",

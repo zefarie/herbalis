@@ -22,19 +22,26 @@ import io.github.zefarie.herbalis.infrastructure.config.Messages;
 import io.github.zefarie.herbalis.infrastructure.item.ItemFactory;
 import io.github.zefarie.herbalis.infrastructure.render.DisplayRenderer;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.RayTraceResult;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
- * HUD principal : quand un joueur regarde une plante, un pot ou un rack,
- * une action bar stylee resume son etat (stage, hydratation, qualite,
- * alertes).
+ * Etat des cibles du regard : construit le contenu des hologrammes
+ * (plante, pot, rack, jarre) et les lignes d'action bar utilisees en
+ * retour d'action (progression d'un rack au clic, /herbalis info).
  */
 public final class HudService {
+
+    /** Contenu d'un hologramme et hauteur d'ancrage au-dessus du bloc. */
+    public record Hologram(Component text, float height) {
+    }
 
     private final HerbalisConfig config;
     private final Messages messages;
@@ -63,15 +70,6 @@ public final class HudService {
         this.environment = environment;
     }
 
-    /** Tick regulier : cherche la cible du regard et affiche le HUD. */
-    public void tick(Player player, long now) {
-        if (!config.hudEnabled()) {
-            return;
-        }
-        targetPos(player).ifPresent(pos -> buildLine(pos, now)
-                .ifPresent(player::sendActionBar));
-    }
-
     /** Position Herbalis visee par le joueur, s'il y en a une. */
     public Optional<BlockPos> targetPos(Player player) {
         RayTraceResult result = player.getWorld().rayTrace(
@@ -89,13 +87,9 @@ public final class HudService {
         return renderer.posOf(entity);
     }
 
-    /** Ligne d'etat pour une position (plante, pot vide ou rack). */
+    /** Ligne d'etat pour une position (pot vide, rack ou jarre). */
     public Optional<Component> buildLine(BlockPos pos, long now) {
-        Optional<Plant> plant = plants.at(pos);
-        if (plant.isPresent()) {
-            return plantLine(plant.get(), now);
-        }
-        if (pots.exists(pos)) {
+        if (pots.exists(pos) && plants.at(pos).isEmpty()) {
             return Optional.of(messages.msg("hud.pot-vide"));
         }
         Optional<DryingRack> rack = racks.at(pos);
@@ -109,31 +103,118 @@ public final class HudService {
         return Optional.empty();
     }
 
-    private Optional<Component> plantLine(Plant plant, long now) {
+    // ----------------------------------------------------------------
+    // Hologrammes
+    // ----------------------------------------------------------------
+
+    /** Hologramme d'etat pour une position (plante, pot, rack, jarre). */
+    public Optional<Hologram> buildHologram(BlockPos pos, long now) {
+        Optional<Plant> plant = plants.at(pos);
+        if (plant.isPresent()) {
+            return plantHologram(pos, plant.get());
+        }
+        if (pots.exists(pos)) {
+            List<Component> lines = new ArrayList<>(List.of(
+                    messages.msg("hud.holo-pot-vide"),
+                    messages.msg("hud.holo-pot-vide-astuce")));
+            if (pots.hasDripper(pos)) {
+                lines.add(messages.msg("hud.holo-goutte"));
+            }
+            return Optional.of(new Hologram(join(lines), 1.05f));
+        }
+        Optional<DryingRack> rack = racks.at(pos);
+        if (rack.isPresent()) {
+            return Optional.of(rackHologram(rack.get(), now));
+        }
+        Optional<CuringJar> jar = jars.at(pos);
+        if (jar.isPresent()) {
+            return Optional.of(jarHologram(jar.get(), now));
+        }
+        return Optional.empty();
+    }
+
+    private Optional<Hologram> plantHologram(BlockPos pos, Plant plant) {
         DrugType drug = drugs.byId(plant.drugId()).orElse(null);
         if (drug == null) {
             return Optional.empty();
         }
+        float height = plant.stage() >= 3 ? 2.0f : 1.55f;
         if (plant.isDead()) {
-            return Optional.of(messages.msg("hud.plante-morte",
-                    Messages.ph("nom", drug.displayName())));
+            return Optional.of(new Hologram(messages.msg("hud.plante-morte",
+                    Messages.ph("nom", drug.displayName())), 1.35f));
         }
 
-        String segments = segments(plant.stage(), drug.growth().stageCount());
-        Quality potential = QualityCalculator.harvestQuality(plant, drug);
-        String alert = alert(plant, drug);
-
-        String hydraTemplate = hydrationTemplate(plant.hydration());
-        Component hydra = messages.msg(hydraTemplate,
-                Messages.ph("valeur", String.valueOf((int) plant.hydration())));
-
-        return Optional.of(messages.msg("hud.plante",
+        List<Component> lines = new ArrayList<>(5);
+        lines.add(messages.msg("hud.holo-titre",
                 Messages.ph("nom", drug.displayName()),
-                Messages.ph("segments", messages.deserialize(segments)),
-                Messages.ph("hydratation", hydra),
-                Messages.ph("etoiles", messages.deserialize(items.starsMarkup(potential))),
-                Messages.ph("alerte", alert.isEmpty()
-                        ? Component.empty() : messages.msg(alert))));
+                Messages.ph("segments", messages.deserialize(
+                        segments(plant.stage(), drug.growth().stageCount())))));
+        lines.add(messages.msg(hydrationTemplate(plant.hydration()),
+                Messages.ph("valeur", String.valueOf((int) plant.hydration()))));
+        lines.add(messages.msg("hud.holo-terreau",
+                Messages.ph("etat", messages.msg(soilStateKey(plant, drug)))));
+        Quality potential = QualityCalculator.harvestQuality(plant, drug);
+        lines.add(messages.msg("hud.holo-qualite",
+                Messages.ph("etoiles",
+                        messages.deserialize(items.starsMarkup(potential)))));
+        if (pots.hasDripper(pos)) {
+            lines.add(messages.msg("hud.holo-goutte"));
+        }
+        String alert = alert(plant, drug);
+        if (!alert.isEmpty()) {
+            lines.add(messages.msg(alert));
+        }
+        return Optional.of(new Hologram(join(lines), height));
+    }
+
+    private Hologram rackHologram(DryingRack rack, long now) {
+        DrugType drug = drugs.byId(rack.drugId()).orElse(null);
+        RackVisualState state = drug == null
+                ? RackVisualState.EMPTY
+                : rack.visualState(now, drug.drying().duration());
+        Component status = switch (state) {
+            case EMPTY -> messages.msg("hud.holo-rack-vide");
+            case DRYING -> messages.msg("hud.holo-rack-sechage",
+                    Messages.ph("pourcent", String.valueOf((int) Math.round(
+                            rack.overallProgress(now, drug.drying().duration()) * 100))),
+                    Messages.ph("nombre", String.valueOf(rack.slots().size())));
+            case READY -> messages.msg("hud.holo-rack-pret",
+                    Messages.ph("nombre", String.valueOf(rack.slots().size())));
+        };
+        return new Hologram(join(List.of(
+                messages.msg("hud.holo-rack-titre"), status)), 1.45f);
+    }
+
+    private Hologram jarHologram(CuringJar jar, long now) {
+        DrugType drug = drugs.byId(jar.drugId()).orElse(null);
+        JarVisualState state = drug == null
+                ? JarVisualState.EMPTY
+                : jar.visualState(now, drug.curing());
+        Component status = switch (state) {
+            case EMPTY -> messages.msg("hud.holo-jarre-vide");
+            case CURING -> messages.msg("hud.holo-jarre-curing",
+                    Messages.ph("pourcent", String.valueOf((int) Math.round(
+                            jar.overallProgress(now, drug.curing()) * 100))),
+                    Messages.ph("nombre", String.valueOf(jar.slots().size())));
+            case READY -> messages.msg("hud.holo-jarre-prete");
+            case MOLDY -> messages.msg("hud.holo-jarre-moisie");
+        };
+        return new Hologram(join(List.of(
+                messages.msg("hud.holo-jarre-titre"), status)), 1.05f);
+    }
+
+    private String soilStateKey(Plant plant, DrugType drug) {
+        if (plant.state() != PlantState.HEALTHY
+                || plant.hydration() <= drug.hydration().thirstyThreshold()) {
+            return "hud.holo-terreau-sec";
+        }
+        return plant.isFertilizedThisStage()
+                ? "hud.holo-terreau-fertilise" : "hud.holo-terreau-humide";
+    }
+
+    private static Component join(List<Component> lines) {
+        return Component.join(
+                JoinConfiguration.separator(Component.newline()), lines);
     }
 
     private Optional<Component> rackLine(DryingRack rack, long now) {

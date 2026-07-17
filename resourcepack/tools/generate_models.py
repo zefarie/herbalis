@@ -592,6 +592,7 @@ FONT_GLYPHS = [
     ("check", ""),
     ("warning", ""),
     ("smoke", ""),
+    ("soil", ""),
 ]
 
 

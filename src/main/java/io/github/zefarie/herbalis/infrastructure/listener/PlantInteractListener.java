@@ -202,8 +202,8 @@ public final class PlantInteractListener implements Listener {
             harvestAction(player, pos, loc);
             return;
         }
-        // Rien d'actionnable : afficher l'etat.
-        hud.buildLine(pos, now).ifPresent(player::sendActionBar);
+        // Rien d'actionnable : l'hologramme au-dessus de la cible montre
+        // deja l'etat complet.
     }
 
     private void plantSeedAction(Player player, BlockPos pos, ItemStack seed,

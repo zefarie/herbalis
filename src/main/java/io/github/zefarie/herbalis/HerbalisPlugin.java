@@ -28,6 +28,7 @@ import io.github.zefarie.herbalis.infrastructure.effects.BlackoutService;
 import io.github.zefarie.herbalis.infrastructure.effects.EffectService;
 import io.github.zefarie.herbalis.infrastructure.effects.WithdrawalService;
 import io.github.zefarie.herbalis.infrastructure.fx.Fx;
+import io.github.zefarie.herbalis.infrastructure.hud.HologramService;
 import io.github.zefarie.herbalis.infrastructure.hud.HudService;
 import io.github.zefarie.herbalis.infrastructure.item.ItemFactory;
 import io.github.zefarie.herbalis.infrastructure.listener.ChunkListener;
@@ -75,6 +76,7 @@ public final class HerbalisPlugin extends JavaPlugin {
     private Database database;
     private SqlitePlantRepository plantRepo;
     private WorldSync worldSync;
+    private HologramService holograms;
 
     @Override
     public void onEnable() {
@@ -143,6 +145,7 @@ public final class HerbalisPlugin extends JavaPlugin {
         var withdrawal = new WithdrawalService(consumerRepo, drugs, config, messages, fx);
         var hud = new HudService(config, messages, items, renderer, plantRepo,
                 potRepo, rackRepo, jarRepo, drugs, environment);
+        holograms = new HologramService(this, config, hud);
 
         // Reprise apres redemarrage : sessions et visuels.
         sessionStore.loadAll().forEach((id, stored) -> effects.restore(id, stored, now));
@@ -164,7 +167,8 @@ public final class HerbalisPlugin extends JavaPlugin {
                 breakPot, breakRack, breakJar), this);
         pm.registerEvents(new ChunkListener(worldSync), this);
         pm.registerEvents(new ConsumeListener(messages, drugs, consume, effects), this);
-        pm.registerEvents(new ConnectionListener(blackout, withdrawal), this);
+        pm.registerEvents(new ConnectionListener(blackout, withdrawal,
+                holograms), this);
         pm.registerEvents(new MoveListener(blackout), this);
         pm.registerEvents(craftListener, this);
 
@@ -194,7 +198,8 @@ public final class HerbalisPlugin extends JavaPlugin {
                 new PlayerTicker(effects, withdrawal), 20L, 20L);
         scheduler.runTaskTimer(this, () -> {
             long tick = System.currentTimeMillis();
-            getServer().getOnlinePlayers().forEach(player -> hud.tick(player, tick));
+            getServer().getOnlinePlayers().forEach(
+                    player -> holograms.tick(player, tick));
         }, 10L, 10L);
         long autosaveTicks = config.autosaveInterval().toSeconds() * 20L;
         scheduler.runTaskTimer(this, plantRepo::flush, autosaveTicks, autosaveTicks);
@@ -205,6 +210,9 @@ public final class HerbalisPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         getServer().getScheduler().cancelTasks(this);
+        if (holograms != null) {
+            holograms.clearAll();
+        }
         if (worldSync != null) {
             // Les entites sont recreees a la prochaine activation.
             worldSync.purgeLoadedChunks();
