@@ -12,7 +12,7 @@ libraries:
 commands:
   herbalis:
     description: Commande principale de Herbalis
-    usage: /herbalis <give|info|tolerance|reload>
+    usage: /herbalis <give|info|avance|tolerance|reload>
     aliases: [herb]
 
 permissions:

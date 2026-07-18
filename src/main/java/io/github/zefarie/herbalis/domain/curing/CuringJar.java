@@ -56,6 +56,14 @@ public record CuringJar(
         return new CuringJar(id, pos, "", List.of());
     }
 
+    /** Avance l'affinage de {@code millis} (outillage de test admin). */
+    public CuringJar shiftedBy(long millis) {
+        List<CuringSlot> shifted = slots.stream()
+                .map(s -> new CuringSlot(s.quality(), s.startedAt() - millis))
+                .toList();
+        return new CuringJar(id, pos, drugId, shifted);
+    }
+
     /** Vrai si toutes les tetes sont affinees. */
     public boolean isReady(long now, CuringProfile profile) {
         return !isEmpty()

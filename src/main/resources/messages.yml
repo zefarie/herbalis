@@ -313,10 +313,12 @@ erreurs:
   joueur-seulement: "<prefix> <color:#f87171>Commande réservée aux joueurs.</color>"
 
 commande:
-  usage: "<prefix> <color:#9ca3af>/herbalis give, info, tolerance ou reload</color>"
+  usage: "<prefix> <color:#9ca3af>/herbalis give, info, avance, tolerance ou reload</color>"
   give-usage: "<prefix> <color:#9ca3af>/herbalis give (joueur) (item) [quantité] [qualité]</color>"
   give-ok: "<prefix> <color:#4ade80><quantite>x <item> donné(s) à <joueur>.</color>"
   info-aucune-cible: "<prefix> <color:#9ca3af>Regarde une plante, un pot, un rack ou une jarre.</color>"
+  avance-usage: "<prefix> <color:#9ca3af>/herbalis avance <durée> (ex : 6h, 1d) en visant une plante, un rack ou une jarre.</color>"
+  avance-ok: "<prefix> <color:#4ade80>Cible avancée de <duree>.</color>"
   info-plante: "<prefix> <gradient:#86efac:#22c55e><b><drogue></b></gradient> <color:#9ca3af>stage <stage>/<stages> (<progression>%), hydratation <hydratation>% (moyenne <hydratation_moyenne>%), engrais <engrais>, état <etat>, potentiel</color> <etoiles>"
   tolerance-usage: "<prefix> <color:#9ca3af>/herbalis tolerance (joueur) [reset]</color>"
   tolerance-info: "<prefix> <color:#9ca3af><joueur> : tolérance</color> <color:#fbbf24><tolerance>/100</color><color:#9ca3af>, addiction</color> <color:#f87171><addiction>/100</color>"

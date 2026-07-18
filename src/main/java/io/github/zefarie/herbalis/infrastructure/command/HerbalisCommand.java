@@ -1,14 +1,18 @@
 package io.github.zefarie.herbalis.infrastructure.command;
 
 import io.github.zefarie.herbalis.application.port.ConsumerRepository;
+import io.github.zefarie.herbalis.application.port.JarRepository;
 import io.github.zefarie.herbalis.application.port.PlantRepository;
+import io.github.zefarie.herbalis.application.port.RackRepository;
 import io.github.zefarie.herbalis.domain.consumption.ConsumerProfile;
 import io.github.zefarie.herbalis.domain.consumption.ConsumptionEngine;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
+import io.github.zefarie.herbalis.domain.geo.BlockPos;
 import io.github.zefarie.herbalis.domain.plant.Plant;
 import io.github.zefarie.herbalis.domain.quality.Quality;
 import io.github.zefarie.herbalis.domain.quality.QualityCalculator;
+import io.github.zefarie.herbalis.infrastructure.config.DurationParser;
 import io.github.zefarie.herbalis.infrastructure.config.HerbalisConfig;
 import io.github.zefarie.herbalis.infrastructure.config.Messages;
 import io.github.zefarie.herbalis.infrastructure.hud.HudService;
@@ -43,12 +47,15 @@ public final class HerbalisCommand implements TabExecutor {
     private final DrugRegistry drugs;
     private final HerbalisConfig config;
     private final PlantRepository plants;
+    private final RackRepository racks;
+    private final JarRepository jars;
     private final ConsumerRepository consumers;
     private final HudService hud;
     private final Reloader reloader;
 
     public HerbalisCommand(Messages messages, ItemFactory items, DrugRegistry drugs,
                            HerbalisConfig config, PlantRepository plants,
+                           RackRepository racks, JarRepository jars,
                            ConsumerRepository consumers, HudService hud,
                            Reloader reloader) {
         this.messages = messages;
@@ -56,6 +63,8 @@ public final class HerbalisCommand implements TabExecutor {
         this.drugs = drugs;
         this.config = config;
         this.plants = plants;
+        this.racks = racks;
+        this.jars = jars;
         this.consumers = consumers;
         this.hud = hud;
         this.reloader = reloader;
@@ -71,11 +80,66 @@ public final class HerbalisCommand implements TabExecutor {
         switch (args[0].toLowerCase(Locale.ROOT)) {
             case "give" -> give(sender, args);
             case "info" -> info(sender);
+            case "avance" -> advance(sender, args);
             case "tolerance" -> tolerance(sender, args);
             case "reload" -> reload(sender);
             default -> sender.sendMessage(messages.msg("commande.usage"));
         }
         return true;
+    }
+
+    /**
+     * Avance le temps de la cible regardee (plante, rack ou jarre) :
+     * indispensable pour tester une pipeline a l'echelle de la semaine.
+     */
+    private void advance(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(messages.msg("erreurs.joueur-seulement"));
+            return;
+        }
+        if (!player.hasPermission("herbalis.admin")) {
+            player.sendMessage(messages.msg("erreurs.permission"));
+            return;
+        }
+        if (args.length < 2) {
+            player.sendMessage(messages.msg("commande.avance-usage"));
+            return;
+        }
+        long millis;
+        try {
+            millis = DurationParser.parse(args[1]).toMillis();
+        } catch (IllegalArgumentException e) {
+            player.sendMessage(messages.msg("commande.avance-usage"));
+            return;
+        }
+        BlockPos pos = hud.targetPos(player).orElse(null);
+        if (pos == null) {
+            player.sendMessage(messages.msg("commande.info-aucune-cible"));
+            return;
+        }
+
+        // Le decalage vers le passe suffit : le rattrapage de la
+        // croissance et les timestamps du sechage et du curing font
+        // le reste au tick suivant.
+        boolean shifted = false;
+        Optional<Plant> plant = plants.at(pos);
+        if (plant.isPresent()) {
+            plants.put(plant.get().withLastTickAt(
+                    plant.get().lastTickAt() - millis));
+            shifted = true;
+        } else if (racks.at(pos).isPresent()) {
+            racks.put(racks.at(pos).orElseThrow().shiftedBy(millis));
+            shifted = true;
+        } else if (jars.at(pos).isPresent()) {
+            jars.put(jars.at(pos).orElseThrow().shiftedBy(millis));
+            shifted = true;
+        }
+        if (!shifted) {
+            player.sendMessage(messages.msg("commande.info-aucune-cible"));
+            return;
+        }
+        player.sendMessage(messages.msg("commande.avance-ok",
+                Messages.ph("duree", args[1])));
     }
 
     private void give(CommandSender sender, String[] args) {
@@ -225,7 +289,7 @@ public final class HerbalisCommand implements TabExecutor {
                 subs.add("info");
             }
             if (sender.hasPermission("herbalis.admin")) {
-                subs.addAll(List.of("give", "tolerance", "reload"));
+                subs.addAll(List.of("give", "avance", "tolerance", "reload"));
             }
             return filter(subs, args[0]);
         }
@@ -240,6 +304,9 @@ public final class HerbalisCommand implements TabExecutor {
                 case 5 -> filter(List.of("1", "2", "3", "4", "5"), args[4]);
                 default -> List.of();
             };
+            case "avance" -> args.length == 2
+                    ? filter(List.of("1h", "6h", "12h", "1d", "2d"), args[1])
+                    : List.<String>of();
             case "tolerance" -> switch (args.length) {
                 case 2 -> filter(playerNames(), args[1]);
                 case 3 -> filter(List.of("reset"), args[2]);

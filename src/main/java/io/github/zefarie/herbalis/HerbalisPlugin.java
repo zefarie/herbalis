@@ -175,7 +175,8 @@ public final class HerbalisPlugin extends JavaPlugin {
 
         // Commande.
         var command = new HerbalisCommand(messages, items, drugs, config,
-                plantRepo, consumerRepo, hud, this::reloadEverything);
+                plantRepo, rackRepo, jarRepo, consumerRepo, hud,
+                this::reloadEverything);
         PluginCommand pluginCommand = getCommand("herbalis");
         if (pluginCommand != null) {
             pluginCommand.setExecutor(command);

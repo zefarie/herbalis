@@ -55,6 +55,14 @@ public record DryingRack(
         return new DryingRack(id, pos, "", List.of());
     }
 
+    /** Avance le sechage de {@code millis} (outillage de test admin). */
+    public DryingRack shiftedBy(long millis) {
+        List<DryingSlot> shifted = slots.stream()
+                .map(s -> new DryingSlot(s.quality(), s.startedAt() - millis))
+                .toList();
+        return new DryingRack(id, pos, drugId, shifted);
+    }
+
     /** Vrai si toutes les tetes sont seches. */
     public boolean isReady(long now, Duration dryingDuration) {
         return !isEmpty() && slots.stream().allMatch(s -> s.isDry(now, dryingDuration));
