@@ -107,6 +107,15 @@
       "chars": [
         "\ue00b"
       ]
+    },
+    {
+      "type": "bitmap",
+      "file": "herbalis:font/soil.png",
+      "ascent": 7,
+      "height": 8,
+      "chars": [
+        "\ue00c"
+      ]
     }
   ]
 }
