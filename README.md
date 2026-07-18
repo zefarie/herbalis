@@ -14,15 +14,18 @@ sec et craquelé, fertilisé), les buds givrent de trichomes et
 scintillent en fenêtre de récolte optimale, une feuille se détache
 parfois des plants matures, des gouttes perlent après l'arrosage.
 Arrosoir et joint en vrais models 3D en main, particules et sons sur
-chaque action (fumée de joint en spirale), HUD en action bar avec une
-font d'icônes dessinée pour le pack, effets de consommation
-cinématiques (montée, plateau, descente, blackout), tolérance et
-manque persistants. Et de la profondeur de jeu : une culture au rythme
-d'une vraie plante (environ une semaine réelle de la graine au joint,
-la croissance continue chunk déchargé et serveur éteint), taille aux
-cisailles dans une fenêtre précise, affinage en jarre de curing (avec
-moisissure punitive), génétique des graines sur plusieurs
-générations, toute la pipeline craftable.
+chaque action (fumée de joint en spirale), hologrammes d'état privés
+au-dessus de ce que le joueur regarde (eau, terreau, qualité,
+alertes) avec une font d'icônes dessinée pour le pack, effets de
+consommation cinématiques (montée, plateau, descente, blackout),
+tolérance et manque persistants. Et de la profondeur de jeu : une
+culture au rythme d'une vraie plante (environ une semaine réelle de
+la graine au joint, la croissance continue chunk déchargé et serveur
+éteint), taille aux cisailles dans une fenêtre précise, nuisibles à
+traiter au pulvérisateur, goutte-à-goutte pour les cultivateurs peu
+présents, affinage en jarre de curing (avec moisissure punitive),
+génétique des graines sur plusieurs générations, joints à taffes qui
+se passent de main en main, toute la pipeline craftable.
 
 ## Installation
 
@@ -74,6 +77,14 @@ par le serveur au premier démarrage.
      deux jours de négligence lui sont fatals.
    - **Engrais** : un par stage, accélère le stage en cours et
      améliore la qualité potentielle.
+   - **Goutte-à-goutte (craftable)** : installé sur le pot (petit
+     réservoir sur piquet, visible), il divise la perte d'eau par
+     deux. Rendu en cassant le pot.
+   - **Nuisibles** : une plante établie peut s'infester (moucherons
+     visibles, alerte à l'hologramme). Infestée, elle pousse deux
+     fois moins vite ; ignorée 12 h, elle est abîmée (-1 étoile à la
+     récolte, définitif). Le pulvérisateur craftable la traite en un
+     clic et se recharge sur l'eau.
    - **Taille (topping)** : un coup de cisailles (l'outil vanilla)
      aux stages 2 ou 3, dans la fenêtre du milieu de stage (le HUD
      affiche des ciseaux quand c'est le moment) : +1 à 2 têtes à la
@@ -86,9 +97,12 @@ par le serveur au premier démarrage.
    transitions animées par interpolation. La croissance suit le temps
    réel : chunk déchargé ou serveur éteint, la plante rattrape tout
    son retard au retour (elle continue aussi de boire, revenez
-   l'arroser). Regarder la plante affiche son état complet en action
-   bar : stage en segments, hydratation, qualité potentielle en étoiles,
-   alertes.
+   l'arroser). Une plante en extérieur pousse au rythme du soleil,
+   rattrapage compris ; une serre éclairée pousse en continu.
+   Regarder la plante fait flotter un hologramme d'état au-dessus
+   d'elle, visible de vous seul : nom et stage, eau, terreau
+   (humide, sec, fertilisé), qualité potentielle en étoiles et
+   alertes contextuelles. Pots vides, racks et jarres ont le leur.
 5. **Récolter** : au stade final, clic droit main vide (ou aux
    cisailles). Une fenêtre
    optimale de 12 heures s'ouvre à la floraison : les buds givrent de
@@ -113,16 +127,23 @@ par le serveur au premier démarrage.
    weed séchée de l'inventaire est emballée, qualité héritée.
 9. **Rouler** : pochon + feuille à rouler dans une grille de craft
    (établi ou inventaire) = joint, qualité héritée.
-10. **Fumer** : maintenir clic droit. Braise à l'allumage, fumée
-    visible par tous les joueurs, montée en 15 secondes par paliers
-    avec messages d'ambiance, plateau avec buffs (durée et intensité
-    selon la qualité : 2 minutes à 1 étoile, 6 minutes à 5 étoiles),
-    descente systématique (lenteur, faim, courte nausée).
+10. **Fumer et partager** : un joint contient 3 taffes (configurable).
+    Maintenir clic droit fume une taffe : braise à l'allumage, fumée
+    visible par tous, montée en 15 secondes par paliers avec messages
+    d'ambiance, plateau avec buffs (durée et intensité selon la
+    qualité : 2 minutes à 1 étoile, 6 minutes à 5 étoiles), descente
+    systématique (lenteur, faim, courte nausée). Le joint entamé
+    revient en main avec ses taffes restantes au lore. Clic droit sur
+    un joueur : on lui **passe le joint**, directement dans sa main
+    libre, messages des deux côtés. Tolérance, addiction et blackout
+    se comptent par taffe : un joint entier fumé seul et vite, c'est
+    déjà flirter avec le blackout.
 
 ### Abus, tolérance, manque
 
-- **Blackout** : 3 joints en moins de 5 minutes : écran noir, joueur
-  cloué au sol 30 secondes, caméra qui tangue, réveil vaseux.
+- **Blackout** : 7 taffes en moins de 10 minutes (plus de deux joints
+  entiers à soi tout seul) : écran noir, joueur cloué au sol
+  30 secondes, caméra qui tangue, réveil vaseux.
 - **Tolérance** : monte à chaque joint, décroît en temps réel (même
   hors ligne). Haute tolérance = effets plus courts et plus faibles.
 - **Addiction** : consommer régulièrement rend addict. Sans dose,
@@ -141,6 +162,8 @@ graines (récolte, casse de plante ou `/herbalis give` uniquement).
 | Graine de weed | Pas de craft : récolte ou give | Clic droit sur un pot, porte sa lignée (étoiles) |
 | Arrosoir | 1 pépite (bec) + 4 lingots de fer | Arrose (8 charges), se recharge sur l'eau |
 | Cisailles | Craft vanilla (2 lingots de fer) | Taille aux stages 2-3, usure vanilla configurable |
+| Pulvérisateur | 1 pépite + 1 lingot + 1 fiole (colonne) | Traite les nuisibles (6 charges), se recharge sur l'eau |
+| Goutte-à-goutte | 3 verres + 1 bâton + 1 ficelle | S'installe sur un pot, perte d'eau divisée par deux |
 | Engrais naturel | 2 poudres d'os + 1 terre (x2) | Un par stage, boost vitesse et qualité |
 | Tête fraîche | Récolte | Se suspend au rack de séchage |
 | Rack de séchage | 3 bâtons + 3 ficelles + 2 bâtons | Sèche jusqu'à 6 têtes |
@@ -149,7 +172,7 @@ graines (récolte, casse de plante ou `/herbalis give` uniquement).
 | Pochon vide | 1 cuir + 1 ficelle (x2) | Clic droit pour emballer la weed séchée |
 | Pochon de weed | Conditionnement | Ingrédient du joint |
 | Feuille à rouler | 1 papier + 1 canne à sucre (x3) | Ingrédient du joint |
-| Joint | Pochon + feuille à rouler | Maintenir clic droit pour fumer |
+| Joint | Pochon + feuille à rouler | 3 taffes : se fume, se passe (clic droit sur un joueur) |
 
 Casser une plante (clic gauche) rend une graine de sa lignée
 (configurable). Casser un pot, un rack ou une jarre (clic gauche) rend
@@ -161,15 +184,16 @@ l'item ; pleins, ils rendent d'abord leur contenu.
 | --- | --- | --- |
 | `/herbalis give <joueur> <item> [quantité] [qualité]` | `herbalis.admin` | Donne un item Herbalis (qualité 1 à 5, graines incluses) |
 | `/herbalis info` | `herbalis.info` | Détails de la plante, du rack ou de la jarre regardés |
+| `/herbalis avance <durée>` | `herbalis.admin` | Avance le temps de la cible regardée (ex : `6h`, `2d`) : indispensable pour tester la pipeline à l'échelle réelle |
 | `/herbalis tolerance <joueur> [reset]` | `herbalis.admin` | Consulte ou remet à zéro tolérance et addiction |
 | `/herbalis reload` | `herbalis.admin` | Recharge config, messages et drogues |
 
 Tab completion complète sur tout. Alias : `/herb`.
 
 Items pour `give` : `pot`, `drying_rack`, `curing_jar`, `watering_can`,
-`fertilizer`, `rolling_paper`, `pouch_empty`, `weed_seed`,
-`weed_bud_fresh`, `weed_dried`, `weed_pouch`, `weed_joint`. La taille
-se fait aux cisailles vanilla.
+`sprayer`, `dripper`, `fertilizer`, `rolling_paper`, `pouch_empty`,
+`weed_seed`, `weed_bud_fresh`, `weed_dried`, `weed_pouch`,
+`weed_joint`. La taille se fait aux cisailles vanilla.
 
 ## Permissions
 
@@ -184,19 +208,23 @@ se fait aux cisailles vanilla.
 ## Configuration
 
 - `config.yml` : tick de croissance, autosave, particules et sons,
-  HUD, charges de l'arrosoir, usure des cisailles à la taille, drops,
-  explosions, cadence du manque. Tout est commenté en français.
+  hologrammes (activation, portée du regard), charges de l'arrosoir
+  et du pulvérisateur, facteur du goutte-à-goutte, usure des
+  cisailles à la taille, drops, explosions, cadence du manque. Tout
+  est commenté en français.
 - `drugs/weed.yml` : la définition complète de la weed : durées de
   stages, lumière minimum, hydratation, engrais, fenêtre de récolte,
-  séchage, taille (stages, fenêtre, bonus, malus), curing (durée,
-  moisissure, bonus), effets (montée, plateau, descente), blackout,
-  tolérance, addiction, poids du calcul de qualité (dont la
-  génétique). Les durées acceptent `30s`, `8m`, `1h30m`, `2d` ou
-  `1j12h` ; les défauts visent le rythme d'une vraie culture
+  séchage, taille (stages, fenêtre, bonus, malus), nuisibles
+  (chance, ralentissement, délai de dégâts, malus), curing (durée,
+  moisissure, bonus), effets (montée, plateau, descente), taffes par
+  joint, blackout, tolérance, addiction, poids du calcul de qualité
+  (dont la génétique). Les durées acceptent `30s`, `8m`, `1h30m`,
+  `2d` ou `1j12h` ; les défauts visent le rythme d'une vraie culture
   (environ une semaine de la graine au joint), tout se raccourcit
-  pour un serveur au rythme arcade. Les sections `taille` et `curing`
-  sont optionnelles : une config antérieure reste valide (défauts
-  raisonnables, génétique à 0 tant que le poids n'est pas déclaré).
+  pour un serveur au rythme arcade. Les sections `taille`, `curing`
+  et `nuisibles` sont optionnelles : une config antérieure reste
+  valide (défauts raisonnables, nuisibles désactivés et génétique à
+  0 tant qu'ils ne sont pas déclarés).
 - `messages.yml` : 100 % des textes joueur, en MiniMessage.
 
 ### Ajouter une drogue
@@ -223,7 +251,7 @@ application/     Cas d'usage (PlantSeed, Water, Harvest, Consume...)
                  et ports (repositories, environnement)
 infrastructure/  Bukkit : rendu Item Display + Interaction, SQLite
                  (écriture asynchrone, write-behind), tickers globaux,
-                 listeners, commandes, FX, HUD
+                 listeners, commandes, FX, hologrammes d'état
 ```
 
 Choix techniques notables :
@@ -235,7 +263,10 @@ Choix techniques notables :
   persistantes, respawnées au chargement des chunks depuis SQLite, les
   orphelines sont purgées. Un crash ne laisse aucun fantôme.
 - **Un scheduler global par préoccupation** (croissance, racks,
-  joueurs, HUD, autosave), jamais une task par plante.
+  joueurs, hologrammes, autosave), jamais une task par plante.
+- **Hologrammes privés** : un TextDisplay par joueur, invisible pour
+  les autres (`setVisibleByDefault(false)` + `showEntity`), qui suit
+  la cible du regard et se retire dès qu'on détourne les yeux.
 - **Timestamps, pas des ticks comptés** : séchage, curing, tolérance,
   addiction et sessions d'effets survivent aux redémarrages et aux
   déconnexions. La croissance aussi : chaque plante garde la date de
@@ -262,9 +293,13 @@ Structure dans `resourcepack/`, format 75 (1.21.11).
   les blocs, 16x pour les items (cohérence vanilla en inventaire).
 - Arrosoir et joint : models 3D en main et au sol, sprite 2D en
   inventaire (select sur le contexte d'affichage, 1.21.4+).
-- Font d'icônes `herbalis:icons` (feuille, goutte, étoiles, segments,
-  soleil, ciseaux, sablier, coche...) : glyphes blancs teintés par les
-  balises de couleur MiniMessage, utilisés partout dans messages.yml.
+- Goutte-à-goutte en vrai volume sur le pot (piquet, réservoir en
+  verre plein d'eau, tuyau qui plonge dans le terreau, variantes des
+  trois terreaux), sprites 16x du pulvérisateur et du goutte-à-goutte.
+- Font d'icônes `herbalis:icons` (feuille, goutte, terreau, étoiles,
+  segments, soleil, ciseaux, sablier, coche...) : glyphes blancs
+  teintés par les balises de couleur MiniMessage, utilisés dans les
+  hologrammes et messages.yml.
 - Les textures sont générées par `resourcepack/tools/generate_textures.py`
   (Pillow) et les models par `generate_models.py` ; les chemins et les
   régions UV sont stables pour permettre à un artiste de remplacer les
@@ -289,10 +324,12 @@ python3 -m venv .venv && .venv/bin/pip install pillow
 ./gradlew test
 ```
 
-55 tests unitaires sur le domaine et les cas d'usage : progression de
+61 tests unitaires sur le domaine et les cas d'usage : progression de
 croissance, rattrapage hors ligne (stages, mort au bon moment, chunk
-déchargé), lumière, sécheresse et mort, calcul de qualité (dont
-génétique et malus de taille), malus de séchage, curing (affinage,
-moisissure, contamination), fenêtre de taille, graines héritées,
-tolérance, fenêtre de blackout, seuils de manque, chronologie des
-effets, parsing des durées (jours inclus).
+déchargé, rythme jour/nuit sous ciel, goutte-à-goutte), lumière,
+sécheresse et mort, nuisibles (apparition, ralentissement, dégâts,
+traitement), calcul de qualité (dont génétique, malus de taille et de
+nuisibles), malus de séchage, curing (affinage, moisissure,
+contamination), fenêtre de taille, graines héritées, tolérance,
+fenêtre de blackout, seuils de manque, chronologie des effets,
+parsing des durées (jours inclus).
