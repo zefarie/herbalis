@@ -51,6 +51,26 @@ goutte-a-goutte:
   # longtemps, pratique pour les cultivateurs peu presents).
   facteur-perte: 0.5
 
+irrigation:
+  # Un seau verse dans un caisson vaut autant de points d'hydratation.
+  # 100 points = un arrosage complet = environ une journee d'eau pour
+  # une plante (deux avec un goutte-a-goutte sur le pot).
+  eau-par-seau: 100.0
+  # Capacite de chaque taille de caisson, en seaux.
+  capacite-seaux:
+    cuve: 16
+    citerne: 64
+    reservoir: 256
+
+silo:
+  # Doses d'engrais que peut contenir un silo (une dose = un engrais,
+  # appliquee automatiquement aux pots relies, une fois par stage).
+  capacite-doses: 16
+
+lampe:
+  # Niveau de lumiere emis par la lampe horticole UV (1 a 15).
+  niveau-lumiere: 15
+
 taille:
   # Points de durabilite perdus par les cisailles (l'outil vanilla)
   # a chaque taille. 0 = aucune usure.

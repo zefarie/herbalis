@@ -1,6 +1,7 @@
 package io.github.zefarie.herbalis.infrastructure.item;
 
 import io.github.zefarie.herbalis.domain.drug.DrugType;
+import io.github.zefarie.herbalis.domain.irrigation.TankSize;
 import io.github.zefarie.herbalis.domain.plant.Plant;
 import io.github.zefarie.herbalis.domain.quality.Quality;
 import io.github.zefarie.herbalis.infrastructure.config.Messages;
@@ -55,6 +56,44 @@ public final class ItemFactory {
     /** Goutte-a-goutte : s'installe sur un pot, ralentit la perte d'eau. */
     public ItemStack dripper() {
         return generic(HerbalisItemType.DRIPPER, 16);
+    }
+
+    /** Tuyau d'irrigation : se pose en chaine entre caissons et pots. */
+    public ItemStack pipe() {
+        return generic(HerbalisItemType.PIPE, 64);
+    }
+
+    /** Caisson d'eau de la taille donnee. */
+    public ItemStack tank(TankSize size) {
+        return generic(tankType(size), 16);
+    }
+
+    /** Silo d'engrais : fertilise tout seul les pots relies. */
+    public ItemStack silo() {
+        return generic(HerbalisItemType.SILO, 16);
+    }
+
+    /** Lampe horticole UV : lumiere maximale pour les cultures d'interieur. */
+    public ItemStack uvLamp() {
+        return generic(HerbalisItemType.UV_LAMP, 16);
+    }
+
+    public static HerbalisItemType tankType(TankSize size) {
+        return switch (size) {
+            case CUVE -> HerbalisItemType.TANK_CUVE;
+            case CITERNE -> HerbalisItemType.TANK_CITERNE;
+            case RESERVOIR -> HerbalisItemType.TANK_RESERVOIR;
+        };
+    }
+
+    /** Taille de caisson portee par un type d'item, s'il en est un. */
+    public static Optional<TankSize> tankSizeOf(HerbalisItemType type) {
+        return switch (type) {
+            case TANK_CUVE -> Optional.of(TankSize.CUVE);
+            case TANK_CITERNE -> Optional.of(TankSize.CITERNE);
+            case TANK_RESERVOIR -> Optional.of(TankSize.RESERVOIR);
+            default -> Optional.empty();
+        };
     }
 
     public ItemStack rollingPaper() {
@@ -153,6 +192,7 @@ public final class ItemFactory {
                 return Optional.of(switch (type) {
                     case WATERING_CAN -> wateringCan(canCharges);
                     case SPRAYER -> sprayer(sprayerCharges);
+                    case PIPE -> pipe();
                     default -> generic(type, 16);
                 });
             }

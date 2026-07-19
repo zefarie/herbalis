@@ -3,6 +3,7 @@ package io.github.zefarie.herbalis.infrastructure.listener;
 import com.destroystokyo.paper.event.inventory.PrepareResultEvent;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
+import io.github.zefarie.herbalis.domain.irrigation.TankSize;
 import io.github.zefarie.herbalis.domain.quality.Quality;
 import io.github.zefarie.herbalis.infrastructure.config.HerbalisConfig;
 import io.github.zefarie.herbalis.infrastructure.item.HerbalisItemType;
@@ -84,6 +85,26 @@ public final class CraftListener implements Listener {
                 new String[]{"ggg", " s ", " r "},
                 Map.of('g', Material.GLASS, 's', Material.STICK,
                         'r', Material.STRING));
+        shaped(plugin, "pipe", withAmount(items.pipe(), 4),
+                new String[]{"ccc"},
+                Map.of('c', Material.COPPER_INGOT));
+        shaped(plugin, "tank_cuve", items.tank(TankSize.CUVE),
+                new String[]{"c c", "p p", "ppp"},
+                Map.of('c', Material.COPPER_INGOT, 'p', Material.OAK_PLANKS));
+        shaped(plugin, "tank_citerne", items.tank(TankSize.CITERNE),
+                new String[]{"iii", "ibi", "iii"},
+                Map.of('i', Material.IRON_INGOT, 'b', Material.BUCKET));
+        shaped(plugin, "tank_reservoir", items.tank(TankSize.RESERVOIR),
+                new String[]{"BiB", "ibi", "BiB"},
+                Map.of('B', Material.IRON_BLOCK, 'i', Material.IRON_INGOT,
+                        'b', Material.BUCKET));
+        shaped(plugin, "silo", items.silo(),
+                new String[]{"p p", "php", "ppp"},
+                Map.of('p', Material.OAK_PLANKS, 'h', Material.HOPPER));
+        shaped(plugin, "uv_lamp", items.uvLamp(),
+                new String[]{"aaa", "grg", " i "},
+                Map.of('a', Material.AMETHYST_SHARD, 'g', Material.GLASS,
+                        'r', Material.REDSTONE, 'i', Material.IRON_INGOT));
         shapeless(plugin, "fertilizer", withAmount(items.fertilizer(), 2),
                 Material.BONE_MEAL, Material.BONE_MEAL, Material.DIRT);
         shapeless(plugin, "rolling_paper", withAmount(items.rollingPaper(), 3),

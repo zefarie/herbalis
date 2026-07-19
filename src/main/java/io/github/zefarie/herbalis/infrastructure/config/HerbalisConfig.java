@@ -1,5 +1,6 @@
 package io.github.zefarie.herbalis.infrastructure.config;
 
+import io.github.zefarie.herbalis.domain.irrigation.TankSize;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.time.Duration;
@@ -21,6 +22,12 @@ public final class HerbalisConfig {
             int wateringCanCharges,
             int sprayerCharges,
             double dripperDecayFactor,
+            double waterPerBucket,
+            int tankBucketsCuve,
+            int tankBucketsCiterne,
+            int tankBucketsReservoir,
+            int siloCapacityDoses,
+            int lampLightLevel,
             int shearsWearPerPruning,
             boolean dropSeedOnBreak,
             boolean explosionKillsPlants,
@@ -57,6 +64,12 @@ public final class HerbalisConfig {
                 Math.max(1, config.getInt("pulverisateur.charges", 6)),
                 Math.clamp(config.getDouble("goutte-a-goutte.facteur-perte", 0.5),
                         0.0, 1.0),
+                Math.max(1.0, config.getDouble("irrigation.eau-par-seau", 100.0)),
+                Math.max(1, config.getInt("irrigation.capacite-seaux.cuve", 16)),
+                Math.max(1, config.getInt("irrigation.capacite-seaux.citerne", 64)),
+                Math.max(1, config.getInt("irrigation.capacite-seaux.reservoir", 256)),
+                Math.max(1, config.getInt("silo.capacite-doses", 16)),
+                Math.clamp(config.getInt("lampe.niveau-lumiere", 15), 1, 15),
                 Math.max(0, config.getInt("taille.usure-cisailles", 1)),
                 config.getBoolean("plantes.drop-graine-si-cassee", true),
                 config.getBoolean("plantes.explosion-detruit", true),
@@ -104,6 +117,33 @@ public final class HerbalisConfig {
 
     public double dripperDecayFactor() {
         return data.dripperDecayFactor();
+    }
+
+    /** Points d'hydratation gagnes par seau verse dans un caisson. */
+    public double waterPerBucket() {
+        return data.waterPerBucket();
+    }
+
+    /** Capacite d'un caisson, en seaux. */
+    public int tankCapacityBuckets(TankSize size) {
+        return switch (size) {
+            case CUVE -> data.tankBucketsCuve();
+            case CITERNE -> data.tankBucketsCiterne();
+            case RESERVOIR -> data.tankBucketsReservoir();
+        };
+    }
+
+    /** Capacite d'un caisson, en points d'hydratation. */
+    public double tankCapacity(TankSize size) {
+        return tankCapacityBuckets(size) * data.waterPerBucket();
+    }
+
+    public int siloCapacityDoses() {
+        return data.siloCapacityDoses();
+    }
+
+    public int lampLightLevel() {
+        return data.lampLightLevel();
     }
 
     public int shearsWearPerPruning() {
