@@ -30,6 +30,14 @@ public sealed interface PlantEvent {
     record PestAppeared() implements PlantEvent {
     }
 
+    /** Le reseau d'irrigation vient de sortir la plante de la soif. */
+    record Irrigated() implements PlantEvent {
+    }
+
+    /** Un silo relie vient d'appliquer une dose d'engrais. */
+    record AutoFertilized() implements PlantEvent {
+    }
+
     /** L'infestation non traitee vient d'abimer la plante. */
     record PestDamaged() implements PlantEvent {
     }

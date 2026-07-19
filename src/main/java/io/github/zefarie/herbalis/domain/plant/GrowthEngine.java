@@ -16,7 +16,16 @@ public final class GrowthEngine {
     private GrowthEngine() {
     }
 
-    public record GrowthTick(Plant plant, List<PlantEvent> events) {
+    /**
+     * Resultat d'un tick : la plante avancee, ses evenements, et ce que
+     * le reseau d'irrigation a fourni (a decompter des stocks).
+     */
+    public record GrowthTick(Plant plant, List<PlantEvent> events,
+                             double waterDrawn, boolean fertilizerUsed) {
+
+        public GrowthTick(Plant plant, List<PlantEvent> events) {
+            this(plant, events, 0.0, false);
+        }
 
         public boolean hasEvents() {
             return !events.isEmpty();
@@ -45,12 +54,32 @@ public final class GrowthEngine {
         HydrationProfile hydrationProfile = drug.hydration();
         long delta = conditions.deltaMillis();
 
+        // Fertigation : un silo relie applique sa dose des que le stage
+        // y a droit (inutile au stade final, la croissance y est finie).
+        boolean fertilizerUsed = false;
+        if (conditions.fertilizerAvailable() && !plant.isFertilizedThisStage()
+                && !drug.growth().isFinalStage(plant.stage())) {
+            plant = plant.withFertilizer();
+            fertilizerUsed = true;
+            events.add(new PlantEvent.AutoFertilized());
+        }
+
         // Hydratation : decroissance (ralentie par un goutte-a-goutte),
-        // puis echantillon pondere par la duree du tick (les ticks de
-        // rattrapage pesent leur juste poids).
+        // puis le reseau d'irrigation complete jusqu'a 100 dans la limite
+        // de son stock, puis echantillon pondere par la duree du tick
+        // (les ticks de rattrapage pesent leur juste poids).
         double hydration = Math.max(0.0,
                 plant.hydration() - hydrationProfile.decayPerMinute()
                         * conditions.hydrationFactor() * delta / 60_000.0);
+        double waterDrawn = 0.0;
+        if (conditions.waterAvailable() > 0.0 && hydration < 100.0) {
+            waterDrawn = Math.min(conditions.waterAvailable(), 100.0 - hydration);
+            boolean wasThirsty = hydration <= hydrationProfile.thirstyThreshold();
+            hydration += waterDrawn;
+            if (wasThirsty) {
+                events.add(new PlantEvent.Irrigated());
+            }
+        }
         double hydrationSum = plant.hydrationSum() + hydration * delta;
         long samples = plant.hydrationSamples() + delta;
 
@@ -81,7 +110,8 @@ public final class GrowthEngine {
             Plant dead = plant.ticked(plant.stage(), plant.stageGrowthMillis(),
                     plant.ripenMillis(), hydration, hydrationSum, samples,
                     dryMillis, pestMillis, pestDamage, PlantState.DEAD);
-            return new GrowthTick(dead, List.of(new PlantEvent.Died()));
+            return new GrowthTick(dead, List.of(new PlantEvent.Died()),
+                    waterDrawn, fertilizerUsed);
         }
         if (dryMillis >= hydrationProfile.witherDelay().toMillis()) {
             if (state == PlantState.HEALTHY) {
@@ -128,7 +158,7 @@ public final class GrowthEngine {
         Plant next = plant.ticked(stage, stageGrowth, ripen,
                 hydration, hydrationSum, samples, dryMillis,
                 pestMillis, pestDamage, state);
-        return new GrowthTick(next, List.copyOf(events));
+        return new GrowthTick(next, List.copyOf(events), waterDrawn, fertilizerUsed);
     }
 
     /** Vrai si la croissance est actuellement figee par manque de lumiere. */

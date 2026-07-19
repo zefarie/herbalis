@@ -205,6 +205,24 @@ public final class Fx {
                 dripSpout(loc), 1, 0.02, 0.05, 0.02, 0.0));
     }
 
+    /** Le reseau d'irrigation vient d'abreuver une plante assoiffee. */
+    public void irrigated(Location loc) {
+        particles(loc, w -> {
+            w.spawnParticle(Particle.DRIPPING_WATER, soil(loc), 8,
+                    0.2, 0.1, 0.2, 0.0);
+            w.spawnParticle(Particle.SPLASH, soil(loc), 6, 0.18, 0.08, 0.18, 0.0);
+        });
+        sound(loc, "minecraft:block.water.ambient", 0.5f, 1.7f);
+    }
+
+    /** Un silo relie vient de fertiliser la plante tout seul. */
+    public void autoFertilized(Location loc) {
+        particles(loc, w ->
+                w.spawnParticle(Particle.HAPPY_VILLAGER, soil(loc), 8,
+                        0.22, 0.15, 0.22, 0.0));
+        sound(loc, "minecraft:item.bone_meal.use", 0.5f, 1.3f);
+    }
+
     /** Coup de pulverisateur : brume et nuisibles disperses. */
     public void sprayed(Location loc) {
         particles(loc, w -> {

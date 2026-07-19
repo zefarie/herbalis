@@ -76,6 +76,8 @@ public final class GrowthTicker implements Runnable {
                     }
                     case PlantEvent.PestAppeared ignored -> fx.pestAppeared(loc);
                     case PlantEvent.PestDamaged ignored -> fx.pestDamaged(loc);
+                    case PlantEvent.Irrigated ignored -> fx.irrigated(loc);
+                    case PlantEvent.AutoFertilized ignored -> fx.autoFertilized(loc);
                 }
             }
             // Le terreau suit l'etat (sec, fertilise, arrose).

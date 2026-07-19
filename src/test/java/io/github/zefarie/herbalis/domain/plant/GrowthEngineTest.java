@@ -166,6 +166,62 @@ class GrowthEngineTest {
     }
 
     @Test
+    void leReseauMaintientLhydratationEtCompteLeauPrelevee() {
+        Plant plant = fresh().withHydration(100);
+        GrowthEngine.GrowthTick tick = GrowthEngine.tick(plant, weed,
+                new GrowthConditions(15, 60_000, 1.0, 1.0, 50.0, false));
+        assertEquals(100.0, tick.plant().hydration(), 0.001);
+        assertEquals(2.5, tick.waterDrawn(), 0.001);
+    }
+
+    @Test
+    void leReseauSortUnePlanteDeLaSoifEtLeSignale() {
+        Plant plant = fresh().withHydration(10);
+        GrowthEngine.GrowthTick tick = GrowthEngine.tick(plant, weed,
+                new GrowthConditions(15, 60_000, 1.0, 1.0, 1000.0, false));
+        assertEquals(100.0, tick.plant().hydration(), 0.001);
+        assertEquals(92.5, tick.waterDrawn(), 0.001);
+        assertTrue(tick.events().stream()
+                .anyMatch(e -> e instanceof PlantEvent.Irrigated));
+    }
+
+    @Test
+    void unStockInsuffisantEstPreleveEnEntierSansCombler() {
+        Plant plant = fresh().withHydration(50);
+        GrowthEngine.GrowthTick tick = GrowthEngine.tick(plant, weed,
+                new GrowthConditions(15, 60_000, 1.0, 1.0, 5.0, false));
+        assertEquals(52.5, tick.plant().hydration(), 0.001);
+        assertEquals(5.0, tick.waterDrawn(), 0.001);
+    }
+
+    @Test
+    void laFertigationAppliqueUneSeuleDoseParStage() {
+        Plant plant = fresh().withHydration(100);
+        GrowthEngine.GrowthTick first = GrowthEngine.tick(plant, weed,
+                new GrowthConditions(15, 60_000, 1.0, 1.0, 0.0, true));
+        assertTrue(first.fertilizerUsed());
+        assertTrue(first.plant().isFertilizedThisStage());
+        assertTrue(first.events().stream()
+                .anyMatch(e -> e instanceof PlantEvent.AutoFertilized));
+        // La dose booste la croissance des ce tick.
+        assertEquals(Math.round(60_000 * 1.5), first.plant().stageGrowthMillis());
+
+        GrowthEngine.GrowthTick second = GrowthEngine.tick(first.plant(), weed,
+                new GrowthConditions(15, 60_000, 1.0, 1.0, 0.0, true));
+        assertFalse(second.fertilizerUsed());
+    }
+
+    @Test
+    void pasDeFertigationAuStadeFinal() {
+        Plant atFinal = new Plant(java.util.UUID.randomUUID(), "weed",
+                TestFixtures.pos(), 4, 0L, 0L, 100.0, 0.0, 0L, 0L, 0, 0, 2, 0,
+                0L, 0, PlantState.HEALTHY, 0L, 0L);
+        GrowthEngine.GrowthTick tick = GrowthEngine.tick(atFinal, weed,
+                new GrowthConditions(15, 60_000, 1.0, 1.0, 0.0, true));
+        assertFalse(tick.fertilizerUsed());
+    }
+
+    @Test
     void fenetreDeRecolteSeRefermeApresLaDureeOptimale() {
         Plant atFinal = new Plant(java.util.UUID.randomUUID(), "weed",
                 TestFixtures.pos(), 4, 0L, 0L, 100.0, 0.0, 0L, 0L, 0, 0, 2, 0,
