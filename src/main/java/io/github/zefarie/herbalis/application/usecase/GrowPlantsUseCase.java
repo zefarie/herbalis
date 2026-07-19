@@ -3,6 +3,7 @@ package io.github.zefarie.herbalis.application.usecase;
 import io.github.zefarie.herbalis.application.port.PlantEnvironment;
 import io.github.zefarie.herbalis.application.port.PlantRepository;
 import io.github.zefarie.herbalis.application.port.PotRepository;
+import io.github.zefarie.herbalis.application.service.IrrigationService;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
@@ -39,16 +40,19 @@ public final class GrowPlantsUseCase {
     private final PotRepository pots;
     private final DrugRegistry drugs;
     private final PlantEnvironment environment;
+    private final IrrigationService irrigation;
     private final RandomGenerator random;
     private final double dripperDecayFactor;
 
     public GrowPlantsUseCase(PlantRepository plants, PotRepository pots,
                              DrugRegistry drugs, PlantEnvironment environment,
-                             RandomGenerator random, double dripperDecayFactor) {
+                             IrrigationService irrigation, RandomGenerator random,
+                             double dripperDecayFactor) {
         this.plants = plants;
         this.pots = pots;
         this.drugs = drugs;
         this.environment = environment;
+        this.irrigation = irrigation;
         this.random = random;
         this.dripperDecayFactor = dripperDecayFactor;
     }
@@ -84,6 +88,10 @@ public final class GrowPlantsUseCase {
                     ? Math.max(blockLight, environment.skyLightLevel(pos)) : 0;
             double hydrationFactor = pots.hasDripper(pos)
                     ? dripperDecayFactor : 1.0;
+            // Reseau d'irrigation : cablage resolu une fois, stocks
+            // debites tranche par tranche (un caisson peut se vider en
+            // plein rattrapage, la plante decline alors normalement).
+            IrrigationService.Hookup hookup = irrigation.hookupFor(pos);
             List<PlantEvent> events = new ArrayList<>(2);
             Plant current = plant;
             int slice = 0;
@@ -93,9 +101,20 @@ public final class GrowPlantsUseCase {
                 int light = catchingUp
                         ? (slice++ % 2 == 0 ? dayLight : blockLight)
                         : liveLight;
+                double water = hookup.hasTank()
+                        ? irrigation.availableWater(hookup) : 0.0;
+                boolean fertilizer = hookup.hasSilo()
+                        && irrigation.hasFertilizerDose(hookup);
                 GrowthEngine.GrowthTick result = GrowthEngine.tick(
                         current, drug, new GrowthConditions(light, step,
-                                random.nextDouble(), hydrationFactor));
+                                random.nextDouble(), hydrationFactor,
+                                water, fertilizer));
+                if (result.waterDrawn() > 0.0) {
+                    irrigation.drawWater(hookup, result.waterDrawn());
+                }
+                if (result.fertilizerUsed()) {
+                    irrigation.consumeFertilizerDose(hookup);
+                }
                 current = result.plant();
                 events.addAll(result.events());
             }

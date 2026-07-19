@@ -19,6 +19,7 @@ import io.github.zefarie.herbalis.application.usecase.PlantSeedUseCase;
 import io.github.zefarie.herbalis.application.usecase.PrunePlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.TreatPlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.WaterPlantUseCase;
+import io.github.zefarie.herbalis.application.service.IrrigationService;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.infrastructure.command.HerbalisCommand;
 import io.github.zefarie.herbalis.infrastructure.config.DrugConfigLoader;
@@ -42,9 +43,13 @@ import io.github.zefarie.herbalis.infrastructure.listener.ProtectionListener;
 import io.github.zefarie.herbalis.infrastructure.persistence.Database;
 import io.github.zefarie.herbalis.infrastructure.persistence.SqliteConsumerRepository;
 import io.github.zefarie.herbalis.infrastructure.persistence.SqliteJarRepository;
+import io.github.zefarie.herbalis.infrastructure.persistence.SqliteLampRepository;
+import io.github.zefarie.herbalis.infrastructure.persistence.SqlitePipeRepository;
 import io.github.zefarie.herbalis.infrastructure.persistence.SqlitePlantRepository;
 import io.github.zefarie.herbalis.infrastructure.persistence.SqlitePotRepository;
 import io.github.zefarie.herbalis.infrastructure.persistence.SqliteRackRepository;
+import io.github.zefarie.herbalis.infrastructure.persistence.SqliteSiloRepository;
+import io.github.zefarie.herbalis.infrastructure.persistence.SqliteTankRepository;
 import io.github.zefarie.herbalis.infrastructure.persistence.SqliteSessionStore;
 import io.github.zefarie.herbalis.infrastructure.render.DisplayRenderer;
 import io.github.zefarie.herbalis.infrastructure.render.WorldSync;
@@ -75,6 +80,7 @@ public final class HerbalisPlugin extends JavaPlugin {
 
     private Database database;
     private SqlitePlantRepository plantRepo;
+    private SqliteTankRepository tankRepo;
     private WorldSync worldSync;
     private HologramService holograms;
 
@@ -100,6 +106,10 @@ public final class HerbalisPlugin extends JavaPlugin {
         plantRepo = new SqlitePlantRepository(database);
         var rackRepo = new SqliteRackRepository(database);
         var jarRepo = new SqliteJarRepository(database);
+        var pipeRepo = new SqlitePipeRepository(database);
+        tankRepo = new SqliteTankRepository(database);
+        var siloRepo = new SqliteSiloRepository(database);
+        var lampRepo = new SqliteLampRepository(database);
         var consumerRepo = new SqliteConsumerRepository(database);
         var sessionStore = new SqliteSessionStore(database);
         getLogger().info(potRepo.all().size() + " pot(s), "
@@ -127,8 +137,11 @@ public final class HerbalisPlugin extends JavaPlugin {
         var harvestPlant = new HarvestPlantUseCase(plantRepo, drugs,
                 new java.util.Random());
         var breakPlant = new BreakPlantUseCase(plantRepo);
+        var irrigation = new IrrigationService(tankRepo, siloRepo, pipeRepo,
+                potRepo);
         var growPlants = new GrowPlantsUseCase(plantRepo, potRepo, drugs,
-                environment, new java.util.Random(), config.dripperDecayFactor());
+                environment, irrigation, new java.util.Random(),
+                config.dripperDecayFactor());
         var placeRack = new PlaceRackUseCase(rackRepo);
         var breakRack = new BreakRackUseCase(rackRepo);
         var addBud = new AddBudToRackUseCase(rackRepo, drugs);
@@ -205,6 +218,7 @@ public final class HerbalisPlugin extends JavaPlugin {
         }, 10L, 10L);
         long autosaveTicks = config.autosaveInterval().toSeconds() * 20L;
         scheduler.runTaskTimer(this, plantRepo::flush, autosaveTicks, autosaveTicks);
+        scheduler.runTaskTimer(this, tankRepo::flush, autosaveTicks, autosaveTicks);
 
         getLogger().info("Herbalis actif.");
     }
@@ -221,6 +235,9 @@ public final class HerbalisPlugin extends JavaPlugin {
         }
         if (plantRepo != null) {
             plantRepo.flushSync();
+        }
+        if (tankRepo != null) {
+            tankRepo.flushSync();
         }
         if (database != null) {
             database.close();

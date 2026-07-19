@@ -1,12 +1,19 @@
 package io.github.zefarie.herbalis.application;
 
+import io.github.zefarie.herbalis.application.port.PipeRepository;
 import io.github.zefarie.herbalis.application.port.PlantEnvironment;
 import io.github.zefarie.herbalis.application.port.PlantRepository;
 import io.github.zefarie.herbalis.application.port.PotRepository;
+import io.github.zefarie.herbalis.application.port.SiloRepository;
+import io.github.zefarie.herbalis.application.port.TankRepository;
+import io.github.zefarie.herbalis.application.service.IrrigationService;
 import io.github.zefarie.herbalis.application.usecase.GrowPlantsUseCase;
 import io.github.zefarie.herbalis.domain.TestFixtures;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
+import io.github.zefarie.herbalis.domain.irrigation.FertilizerSilo;
+import io.github.zefarie.herbalis.domain.irrigation.TankSize;
+import io.github.zefarie.herbalis.domain.irrigation.WaterTank;
 import io.github.zefarie.herbalis.domain.plant.Plant;
 import io.github.zefarie.herbalis.domain.plant.PlantEvent;
 import io.github.zefarie.herbalis.domain.plant.PlantState;
@@ -120,15 +127,97 @@ class GrowPlantsUseCaseTest {
         }
     }
 
+    private static final class InMemoryTanks implements TankRepository {
+        final Map<BlockPos, WaterTank> tanks = new HashMap<>();
+
+        @Override
+        public Optional<WaterTank> at(BlockPos pos) {
+            return Optional.ofNullable(tanks.get(pos));
+        }
+
+        @Override
+        public void put(WaterTank tank) {
+            tanks.put(tank.pos(), tank);
+        }
+
+        @Override
+        public void remove(BlockPos pos) {
+            tanks.remove(pos);
+        }
+
+        @Override
+        public Collection<WaterTank> all() {
+            return List.copyOf(tanks.values());
+        }
+    }
+
+    private static final class InMemorySilos implements SiloRepository {
+        final Map<BlockPos, FertilizerSilo> silos = new HashMap<>();
+
+        @Override
+        public Optional<FertilizerSilo> at(BlockPos pos) {
+            return Optional.ofNullable(silos.get(pos));
+        }
+
+        @Override
+        public void put(FertilizerSilo silo) {
+            silos.put(silo.pos(), silo);
+        }
+
+        @Override
+        public void remove(BlockPos pos) {
+            silos.remove(pos);
+        }
+
+        @Override
+        public Collection<FertilizerSilo> all() {
+            return List.copyOf(silos.values());
+        }
+    }
+
+    private static final class InMemoryPipes implements PipeRepository {
+        final Set<BlockPos> pipes = new HashSet<>();
+
+        @Override
+        public boolean has(BlockPos pos) {
+            return pipes.contains(pos);
+        }
+
+        @Override
+        public void add(BlockPos pos) {
+            pipes.add(pos);
+        }
+
+        @Override
+        public void remove(BlockPos pos) {
+            pipes.remove(pos);
+        }
+
+        @Override
+        public Set<BlockPos> all() {
+            return Set.copyOf(pipes);
+        }
+    }
+
     private final DrugRegistry drugs = new DrugRegistry();
     private final InMemoryPlants plants = new InMemoryPlants();
     private final InMemoryPots pots = new InMemoryPots();
+    private final InMemoryTanks tanks = new InMemoryTanks();
+    private final InMemorySilos silos = new InMemorySilos();
+    private final InMemoryPipes pipes = new InMemoryPipes();
     private final FakeEnvironment environment = new FakeEnvironment();
+    private final IrrigationService irrigation = new IrrigationService(
+            tanks, silos, pipes, pots);
     private final GrowPlantsUseCase grow = new GrowPlantsUseCase(
-            plants, pots, drugs, environment, new java.util.Random(42), 0.5);
+            plants, pots, drugs, environment, irrigation,
+            new java.util.Random(42), 0.5);
 
     GrowPlantsUseCaseTest() {
         drugs.register(TestFixtures.weed());
+    }
+
+    private static BlockPos at(int x, int y, int z) {
+        return new BlockPos(TestFixtures.WORLD, x, y, z);
     }
 
     @Test
@@ -195,6 +284,91 @@ class GrowPlantsUseCaseTest {
         // Perte 2.5/min divisee par deux : 12.5 points en 10 minutes.
         Plant after = plants.at(TestFixtures.pos()).orElseThrow();
         assertEquals(100.0 - 12.5, after.hydration(), 0.01);
+    }
+
+    @Test
+    void leCaissonRelieMaintientLaPlanteEnEauEtSeVide() {
+        // Pot en (0), tuyaux en (1) et (2), caisson en (3).
+        BlockPos potPos = at(0, 64, 0);
+        pots.add(potPos);
+        plants.put(Plant.plant("weed", potPos, 0L));
+        pipes.add(at(1, 64, 0));
+        pipes.add(at(2, 64, 0));
+        BlockPos tankPos = at(3, 64, 0);
+        tanks.put(new WaterTank(java.util.UUID.randomUUID(), tankPos,
+                TankSize.CUVE, 1000.0));
+
+        grow.tick(40 * 60_000L);
+
+        // 40 min a 2.5/min : la plante reste a 100, le caisson paie.
+        assertEquals(100.0, plants.at(potPos).orElseThrow().hydration(), 0.01);
+        assertEquals(1000.0 - 100.0, tanks.at(tankPos).orElseThrow().stock(), 0.01);
+    }
+
+    @Test
+    void laPanneSecheLaisseLaPlanteDeclinerEnPleinRattrapage() {
+        BlockPos potPos = at(0, 64, 0);
+        pots.add(potPos);
+        plants.put(Plant.plant("weed", potPos, 0L));
+        pipes.add(at(1, 64, 0));
+        BlockPos tankPos = at(2, 64, 0);
+        // 25 points : 10 minutes d'eau, puis panne seche.
+        tanks.put(new WaterTank(java.util.UUID.randomUUID(), tankPos,
+                TankSize.CUVE, 25.0));
+
+        grow.tick(20 * 60_000L);
+
+        assertEquals(75.0, plants.at(potPos).orElseThrow().hydration(), 0.01);
+        assertEquals(0.0, tanks.at(tankPos).orElseThrow().stock(), 0.01);
+    }
+
+    @Test
+    void laFertigationConsommeUneDoseParStage() {
+        BlockPos potPos = at(0, 64, 0);
+        pots.add(potPos);
+        plants.put(Plant.plant("weed", potPos, 0L).withHydration(100));
+        pipes.add(at(1, 64, 0));
+        BlockPos siloPos = at(2, 64, 0);
+        silos.put(new FertilizerSilo(java.util.UUID.randomUUID(), siloPos, 2));
+        // De l'eau pour ne pas fausser la croissance.
+        BlockPos tankPos = at(1, 65, 0);
+        tanks.put(new WaterTank(java.util.UUID.randomUUID(), tankPos,
+                TankSize.CUVE, 10_000.0));
+
+        grow.tick(12 * 60_000L);
+
+        // Stages de 8 min boostes a x1.5 : le stage 2 est entame, deux
+        // doses parties (une par stage).
+        Plant after = plants.at(potPos).orElseThrow();
+        assertEquals(2, after.stage());
+        assertEquals(2, after.fertilizerUses());
+        assertEquals(0, silos.at(siloPos).orElseThrow().doses());
+    }
+
+    @Test
+    void deuxPotsSePartagentLeMemeCaisson() {
+        BlockPos potA = at(0, 64, 0);
+        BlockPos potB = at(0, 64, 2);
+        pots.add(potA);
+        pots.add(potB);
+        plants.put(Plant.plant("weed", potA, 0L));
+        plants.put(Plant.plant("weed", potB, 0L));
+        pipes.add(at(0, 64, 1));
+        pipes.add(at(1, 64, 1));
+        BlockPos tankPos = at(2, 64, 1);
+        // 30 points pour 50 de besoin total : le premier servi boit tout.
+        tanks.put(new WaterTank(java.util.UUID.randomUUID(), tankPos,
+                TankSize.CUVE, 30.0));
+
+        grow.tick(10 * 60_000L);
+
+        assertEquals(0.0, tanks.at(tankPos).orElseThrow().stock(), 0.01);
+        List<Double> hydrations = new java.util.ArrayList<>(List.of(
+                plants.at(potA).orElseThrow().hydration(),
+                plants.at(potB).orElseThrow().hydration()));
+        hydrations.sort(Double::compareTo);
+        assertEquals(80.0, hydrations.get(0), 0.01);
+        assertEquals(100.0, hydrations.get(1), 0.01);
     }
 
     @Test
