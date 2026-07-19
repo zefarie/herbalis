@@ -4,12 +4,19 @@ import io.github.zefarie.herbalis.application.port.JarRepository;
 import io.github.zefarie.herbalis.application.port.PlantRepository;
 import io.github.zefarie.herbalis.application.port.PotRepository;
 import io.github.zefarie.herbalis.application.port.RackRepository;
+import io.github.zefarie.herbalis.application.port.SiloRepository;
+import io.github.zefarie.herbalis.application.port.TankRepository;
+import io.github.zefarie.herbalis.application.service.IrrigationService;
 import io.github.zefarie.herbalis.application.usecase.AddBudToRackUseCase;
 import io.github.zefarie.herbalis.application.usecase.AddToJarUseCase;
 import io.github.zefarie.herbalis.application.usecase.BreakJarUseCase;
+import io.github.zefarie.herbalis.application.usecase.BreakLampUseCase;
+import io.github.zefarie.herbalis.application.usecase.BreakPipeUseCase;
 import io.github.zefarie.herbalis.application.usecase.BreakPlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.BreakPotUseCase;
 import io.github.zefarie.herbalis.application.usecase.BreakRackUseCase;
+import io.github.zefarie.herbalis.application.usecase.BreakSiloUseCase;
+import io.github.zefarie.herbalis.application.usecase.BreakTankUseCase;
 import io.github.zefarie.herbalis.application.usecase.CollectJarUseCase;
 import io.github.zefarie.herbalis.application.usecase.CollectRackUseCase;
 import io.github.zefarie.herbalis.application.usecase.FertilizePlantUseCase;
@@ -23,6 +30,10 @@ import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
 import io.github.zefarie.herbalis.domain.drying.RackVisualState;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
+import io.github.zefarie.herbalis.domain.irrigation.FertilizerSilo;
+import io.github.zefarie.herbalis.domain.irrigation.SiloVisualState;
+import io.github.zefarie.herbalis.domain.irrigation.TankVisualState;
+import io.github.zefarie.herbalis.domain.irrigation.WaterTank;
 import io.github.zefarie.herbalis.domain.plant.GrowthEngine;
 import io.github.zefarie.herbalis.domain.plant.Plant;
 import io.github.zefarie.herbalis.domain.quality.Quality;
@@ -34,10 +45,13 @@ import io.github.zefarie.herbalis.infrastructure.item.HerbalisItemType;
 import io.github.zefarie.herbalis.infrastructure.item.ItemFactory;
 import io.github.zefarie.herbalis.infrastructure.item.ItemKeys;
 import io.github.zefarie.herbalis.infrastructure.render.DisplayRenderer;
+import io.github.zefarie.herbalis.infrastructure.render.PipeLayout;
 import io.github.zefarie.herbalis.infrastructure.render.PlantVisuals;
 import io.github.zefarie.herbalis.infrastructure.render.PosCodec;
+import io.github.zefarie.herbalis.infrastructure.world.LampBlocks;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -69,6 +83,10 @@ public final class PlantInteractListener implements Listener {
     private final PotRepository pots;
     private final RackRepository racks;
     private final JarRepository jars;
+    private final TankRepository tanks;
+    private final SiloRepository silos;
+    private final IrrigationService irrigation;
+    private final PipeLayout layout;
     private final PlantSeedUseCase plantSeed;
     private final WaterPlantUseCase waterPlant;
     private final FertilizePlantUseCase fertilizePlant;
@@ -83,12 +101,18 @@ public final class PlantInteractListener implements Listener {
     private final AddToJarUseCase addToJar;
     private final CollectJarUseCase collectJar;
     private final BreakJarUseCase breakJar;
+    private final BreakPipeUseCase breakPipe;
+    private final BreakTankUseCase breakTank;
+    private final BreakSiloUseCase breakSilo;
+    private final BreakLampUseCase breakLamp;
 
     public PlantInteractListener(Messages messages, Fx fx, ItemFactory items,
                                  DisplayRenderer renderer, DrugRegistry drugs,
                                  HerbalisConfig config, HudService hud,
                                  PlantRepository plants, PotRepository pots,
                                  RackRepository racks, JarRepository jars,
+                                 TankRepository tanks, SiloRepository silos,
+                                 IrrigationService irrigation, PipeLayout layout,
                                  PlantSeedUseCase plantSeed, WaterPlantUseCase waterPlant,
                                  FertilizePlantUseCase fertilizePlant,
                                  PrunePlantUseCase prunePlant,
@@ -97,7 +121,9 @@ public final class PlantInteractListener implements Listener {
                                  BreakPlantUseCase breakPlant, BreakPotUseCase breakPot,
                                  AddBudToRackUseCase addBud, CollectRackUseCase collectRack,
                                  BreakRackUseCase breakRack, AddToJarUseCase addToJar,
-                                 CollectJarUseCase collectJar, BreakJarUseCase breakJar) {
+                                 CollectJarUseCase collectJar, BreakJarUseCase breakJar,
+                                 BreakPipeUseCase breakPipe, BreakTankUseCase breakTank,
+                                 BreakSiloUseCase breakSilo, BreakLampUseCase breakLamp) {
         this.messages = messages;
         this.fx = fx;
         this.items = items;
@@ -109,6 +135,10 @@ public final class PlantInteractListener implements Listener {
         this.pots = pots;
         this.racks = racks;
         this.jars = jars;
+        this.tanks = tanks;
+        this.silos = silos;
+        this.irrigation = irrigation;
+        this.layout = layout;
         this.plantSeed = plantSeed;
         this.waterPlant = waterPlant;
         this.fertilizePlant = fertilizePlant;
@@ -123,6 +153,10 @@ public final class PlantInteractListener implements Listener {
         this.addToJar = addToJar;
         this.collectJar = collectJar;
         this.breakJar = breakJar;
+        this.breakPipe = breakPipe;
+        this.breakTank = breakTank;
+        this.breakSilo = breakSilo;
+        this.breakLamp = breakLamp;
     }
 
     // ----------------------------------------------------------------
@@ -148,6 +182,8 @@ public final class PlantInteractListener implements Listener {
             case "pot" -> potRightClick(player, pos.get(), now);
             case "rack" -> rackRightClick(player, pos.get(), now);
             case "jar" -> jarRightClick(player, pos.get(), now);
+            case "tank" -> tankRightClick(player, pos.get());
+            case "silo" -> siloRightClick(player, pos.get());
             default -> {
             }
         }
@@ -551,6 +587,97 @@ public final class PlantInteractListener implements Listener {
     }
 
     // ----------------------------------------------------------------
+    // Reseau d'irrigation
+    // ----------------------------------------------------------------
+
+    /** Seau d'eau : on remplit. Main vide ou autre : l'etat du caisson. */
+    private void tankRightClick(Player player, BlockPos pos) {
+        WaterTank tank = tanks.at(pos).orElse(null);
+        Location loc = PosCodec.corner(pos).orElse(null);
+        if (tank == null || loc == null) {
+            return;
+        }
+        double capacity = config.tankCapacity(tank.size());
+        ItemStack held = player.getInventory().getItemInMainHand();
+
+        if (held.getType() == Material.WATER_BUCKET) {
+            if (!player.hasPermission("herbalis.plant")) {
+                player.sendMessage(messages.msg("erreurs.permission"));
+                return;
+            }
+            if (tank.stock() >= capacity - 0.001) {
+                player.sendActionBar(messages.msg("irrigation.caisson-plein"));
+                return;
+            }
+            WaterTank filled = tank.filled(config.waterPerBucket(), capacity);
+            tanks.put(filled);
+            if (player.getGameMode() != GameMode.CREATIVE) {
+                player.getInventory().setItemInMainHand(
+                        ItemStack.of(Material.BUCKET));
+            }
+            renderer.updateTank(pos, filled.size(),
+                    TankVisualState.of(filled.fillRatio(capacity)));
+            fx.tankFilled(loc);
+            player.sendActionBar(messages.msg("irrigation.caisson-rempli",
+                    Messages.ph("stock", bucketsOf(filled.stock())),
+                    Messages.ph("capacite", String.valueOf(
+                            config.tankCapacityBuckets(filled.size())))));
+            player.swingMainHand();
+            return;
+        }
+        player.sendActionBar(messages.msg("irrigation.caisson-info",
+                Messages.ph("stock", bucketsOf(tank.stock())),
+                Messages.ph("capacite", String.valueOf(
+                        config.tankCapacityBuckets(tank.size()))),
+                Messages.ph("pots", String.valueOf(irrigation.connectedPots(pos)))));
+    }
+
+    /** Engrais en main : une dose part dans le silo. Sinon : son etat. */
+    private void siloRightClick(Player player, BlockPos pos) {
+        FertilizerSilo silo = silos.at(pos).orElse(null);
+        Location loc = PosCodec.corner(pos).orElse(null);
+        if (silo == null || loc == null) {
+            return;
+        }
+        int capacity = config.siloCapacityDoses();
+        ItemStack held = player.getInventory().getItemInMainHand();
+
+        if (ItemKeys.typeOf(held)
+                .filter(t -> t == HerbalisItemType.FERTILIZER).isPresent()) {
+            if (!player.hasPermission("herbalis.plant")) {
+                player.sendMessage(messages.msg("erreurs.permission"));
+                return;
+            }
+            if (silo.doses() >= capacity) {
+                player.sendActionBar(messages.msg("irrigation.silo-plein"));
+                return;
+            }
+            held.subtract();
+            FertilizerSilo filled = silo.filled(capacity);
+            silos.put(filled);
+            renderer.updateSilo(pos, SiloVisualState.of(filled.doses(), capacity));
+            fx.siloFilled(loc);
+            player.sendActionBar(messages.msg("irrigation.silo-rempli",
+                    Messages.ph("doses", String.valueOf(filled.doses())),
+                    Messages.ph("capacite", String.valueOf(capacity))));
+            player.swingMainHand();
+            return;
+        }
+        player.sendActionBar(messages.msg("irrigation.silo-info",
+                Messages.ph("doses", String.valueOf(silo.doses())),
+                Messages.ph("capacite", String.valueOf(capacity)),
+                Messages.ph("pots", String.valueOf(irrigation.connectedPots(pos)))));
+    }
+
+    /** Stock en seaux, une decimale utile au plus (120.0 -> "1.2"). */
+    private String bucketsOf(double stock) {
+        double buckets = Math.round(stock / config.waterPerBucket() * 10.0) / 10.0;
+        return buckets == Math.floor(buckets)
+                ? String.valueOf((long) buckets)
+                : String.valueOf(buckets);
+    }
+
+    // ----------------------------------------------------------------
     // Clic gauche
     // ----------------------------------------------------------------
 
@@ -576,6 +703,10 @@ public final class PlantInteractListener implements Listener {
             case "pot" -> potLeftClick(player, pos.get());
             case "rack" -> rackLeftClick(player, pos.get());
             case "jar" -> jarLeftClick(player, pos.get());
+            case "pipe" -> pipeLeftClick(player, pos.get());
+            case "tank" -> tankLeftClick(player, pos.get());
+            case "silo" -> siloLeftClick(player, pos.get());
+            case "lamp" -> lampLeftClick(player, pos.get());
             default -> {
             }
         }
@@ -606,6 +737,9 @@ public final class PlantInteractListener implements Listener {
         boolean hadDripper = pots.hasDripper(pos);
         breakPot.execute(pos);
         renderer.removePotVisual(pos);
+        // Le pot etait un point de branchement : le reseau change.
+        layout.refreshAround(pos);
+        irrigation.invalidate();
         fx.broken(loc);
         Location potDrop = loc.clone().add(0.5, 0.4, 0.5);
         loc.getWorld().dropItemNaturally(potDrop, items.pot());
@@ -670,5 +804,82 @@ public final class PlantInteractListener implements Listener {
         fx.jarBroken(loc);
         loc.getWorld().dropItemNaturally(dropAt, items.curingJar());
         player.sendActionBar(messages.msg("curing.jarre-cassee"));
+    }
+
+    private void pipeLeftClick(Player player, BlockPos pos) {
+        Location loc = PosCodec.corner(pos).orElse(null);
+        if (loc == null || !breakPipe.execute(pos)) {
+            return;
+        }
+        renderer.removePipeVisual(pos);
+        layout.refreshAround(pos);
+        irrigation.invalidate();
+        fx.pipeBroken(loc);
+        loc.getWorld().dropItemNaturally(
+                loc.clone().add(0.5, 0.4, 0.5), items.pipe());
+        player.sendActionBar(messages.msg("irrigation.tuyau-casse"));
+    }
+
+    private void tankLeftClick(Player player, BlockPos pos) {
+        Location loc = PosCodec.corner(pos).orElse(null);
+        if (loc == null) {
+            return;
+        }
+        WaterTank tank = breakTank.execute(pos).orElse(null);
+        if (tank == null) {
+            return;
+        }
+        renderer.removeTankVisual(pos);
+        layout.refreshAround(pos);
+        irrigation.invalidate();
+        // L'eau restante est perdue, elle se repand par terre.
+        fx.tankBroken(loc, !tank.isEmpty());
+        loc.getWorld().dropItemNaturally(
+                loc.clone().add(0.5, 0.4, 0.5), items.tank(tank.size()));
+        player.sendActionBar(messages.msg("irrigation.caisson-casse"));
+    }
+
+    private void siloLeftClick(Player player, BlockPos pos) {
+        Location loc = PosCodec.corner(pos).orElse(null);
+        if (loc == null) {
+            return;
+        }
+        FertilizerSilo silo = breakSilo.execute(pos).orElse(null);
+        if (silo == null) {
+            return;
+        }
+        renderer.removeSiloVisual(pos);
+        layout.refreshAround(pos);
+        irrigation.invalidate();
+        fx.siloBroken(loc);
+        Location dropAt = loc.clone().add(0.5, 0.4, 0.5);
+        loc.getWorld().dropItemNaturally(dropAt, items.silo());
+        dropFertilizer(loc.getWorld(), dropAt, silo.doses());
+        player.sendActionBar(messages.msg("irrigation.silo-casse"));
+    }
+
+    private void lampLeftClick(Player player, BlockPos pos) {
+        Location loc = PosCodec.corner(pos).orElse(null);
+        if (loc == null || !breakLamp.execute(pos)) {
+            return;
+        }
+        renderer.removeLampVisual(pos);
+        LampBlocks.remove(pos);
+        fx.lampBroken(loc);
+        loc.getWorld().dropItemNaturally(
+                loc.clone().add(0.5, 0.4, 0.5), items.uvLamp());
+        player.sendActionBar(messages.msg("lampe.cassee"));
+    }
+
+    /** Les doses restantes sont rendues en items d'engrais. */
+    private void dropFertilizer(org.bukkit.World world, Location dropAt, int doses) {
+        int remaining = doses;
+        while (remaining > 0) {
+            ItemStack stack = items.fertilizer();
+            int amount = Math.min(stack.getMaxStackSize(), remaining);
+            stack.setAmount(amount);
+            world.dropItemNaturally(dropAt, stack);
+            remaining -= amount;
+        }
     }
 }

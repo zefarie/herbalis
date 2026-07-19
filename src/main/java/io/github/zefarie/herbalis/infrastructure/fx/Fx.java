@@ -21,6 +21,7 @@ public final class Fx {
     private static final Color LEAF_LIGHT = Color.fromRGB(0x86, 0xef, 0xac);
     private static final Color AURA_PURPLE = Color.fromRGB(0xc4, 0xb5, 0xfd);
     private static final Color AURA_AMBER = Color.fromRGB(0xfc, 0xd3, 0x4d);
+    private static final Color UV_PURPLE = Color.fromRGB(0xa8, 0x55, 0xf7);
 
     private final HerbalisConfig config;
 
@@ -238,6 +239,105 @@ public final class Fx {
         particles(loc, w -> w.spawnParticle(Particle.BLOCK, center(loc), 16,
                 0.25, 0.2, 0.25, 0.0, Material.DECORATED_POT.createBlockData()));
         sound(loc, "minecraft:block.decorated_pot.break", 0.8f, 1.1f);
+    }
+
+    // ----------------------------------------------------------------
+    // Reseau d'irrigation
+    // ----------------------------------------------------------------
+
+    public void pipePlaced(Location loc) {
+        particles(loc, w -> w.spawnParticle(Particle.BLOCK, center(loc), 10,
+                0.2, 0.15, 0.2, 0.0, Material.COPPER_BLOCK.createBlockData()));
+        sound(loc, "minecraft:block.copper.place", 0.9f, 1.1f);
+    }
+
+    public void pipeBroken(Location loc) {
+        particles(loc, w -> w.spawnParticle(Particle.BLOCK, center(loc), 10,
+                0.2, 0.15, 0.2, 0.0, Material.COPPER_BLOCK.createBlockData()));
+        sound(loc, "minecraft:block.copper.break", 0.9f, 1.0f);
+    }
+
+    public void tankPlaced(Location loc) {
+        particles(loc, w -> w.spawnParticle(Particle.BLOCK, center(loc), 16,
+                0.3, 0.25, 0.3, 0.0, Material.IRON_BLOCK.createBlockData()));
+        sound(loc, "minecraft:block.metal.place", 0.9f, 0.9f);
+    }
+
+    /** Un seau se deverse dans le caisson. */
+    public void tankFilled(Location loc) {
+        particles(loc, w -> {
+            w.spawnParticle(Particle.SPLASH, center(loc).add(0, 0.4, 0), 20,
+                    0.25, 0.15, 0.25, 0.0);
+            w.spawnParticle(Particle.FALLING_WATER, center(loc).add(0, 0.5, 0), 8,
+                    0.2, 0.1, 0.2, 0.0);
+        });
+        sound(loc, "minecraft:item.bucket.empty", 0.9f, 1.0f);
+    }
+
+    public void tankBroken(Location loc, boolean hadWater) {
+        particles(loc, w -> {
+            w.spawnParticle(Particle.BLOCK, center(loc), 16,
+                    0.3, 0.25, 0.3, 0.0, Material.IRON_BLOCK.createBlockData());
+            if (hadWater) {
+                w.spawnParticle(Particle.SPLASH, center(loc), 24,
+                        0.4, 0.2, 0.4, 0.0);
+            }
+        });
+        sound(loc, "minecraft:block.metal.break", 0.9f, 0.9f);
+        if (hadWater) {
+            sound(loc, "minecraft:entity.generic.splash", 0.7f, 1.0f);
+        }
+    }
+
+    public void siloPlaced(Location loc) {
+        particles(loc, w -> w.spawnParticle(Particle.BLOCK, center(loc), 14,
+                0.28, 0.25, 0.28, 0.0, Material.OAK_PLANKS.createBlockData()));
+        sound(loc, "minecraft:block.wood.place", 0.9f, 0.9f);
+    }
+
+    /** Une dose d'engrais part dans le silo. */
+    public void siloFilled(Location loc) {
+        particles(loc, w -> w.spawnParticle(Particle.COMPOSTER,
+                center(loc).add(0, 0.35, 0), 10, 0.2, 0.15, 0.2, 0.0));
+        sound(loc, "minecraft:block.composter.fill_success", 0.9f, 1.0f);
+    }
+
+    public void siloBroken(Location loc) {
+        particles(loc, w -> w.spawnParticle(Particle.BLOCK, center(loc), 14,
+                0.28, 0.25, 0.28, 0.0, Material.OAK_PLANKS.createBlockData()));
+        sound(loc, "minecraft:block.wood.break", 0.9f, 0.9f);
+    }
+
+    public void lampPlaced(Location loc) {
+        particles(loc, w -> {
+            w.spawnParticle(Particle.END_ROD, center(loc), 8, 0.2, 0.2, 0.2, 0.01);
+            lampGlow(w, loc, 6);
+        });
+        sound(loc, "minecraft:block.amethyst_block.place", 0.9f, 1.1f);
+        sound(loc, "minecraft:block.respawn_anchor.charge", 0.4f, 1.6f);
+    }
+
+    public void lampBroken(Location loc) {
+        particles(loc, w -> w.spawnParticle(Particle.BLOCK, center(loc), 12,
+                0.2, 0.2, 0.2, 0.0, Material.AMETHYST_BLOCK.createBlockData()));
+        sound(loc, "minecraft:block.amethyst_block.break", 0.9f, 1.0f);
+    }
+
+    /** Halo violet discret d'une lampe allumee, visible de loin. */
+    public void lampAmbient(Location loc) {
+        particles(loc, w -> lampGlow(w, loc, 2));
+    }
+
+    private void lampGlow(World world, Location loc, int count) {
+        ThreadLocalRandom rng = ThreadLocalRandom.current();
+        for (int i = 0; i < count; i++) {
+            Location at = center(loc).add(
+                    rng.nextDouble(-0.35, 0.35),
+                    rng.nextDouble(-0.1, 0.45),
+                    rng.nextDouble(-0.35, 0.35));
+            world.spawnParticle(Particle.DUST, at, 1,
+                    new Particle.DustOptions(UV_PURPLE, 0.85f));
+        }
     }
 
     // ----------------------------------------------------------------

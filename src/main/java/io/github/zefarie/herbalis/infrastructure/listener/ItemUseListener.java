@@ -1,20 +1,32 @@
 package io.github.zefarie.herbalis.infrastructure.listener;
 
+import io.github.zefarie.herbalis.application.service.IrrigationService;
+import io.github.zefarie.herbalis.application.service.OccupancyService;
 import io.github.zefarie.herbalis.application.usecase.PlaceJarUseCase;
+import io.github.zefarie.herbalis.application.usecase.PlaceLampUseCase;
+import io.github.zefarie.herbalis.application.usecase.PlacePipeUseCase;
 import io.github.zefarie.herbalis.application.usecase.PlacePotUseCase;
 import io.github.zefarie.herbalis.application.usecase.PlaceRackUseCase;
+import io.github.zefarie.herbalis.application.usecase.PlaceSiloUseCase;
+import io.github.zefarie.herbalis.application.usecase.PlaceTankUseCase;
 import io.github.zefarie.herbalis.domain.curing.JarVisualState;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drying.RackVisualState;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
+import io.github.zefarie.herbalis.domain.irrigation.SiloVisualState;
+import io.github.zefarie.herbalis.domain.irrigation.TankSize;
+import io.github.zefarie.herbalis.domain.irrigation.TankVisualState;
 import io.github.zefarie.herbalis.domain.quality.Quality;
+import io.github.zefarie.herbalis.infrastructure.config.HerbalisConfig;
 import io.github.zefarie.herbalis.infrastructure.config.Messages;
 import io.github.zefarie.herbalis.infrastructure.fx.Fx;
 import io.github.zefarie.herbalis.infrastructure.item.HerbalisItemType;
 import io.github.zefarie.herbalis.infrastructure.item.ItemFactory;
 import io.github.zefarie.herbalis.infrastructure.item.ItemKeys;
 import io.github.zefarie.herbalis.infrastructure.render.DisplayRenderer;
+import io.github.zefarie.herbalis.infrastructure.render.PipeLayout;
 import io.github.zefarie.herbalis.infrastructure.render.PosCodec;
+import io.github.zefarie.herbalis.infrastructure.world.LampBlocks;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -42,22 +54,42 @@ public final class ItemUseListener implements Listener {
     private final ItemFactory items;
     private final DisplayRenderer renderer;
     private final DrugRegistry drugs;
+    private final HerbalisConfig config;
+    private final OccupancyService occupancy;
+    private final IrrigationService irrigation;
+    private final PipeLayout layout;
     private final PlacePotUseCase placePot;
     private final PlaceRackUseCase placeRack;
     private final PlaceJarUseCase placeJar;
+    private final PlacePipeUseCase placePipe;
+    private final PlaceTankUseCase placeTank;
+    private final PlaceSiloUseCase placeSilo;
+    private final PlaceLampUseCase placeLamp;
 
     public ItemUseListener(Messages messages, Fx fx, ItemFactory items,
                            DisplayRenderer renderer, DrugRegistry drugs,
+                           HerbalisConfig config, OccupancyService occupancy,
+                           IrrigationService irrigation, PipeLayout layout,
                            PlacePotUseCase placePot, PlaceRackUseCase placeRack,
-                           PlaceJarUseCase placeJar) {
+                           PlaceJarUseCase placeJar, PlacePipeUseCase placePipe,
+                           PlaceTankUseCase placeTank, PlaceSiloUseCase placeSilo,
+                           PlaceLampUseCase placeLamp) {
         this.messages = messages;
         this.fx = fx;
         this.items = items;
         this.renderer = renderer;
         this.drugs = drugs;
+        this.config = config;
+        this.occupancy = occupancy;
+        this.irrigation = irrigation;
+        this.layout = layout;
         this.placePot = placePot;
         this.placeRack = placeRack;
         this.placeJar = placeJar;
+        this.placePipe = placePipe;
+        this.placeTank = placeTank;
+        this.placeSilo = placeSilo;
+        this.placeLamp = placeLamp;
     }
 
     @EventHandler
@@ -73,13 +105,23 @@ public final class ItemUseListener implements Listener {
         Player player = event.getPlayer();
 
         switch (type.get()) {
-            case POT, DRYING_RACK, CURING_JAR -> {
+            case POT, DRYING_RACK, CURING_JAR, TANK_CUVE, TANK_CITERNE,
+                 TANK_RESERVOIR, SILO, UV_LAMP -> {
                 if (event.getAction() != Action.RIGHT_CLICK_BLOCK
                         || event.getClickedBlock() == null) {
                     return;
                 }
                 event.setCancelled(true);
                 placeStructure(player, held, type.get(),
+                        event.getClickedBlock(), event.getBlockFace());
+            }
+            case PIPE -> {
+                if (event.getAction() != Action.RIGHT_CLICK_BLOCK
+                        || event.getClickedBlock() == null) {
+                    return;
+                }
+                event.setCancelled(true);
+                placePipe(player, held,
                         event.getClickedBlock(), event.getBlockFace());
             }
             case WATERING_CAN, SPRAYER -> {
@@ -123,11 +165,20 @@ public final class ItemUseListener implements Listener {
             return;
         }
         BlockPos pos = PosCodec.of(target);
+        if (occupancy.occupied(pos)) {
+            player.sendActionBar(messages.msg("culture.pose-place-occupee"));
+            return;
+        }
 
         boolean placed = switch (type) {
             case POT -> placePot.execute(pos);
             case DRYING_RACK -> placeRack.execute(pos).isPresent();
             case CURING_JAR -> placeJar.execute(pos).isPresent();
+            case TANK_CUVE, TANK_CITERNE, TANK_RESERVOIR ->
+                    placeTank.execute(pos, ItemFactory.tankSizeOf(type)
+                            .orElseThrow()).isPresent();
+            case SILO -> placeSilo.execute(pos).isPresent();
+            case UV_LAMP -> placeLamp.execute(pos);
             default -> false;
         };
         if (!placed) {
@@ -140,6 +191,9 @@ public final class ItemUseListener implements Listener {
             switch (type) {
                 case POT -> {
                     renderer.showPot(pos, Optional.empty(), "", "pot", 1.0f);
+                    // Un pot est un point de branchement : le reseau change.
+                    layout.refreshAround(pos);
+                    irrigation.invalidate();
                     fx.potPlaced(loc);
                     player.sendActionBar(messages.msg("culture.pot-pose"));
                 }
@@ -153,10 +207,57 @@ public final class ItemUseListener implements Listener {
                     fx.jarPlaced(loc);
                     player.sendActionBar(messages.msg("curing.jarre-posee"));
                 }
+                case TANK_CUVE, TANK_CITERNE, TANK_RESERVOIR -> {
+                    TankSize size = ItemFactory.tankSizeOf(type).orElseThrow();
+                    renderer.showTank(pos, size, TankVisualState.EMPTY);
+                    layout.refreshAround(pos);
+                    irrigation.invalidate();
+                    fx.tankPlaced(loc);
+                    player.sendActionBar(messages.msg("irrigation.caisson-pose"));
+                }
+                case SILO -> {
+                    renderer.showSilo(pos, SiloVisualState.EMPTY);
+                    layout.refreshAround(pos);
+                    irrigation.invalidate();
+                    fx.siloPlaced(loc);
+                    player.sendActionBar(messages.msg("irrigation.silo-pose"));
+                }
+                case UV_LAMP -> {
+                    renderer.showLamp(pos);
+                    LampBlocks.place(pos, config.lampLightLevel());
+                    fx.lampPlaced(loc);
+                    player.sendActionBar(messages.msg("lampe.posee"));
+                }
                 default -> {
                 }
             }
         });
+        player.swingMainHand();
+    }
+
+    /** Les tuyaux se posent sur n'importe quelle face et peuvent flotter. */
+    private void placePipe(Player player, ItemStack held, Block clicked,
+                           BlockFace face) {
+        if (!player.hasPermission("herbalis.plant")) {
+            player.sendMessage(messages.msg("erreurs.permission"));
+            return;
+        }
+        Block target = clicked.getRelative(face);
+        if (!target.getType().isAir()) {
+            player.sendActionBar(messages.msg("culture.pose-place-occupee"));
+            return;
+        }
+        BlockPos pos = PosCodec.of(target);
+        if (occupancy.occupied(pos) || !placePipe.execute(pos)) {
+            player.sendActionBar(messages.msg("culture.pose-place-occupee"));
+            return;
+        }
+        held.subtract();
+        renderer.showPipe(pos, layout.maskOf(pos));
+        layout.refreshAround(pos);
+        irrigation.invalidate();
+        PosCodec.corner(pos).ifPresent(fx::pipePlaced);
+        player.sendActionBar(messages.msg("irrigation.tuyau-pose"));
         player.swingMainHand();
     }
 

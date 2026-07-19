@@ -2,8 +2,14 @@ package io.github.zefarie.herbalis.infrastructure.scheduler;
 
 import io.github.zefarie.herbalis.application.port.PlantRepository;
 import io.github.zefarie.herbalis.application.port.PotRepository;
+import io.github.zefarie.herbalis.application.port.SiloRepository;
+import io.github.zefarie.herbalis.application.port.TankRepository;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
+import io.github.zefarie.herbalis.domain.irrigation.FertilizerSilo;
+import io.github.zefarie.herbalis.domain.irrigation.SiloVisualState;
+import io.github.zefarie.herbalis.domain.irrigation.TankVisualState;
+import io.github.zefarie.herbalis.domain.irrigation.WaterTank;
 import io.github.zefarie.herbalis.domain.plant.GrowthEngine;
 import io.github.zefarie.herbalis.domain.plant.Plant;
 import io.github.zefarie.herbalis.domain.plant.PlantState;
@@ -41,17 +47,22 @@ public final class PlantSwayTicker implements Runnable {
     private final DisplayRenderer renderer;
     private final PlantRepository plants;
     private final PotRepository pots;
+    private final TankRepository tanks;
+    private final SiloRepository silos;
     private final DrugRegistry drugs;
     private final HerbalisConfig config;
     private final Fx fx;
     private int cycle;
 
     public PlantSwayTicker(DisplayRenderer renderer, PlantRepository plants,
-                           PotRepository pots, DrugRegistry drugs,
+                           PotRepository pots, TankRepository tanks,
+                           SiloRepository silos, DrugRegistry drugs,
                            HerbalisConfig config, Fx fx) {
         this.renderer = renderer;
         this.plants = plants;
         this.pots = pots;
+        this.tanks = tanks;
+        this.silos = silos;
         this.drugs = drugs;
         this.config = config;
         this.fx = fx;
@@ -129,5 +140,20 @@ public final class PlantSwayTicker implements Runnable {
                 PosCodec.corner(pos).ifPresent(fx::dripAmbient);
             }
         });
+
+        // Le niveau d'eau des caissons suit la consommation du reseau
+        // (swap de modele sans effet tant que le palier ne change pas).
+        for (WaterTank tank : tanks.all()) {
+            renderer.updateTank(tank.pos(), tank.size(), TankVisualState.of(
+                    tank.fillRatio(config.tankCapacity(tank.size()))));
+        }
+        for (FertilizerSilo silo : silos.all()) {
+            renderer.updateSilo(silo.pos(), SiloVisualState.of(
+                    silo.doses(), config.siloCapacityDoses()));
+        }
+
+        // Halo violet des lampes UV, visible de loin.
+        renderer.forEachLampDisplay((pos, display) ->
+                PosCodec.corner(pos).ifPresent(fx::lampAmbient));
     }
 }

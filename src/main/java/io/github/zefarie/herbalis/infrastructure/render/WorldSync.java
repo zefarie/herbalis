@@ -1,16 +1,26 @@
 package io.github.zefarie.herbalis.infrastructure.render;
 
 import io.github.zefarie.herbalis.application.port.JarRepository;
+import io.github.zefarie.herbalis.application.port.LampRepository;
+import io.github.zefarie.herbalis.application.port.PipeRepository;
 import io.github.zefarie.herbalis.application.port.PlantRepository;
 import io.github.zefarie.herbalis.application.port.PotRepository;
 import io.github.zefarie.herbalis.application.port.RackRepository;
+import io.github.zefarie.herbalis.application.port.SiloRepository;
+import io.github.zefarie.herbalis.application.port.TankRepository;
 import io.github.zefarie.herbalis.domain.curing.CuringJar;
 import io.github.zefarie.herbalis.domain.curing.JarVisualState;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drying.DryingRack;
 import io.github.zefarie.herbalis.domain.drying.RackVisualState;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
+import io.github.zefarie.herbalis.domain.irrigation.FertilizerSilo;
+import io.github.zefarie.herbalis.domain.irrigation.SiloVisualState;
+import io.github.zefarie.herbalis.domain.irrigation.TankVisualState;
+import io.github.zefarie.herbalis.domain.irrigation.WaterTank;
 import io.github.zefarie.herbalis.domain.plant.Plant;
+import io.github.zefarie.herbalis.infrastructure.config.HerbalisConfig;
+import io.github.zefarie.herbalis.infrastructure.world.LampBlocks;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
@@ -29,17 +39,32 @@ public final class WorldSync {
     private final PlantRepository plants;
     private final RackRepository racks;
     private final JarRepository jars;
+    private final TankRepository tanks;
+    private final SiloRepository silos;
+    private final PipeRepository pipes;
+    private final LampRepository lamps;
     private final DrugRegistry drugs;
+    private final HerbalisConfig config;
+    private final PipeLayout layout;
 
     public WorldSync(DisplayRenderer renderer, PotRepository pots,
                      PlantRepository plants, RackRepository racks,
-                     JarRepository jars, DrugRegistry drugs) {
+                     JarRepository jars, TankRepository tanks,
+                     SiloRepository silos, PipeRepository pipes,
+                     LampRepository lamps, DrugRegistry drugs,
+                     HerbalisConfig config, PipeLayout layout) {
         this.renderer = renderer;
         this.pots = pots;
         this.plants = plants;
         this.racks = racks;
         this.jars = jars;
+        this.tanks = tanks;
+        this.silos = silos;
+        this.pipes = pipes;
+        this.lamps = lamps;
         this.drugs = drugs;
+        this.config = config;
+        this.layout = layout;
     }
 
     /** Purge les entites Herbalis du chunk puis respawn depuis la base. */
@@ -76,6 +101,32 @@ public final class WorldSync {
                         .map(drug -> jar.visualState(now, drug.curing()))
                         .orElse(JarVisualState.EMPTY);
                 renderer.showJar(jar.pos(), state);
+            }
+        }
+        for (WaterTank tank : tanks.all()) {
+            if (inChunk(tank.pos(), worldId, chunk.getX(), chunk.getZ())) {
+                double capacity = config.tankCapacity(tank.size());
+                renderer.showTank(tank.pos(), tank.size(),
+                        TankVisualState.of(tank.fillRatio(capacity)));
+            }
+        }
+        for (FertilizerSilo silo : silos.all()) {
+            if (inChunk(silo.pos(), worldId, chunk.getX(), chunk.getZ())) {
+                renderer.showSilo(silo.pos(), SiloVisualState.of(
+                        silo.doses(), config.siloCapacityDoses()));
+            }
+        }
+        for (BlockPos pos : pipes.all()) {
+            if (inChunk(pos, worldId, chunk.getX(), chunk.getZ())) {
+                renderer.showPipe(pos, layout.maskOf(pos));
+            }
+        }
+        for (BlockPos pos : lamps.all()) {
+            if (inChunk(pos, worldId, chunk.getX(), chunk.getZ())) {
+                renderer.showLamp(pos);
+                // Le bloc lumineux est persistant, mais on le repose au cas
+                // ou il aurait ete efface (WorldEdit, /fill, reset partiel).
+                LampBlocks.place(pos, config.lampLightLevel());
             }
         }
     }

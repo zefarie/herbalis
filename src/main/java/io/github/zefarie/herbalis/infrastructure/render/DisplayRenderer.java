@@ -3,6 +3,9 @@ package io.github.zefarie.herbalis.infrastructure.render;
 import io.github.zefarie.herbalis.domain.curing.JarVisualState;
 import io.github.zefarie.herbalis.domain.drying.RackVisualState;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
+import io.github.zefarie.herbalis.domain.irrigation.SiloVisualState;
+import io.github.zefarie.herbalis.domain.irrigation.TankSize;
+import io.github.zefarie.herbalis.domain.irrigation.TankVisualState;
 import io.github.zefarie.herbalis.domain.plant.Plant;
 import io.github.zefarie.herbalis.infrastructure.item.ItemFactory;
 import io.github.zefarie.herbalis.infrastructure.item.ItemKeys;
@@ -38,6 +41,10 @@ public final class DisplayRenderer {
     private static final String MARKER_PLANT = "plant";
     private static final String MARKER_RACK = "rack";
     private static final String MARKER_JAR = "jar";
+    private static final String MARKER_PIPE = "pipe";
+    private static final String MARKER_TANK = "tank";
+    private static final String MARKER_SILO = "silo";
+    private static final String MARKER_LAMP = "lamp";
 
     private record Spawned(UUID potDisplay, UUID plantDisplay, UUID interaction) {
     }
@@ -46,8 +53,13 @@ public final class DisplayRenderer {
     private final Map<BlockPos, Spawned> pots = new HashMap<>();
     private final Map<BlockPos, Spawned> racks = new HashMap<>();
     private final Map<BlockPos, Spawned> jars = new HashMap<>();
+    private final Map<BlockPos, Spawned> pipes = new HashMap<>();
+    private final Map<BlockPos, Spawned> tanks = new HashMap<>();
+    private final Map<BlockPos, Spawned> silos = new HashMap<>();
+    private final Map<BlockPos, Spawned> lamps = new HashMap<>();
     private final Map<BlockPos, String> potModels = new HashMap<>();
     private final Map<BlockPos, String> plantModels = new HashMap<>();
+    private final Map<BlockPos, String> networkModels = new HashMap<>();
 
     public DisplayRenderer(Plugin plugin) {
         this.plugin = plugin;
@@ -262,6 +274,126 @@ public final class DisplayRenderer {
     }
 
     // ----------------------------------------------------------------
+    // Reseau d'irrigation : tuyaux, caissons, silos
+    // ----------------------------------------------------------------
+
+    /** Tuyau : le modele suit le masque de connexions (voisins relies). */
+    public void showPipe(BlockPos pos, int mask) {
+        removePipeVisual(pos);
+        Optional<Location> center = PosCodec.center(pos);
+        if (center.isEmpty()) {
+            return;
+        }
+        String model = pipeModel(mask);
+        ItemDisplay display = spawnDisplay(center.get(), model, MARKER_PIPE, pos);
+        networkModels.put(pos, model);
+        Interaction interaction = spawnInteraction(pos, MARKER_PIPE, 0.7f, 0.55f);
+        pipes.put(pos, new Spawned(display.getUniqueId(), null,
+                interaction == null ? null : interaction.getUniqueId()));
+    }
+
+    public void updatePipe(BlockPos pos, int mask) {
+        updateNetworkModel(pipes.get(pos), pos, pipeModel(mask));
+    }
+
+    public void removePipeVisual(BlockPos pos) {
+        removeSimple(pipes, pos);
+    }
+
+    public void showTank(BlockPos pos, TankSize size, TankVisualState state) {
+        removeTankVisual(pos);
+        Optional<Location> center = PosCodec.center(pos);
+        if (center.isEmpty()) {
+            return;
+        }
+        String model = tankModel(size, state);
+        ItemDisplay display = spawnDisplay(center.get(), model, MARKER_TANK, pos);
+        networkModels.put(pos, model);
+        Interaction interaction = spawnInteraction(pos, MARKER_TANK,
+                tankHeight(size), 0.95f);
+        tanks.put(pos, new Spawned(display.getUniqueId(), null,
+                interaction == null ? null : interaction.getUniqueId()));
+    }
+
+    /** Le niveau d'eau se lit dans la cuve : swap de modele sans effet si inchange. */
+    public void updateTank(BlockPos pos, TankSize size, TankVisualState state) {
+        updateNetworkModel(tanks.get(pos), pos, tankModel(size, state));
+    }
+
+    public void removeTankVisual(BlockPos pos) {
+        removeSimple(tanks, pos);
+    }
+
+    public void showSilo(BlockPos pos, SiloVisualState state) {
+        removeSiloVisual(pos);
+        Optional<Location> center = PosCodec.center(pos);
+        if (center.isEmpty()) {
+            return;
+        }
+        String model = siloModel(state);
+        ItemDisplay display = spawnDisplay(center.get(), model, MARKER_SILO, pos);
+        networkModels.put(pos, model);
+        Interaction interaction = spawnInteraction(pos, MARKER_SILO, 1.0f, 0.9f);
+        silos.put(pos, new Spawned(display.getUniqueId(), null,
+                interaction == null ? null : interaction.getUniqueId()));
+    }
+
+    public void updateSilo(BlockPos pos, SiloVisualState state) {
+        updateNetworkModel(silos.get(pos), pos, siloModel(state));
+    }
+
+    public void removeSiloVisual(BlockPos pos) {
+        removeSimple(silos, pos);
+    }
+
+    /** Lampe UV : le display est fullbright, elle parait allumee de loin. */
+    public void showLamp(BlockPos pos) {
+        removeLampVisual(pos);
+        Optional<Location> center = PosCodec.center(pos);
+        if (center.isEmpty()) {
+            return;
+        }
+        ItemDisplay display = spawnDisplay(center.get(), "uv_lamp", MARKER_LAMP, pos);
+        display.setBrightness(new Display.Brightness(15, 15));
+        Interaction interaction = spawnInteraction(pos, MARKER_LAMP, 1.0f, 0.6f);
+        lamps.put(pos, new Spawned(display.getUniqueId(), null,
+                interaction == null ? null : interaction.getUniqueId()));
+    }
+
+    public void removeLampVisual(BlockPos pos) {
+        removeSimple(lamps, pos);
+    }
+
+    /** Parcourt les lampes vivantes (halo violet ambiant). */
+    public void forEachLampDisplay(java.util.function.BiConsumer<BlockPos, ItemDisplay> consumer) {
+        lamps.forEach((pos, spawned) -> {
+            if (entity(spawned.potDisplay()) instanceof ItemDisplay display
+                    && display.isValid()) {
+                consumer.accept(pos, display);
+            }
+        });
+    }
+
+    private void updateNetworkModel(Spawned current, BlockPos pos, String model) {
+        if (current == null || model.equals(networkModels.get(pos))) {
+            return;
+        }
+        if (entity(current.potDisplay()) instanceof ItemDisplay display) {
+            display.setItemStack(ItemFactory.displayItem(model));
+            networkModels.put(pos, model);
+        }
+    }
+
+    private void removeSimple(Map<BlockPos, Spawned> family, BlockPos pos) {
+        networkModels.remove(pos);
+        Spawned current = family.remove(pos);
+        if (current != null) {
+            removeEntity(current.potDisplay());
+            removeEntity(current.interaction());
+        }
+    }
+
+    // ----------------------------------------------------------------
     // Cycle de vie des chunks
     // ----------------------------------------------------------------
 
@@ -270,8 +402,13 @@ public final class DisplayRenderer {
         pots.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         racks.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         jars.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
+        pipes.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
+        tanks.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
+        silos.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
+        lamps.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         potModels.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         plantModels.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
+        networkModels.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
     }
 
     /**
@@ -405,6 +542,36 @@ public final class DisplayRenderer {
             case CURING -> "curing_jar_full";
             case READY -> "curing_jar_ready";
             case MOLDY -> "curing_jar_moldy";
+        };
+    }
+
+    private static String pipeModel(int mask) {
+        return "pipe_" + mask;
+    }
+
+    private static String tankModel(TankSize size, TankVisualState state) {
+        String base = "tank_" + size.id();
+        return switch (state) {
+            case EMPTY -> base;
+            case LOW -> base + "_low";
+            case MID -> base + "_mid";
+            case FULL -> base + "_full";
+        };
+    }
+
+    private static String siloModel(SiloVisualState state) {
+        return switch (state) {
+            case EMPTY -> "silo";
+            case PARTIAL -> "silo_mid";
+            case FULL -> "silo_full";
+        };
+    }
+
+    private static float tankHeight(TankSize size) {
+        return switch (size) {
+            case CUVE -> 0.8f;
+            case CITERNE -> 1.0f;
+            case RESERVOIR -> 1.4f;
         };
     }
 
