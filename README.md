@@ -23,9 +23,13 @@ culture au rythme d'une vraie plante (environ une semaine réelle de
 la graine au joint, la croissance continue chunk déchargé et serveur
 éteint), taille aux cisailles dans une fenêtre précise, nuisibles à
 traiter au pulvérisateur, goutte-à-goutte pour les cultivateurs peu
-présents, affinage en jarre de curing (avec moisissure punitive),
-génétique des graines sur plusieurs générations, joints à taffes qui
-se passent de main en main, toute la pipeline craftable.
+présents, réseau d'irrigation en tuyaux de cuivre (caissons d'eau en
+trois tailles, silo d'engrais qui fertilise tout seul, tuyaux
+auto-connectés : pas relié, pas d'eau), lampe horticole UV fullbright
+qui éclaire vraiment les cultures d'intérieur, affinage en jarre de
+curing (avec moisissure punitive), génétique des graines sur
+plusieurs générations, joints à taffes qui se passent de main en
+main, toute la pipeline craftable.
 
 ## Installation
 
@@ -80,6 +84,25 @@ par le serveur au premier démarrage.
    - **Goutte-à-goutte (craftable)** : installé sur le pot (petit
      réservoir sur piquet, visible), il divise la perte d'eau par
      deux. Rendu en cassant le pot.
+   - **Réseau d'irrigation** : des caissons d'eau (cuve 16 seaux,
+     citerne 64, réservoir industriel 256, configurables) se
+     remplissent au seau et abreuvent automatiquement les pots qui
+     leur sont **reliés par des tuyaux de cuivre**. Pas relié, pas
+     d'eau. Les tuyaux se posent sur n'importe quelle face (même en
+     l'air), se connectent visuellement entre eux et aux caissons,
+     silos et pots, et le niveau d'eau se lit sur le caisson (cuve
+     ouverte, jauges des citernes). Un pot relié ne demande plus
+     d'arrosoir tant que le réseau a du stock : environ un seau par
+     plante et par jour, deux fois moins avec un goutte-à-goutte.
+     L'hologramme de la plante affiche « reliée au réseau » ou
+     « réseau à sec », celui du caisson son stock et ses pots reliés.
+   - **Silo d'engrais** : chargé en doses d'engrais (16 par défaut),
+     il fertilise tout seul chaque nouveau stage des plantes reliées
+     au réseau. Cassé, il rend ses doses.
+   - **Lampe horticole UV** : lueur violette (halo de particules,
+     panneau LED fullbright visible de nuit) et vraie lumière niveau
+     15 : les caves deviennent des serres, croissance nocturne et
+     rattrapage compris.
    - **Nuisibles** : une plante établie peut s'infester (moucherons
      visibles, alerte à l'hologramme). Infestée, elle pousse deux
      fois moins vite ; ignorée 12 h, elle est abîmée (-1 étoile à la
@@ -164,6 +187,12 @@ graines (récolte, casse de plante ou `/herbalis give` uniquement).
 | Cisailles | Craft vanilla (2 lingots de fer) | Taille aux stages 2-3, usure vanilla configurable |
 | Pulvérisateur | 1 pépite + 1 lingot + 1 fiole (colonne) | Traite les nuisibles (6 charges), se recharge sur l'eau |
 | Goutte-à-goutte | 3 verres + 1 bâton + 1 ficelle | S'installe sur un pot, perte d'eau divisée par deux |
+| Tuyau d'irrigation | 3 lingots de cuivre (x4) | Relie caissons, silos et pots ; se pose partout |
+| Cuve d'eau | 4 lingots de cuivre + 5 planches | Caisson de 16 seaux, niveau d'eau visible |
+| Citerne d'eau | 8 lingots de fer + 1 seau | Caisson de 64 seaux, jauges en façade |
+| Réservoir industriel | 4 blocs de fer + 4 lingots + 1 seau | Caisson de 256 seaux, plus haut qu'un bloc |
+| Silo d'engrais | 7 planches + 1 entonnoir | Fertilise tout seul les pots reliés (16 doses) |
+| Lampe horticole UV | 3 améthystes + 2 verres + 1 redstone + 1 lingot | Vraie lumière niveau 15, panneau violet fullbright |
 | Engrais naturel | 2 poudres d'os + 1 terre (x2) | Un par stage, boost vitesse et qualité |
 | Tête fraîche | Récolte | Se suspend au rack de séchage |
 | Rack de séchage | 3 bâtons + 3 ficelles + 2 bâtons | Sèche jusqu'à 6 têtes |
@@ -191,9 +220,10 @@ l'item ; pleins, ils rendent d'abord leur contenu.
 Tab completion complète sur tout. Alias : `/herb`.
 
 Items pour `give` : `pot`, `drying_rack`, `curing_jar`, `watering_can`,
-`sprayer`, `dripper`, `fertilizer`, `rolling_paper`, `pouch_empty`,
-`weed_seed`, `weed_bud_fresh`, `weed_dried`, `weed_pouch`,
-`weed_joint`. La taille se fait aux cisailles vanilla.
+`sprayer`, `dripper`, `pipe`, `tank_cuve`, `tank_citerne`,
+`tank_reservoir`, `silo`, `uv_lamp`, `fertilizer`, `rolling_paper`,
+`pouch_empty`, `weed_seed`, `weed_bud_fresh`, `weed_dried`,
+`weed_pouch`, `weed_joint`. La taille se fait aux cisailles vanilla.
 
 ## Permissions
 
@@ -209,9 +239,11 @@ Items pour `give` : `pot`, `drying_rack`, `curing_jar`, `watering_can`,
 
 - `config.yml` : tick de croissance, autosave, particules et sons,
   hologrammes (activation, portée du regard), charges de l'arrosoir
-  et du pulvérisateur, facteur du goutte-à-goutte, usure des
-  cisailles à la taille, drops, explosions, cadence du manque. Tout
-  est commenté en français.
+  et du pulvérisateur, facteur du goutte-à-goutte, irrigation (points
+  d'eau par seau, capacité de chaque taille de caisson), capacité du
+  silo, niveau de lumière de la lampe UV, usure des cisailles à la
+  taille, drops, explosions, cadence du manque. Tout est commenté en
+  français.
 - `drugs/weed.yml` : la définition complète de la weed : durées de
   stages, lumière minimum, hydratation, engrais, fenêtre de récolte,
   séchage, taille (stages, fenêtre, bonus, malus), nuisibles
@@ -296,6 +328,14 @@ Structure dans `resourcepack/`, format 75 (1.21.11).
 - Goutte-à-goutte en vrai volume sur le pot (piquet, réservoir en
   verre plein d'eau, tuyau qui plonge dans le terreau, variantes des
   trois terreaux), sprites 16x du pulvérisateur et du goutte-à-goutte.
+- Réseau d'irrigation : **64 models de tuyaux générés par masque de
+  connexions** (un par combinaison des six voisins, colliers de
+  raccord aux jonctions), caissons en trois tailles et quatre niveaux
+  d'eau chacun (cuve en douves ouverte où l'eau se voit, citerne et
+  réservoir rivetés à jauges en façade, montants de cuivre), silo à
+  trémie sur pieds (contenu visible : vide, entamé, plein), lampe
+  horticole (panneau LED violet rendu fullbright via la brightness du
+  Display, plus un vrai bloc `minecraft:light` posé par le plugin).
 - Font d'icônes `herbalis:icons` (feuille, goutte, terreau, étoiles,
   segments, soleil, ciseaux, sablier, coche...) : glyphes blancs
   teintés par les balises de couleur MiniMessage, utilisés dans les
@@ -324,12 +364,14 @@ python3 -m venv .venv && .venv/bin/pip install pillow
 ./gradlew test
 ```
 
-61 tests unitaires sur le domaine et les cas d'usage : progression de
+78 tests unitaires sur le domaine et les cas d'usage : progression de
 croissance, rattrapage hors ligne (stages, mort au bon moment, chunk
 déchargé, rythme jour/nuit sous ciel, goutte-à-goutte), lumière,
 sécheresse et mort, nuisibles (apparition, ralentissement, dégâts,
-traitement), calcul de qualité (dont génétique, malus de taille et de
-nuisibles), malus de séchage, curing (affinage, moisissure,
-contamination), fenêtre de taille, graines héritées, tolérance,
-fenêtre de blackout, seuils de manque, chronologie des effets,
-parsing des durées (jours inclus).
+traitement), réseau d'irrigation (BFS des tuyaux, coupures, stocks
+des caissons, panne sèche en plein rattrapage, partage entre pots,
+fertigation une dose par stage), calcul de qualité (dont génétique,
+malus de taille et de nuisibles), malus de séchage, curing (affinage,
+moisissure, contamination), fenêtre de taille, graines héritées,
+tolérance, fenêtre de blackout, seuils de manque, chronologie des
+effets, parsing des durées (jours inclus).
