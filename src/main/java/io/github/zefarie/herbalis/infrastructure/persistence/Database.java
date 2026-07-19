@@ -138,6 +138,43 @@ public final class Database implements AutoCloseable {
                         PRIMARY KEY (jar_id, slot)
                     )""");
             statement.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS tanks (
+                        id TEXT PRIMARY KEY,
+                        world TEXT NOT NULL,
+                        x INTEGER NOT NULL,
+                        y INTEGER NOT NULL,
+                        z INTEGER NOT NULL,
+                        size TEXT NOT NULL,
+                        stock REAL NOT NULL DEFAULT 0,
+                        UNIQUE (world, x, y, z)
+                    )""");
+            statement.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS silos (
+                        id TEXT PRIMARY KEY,
+                        world TEXT NOT NULL,
+                        x INTEGER NOT NULL,
+                        y INTEGER NOT NULL,
+                        z INTEGER NOT NULL,
+                        doses INTEGER NOT NULL DEFAULT 0,
+                        UNIQUE (world, x, y, z)
+                    )""");
+            statement.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS pipes (
+                        world TEXT NOT NULL,
+                        x INTEGER NOT NULL,
+                        y INTEGER NOT NULL,
+                        z INTEGER NOT NULL,
+                        PRIMARY KEY (world, x, y, z)
+                    )""");
+            statement.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS lamps (
+                        world TEXT NOT NULL,
+                        x INTEGER NOT NULL,
+                        y INTEGER NOT NULL,
+                        z INTEGER NOT NULL,
+                        PRIMARY KEY (world, x, y, z)
+                    )""");
+            statement.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS players (
                         uuid TEXT PRIMARY KEY,
                         tolerance REAL NOT NULL,
