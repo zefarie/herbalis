@@ -1,0 +1,77 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "herbalis:block/pipe_copper",
+    "pipe": "herbalis:block/pipe_copper"
+  },
+  "elements": [
+    {
+      "from": [
+        5.8,
+        5.8,
+        5.8
+      ],
+      "to": [
+        10.2,
+        10.2,
+        10.2
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            5.8,
+            5.800000000000001,
+            10.2,
+            10.2
+          ],
+          "texture": "#pipe"
+        },
+        "south": {
+          "uv": [
+            5.8,
+            5.800000000000001,
+            10.2,
+            10.2
+          ],
+          "texture": "#pipe"
+        },
+        "west": {
+          "uv": [
+            5.8,
+            5.800000000000001,
+            10.2,
+            10.2
+          ],
+          "texture": "#pipe"
+        },
+        "east": {
+          "uv": [
+            5.8,
+            5.800000000000001,
+            10.2,
+            10.2
+          ],
+          "texture": "#pipe"
+        },
+        "up": {
+          "uv": [
+            5.8,
+            5.8,
+            10.2,
+            10.2
+          ],
+          "texture": "#pipe"
+        },
+        "down": {
+          "uv": [
+            5.8,
+            5.8,
+            10.2,
+            10.2
+          ],
+          "texture": "#pipe"
+        }
+      }
+    }
+  ]
+}

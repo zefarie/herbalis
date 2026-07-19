@@ -472,6 +472,272 @@ def jar_model(name: str, weed_texture: str | None,
 
 
 # ------------------------------------------------------------------
+# Reseau d'irrigation : tuyaux auto-connectes
+#
+# Le masque suit BlockPos.neighbors() cote Java :
+# bit 0 bas, 1 haut, 2 nord (z-), 3 sud (z+), 4 ouest (x-), 5 est (x+).
+# ------------------------------------------------------------------
+
+PIPE_DIRECTIONS = [
+    ("y", -1),  # bas
+    ("y", 1),   # haut
+    ("z", -1),  # nord
+    ("z", 1),   # sud
+    ("x", -1),  # ouest
+    ("x", 1),   # est
+]
+
+PIPE_RADIUS = 1.5
+COLLAR_RADIUS = 2.2
+COLLAR_LENGTH = 1.5
+
+
+def axis_box(axis: str, lo: float, hi: float, radius: float,
+             texture: str) -> dict:
+    """Boite alignee sur un axe, section carree centree sur (8, 8)."""
+    a, b = 8 - radius, 8 + radius
+    match axis:
+        case "x":
+            return box([lo, a, a], [hi, b, b], texture)
+        case "y":
+            return box([a, lo, a], [b, hi, b], texture)
+        case _:
+            return box([a, a, lo], [b, b, hi], texture)
+
+
+def pipe_model(mask: int) -> None:
+    core = PIPE_RADIUS
+    elements = []
+    if mask == 0:
+        # Raccord isole, un peu plus gros pour rester lisible.
+        elements.append(axis_box("y", 8 - COLLAR_RADIUS, 8 + COLLAR_RADIUS,
+                                 COLLAR_RADIUS, "#pipe"))
+    else:
+        elements.append(axis_box("y", 8 - core, 8 + core, core, "#pipe"))
+    for bit, (axis, sign) in enumerate(PIPE_DIRECTIONS):
+        if not mask & (1 << bit):
+            continue
+        if sign > 0:
+            arm_lo, arm_hi = 8 + core, 16.0
+            col_lo, col_hi = 16.0 - COLLAR_LENGTH, 16.0
+        else:
+            arm_lo, arm_hi = 0.0, 8 - core
+            col_lo, col_hi = 0.0, COLLAR_LENGTH
+        elements.append(axis_box(axis, arm_lo, arm_hi, core, "#pipe"))
+        # Collier de raccord au bord du bloc.
+        elements.append(axis_box(axis, col_lo, col_hi, COLLAR_RADIUS, "#pipe"))
+    write(ASSETS / "models" / "block" / f"pipe_{mask}.json", {
+        "parent": "minecraft:block/block",
+        "textures": {
+            "particle": "herbalis:block/pipe_copper",
+            "pipe": "herbalis:block/pipe_copper",
+        },
+        "elements": elements,
+    })
+
+
+# ------------------------------------------------------------------
+# Caissons d'eau (cuve ouverte, citerne et reservoir a jauges)
+# ------------------------------------------------------------------
+
+def water_plane(x0: float, z0: float, x1: float, z1: float,
+                height: float) -> dict:
+    element = box([x0, height - 0.4, z0], [x1, height, z1], "#water",
+                  uv=[1, 1, 15, 15])
+    element["shade"] = False
+    return element
+
+
+def copper_rim(x0: float, y: float, z0: float, x1: float, z1: float,
+               thickness: float = 1.0, width: float = 1.6) -> list[dict]:
+    """Lisere de cuivre qui couronne une paroi ouverte."""
+    return [
+        box([x0, y, z0], [x1, y + thickness, z0 + width], "#copper"),
+        box([x0, y, z1 - width], [x1, y + thickness, z1], "#copper"),
+        box([x0, y, z0], [x0 + width, y + thickness, z1], "#copper"),
+        box([x1 - width, y, z0], [x1, y + thickness, z1], "#copper"),
+    ]
+
+
+def tank_cuve_model(name: str, water_height: float | None) -> None:
+    """Cuve en douves ouverte : le niveau d'eau se lit directement."""
+    wall = 1.6
+    elements = [
+        box([1, 0, 1], [15, 1.6, 15], "#wood"),
+        box([1, 1.6, 1], [15, 11.6, 1 + wall], "#wood"),
+        box([1, 1.6, 15 - wall], [15, 11.6, 15], "#wood"),
+        box([1, 1.6, 1 + wall], [1 + wall, 11.6, 15 - wall], "#wood"),
+        box([15 - wall, 1.6, 1 + wall], [15, 11.6, 15 - wall], "#wood"),
+        *copper_rim(0.7, 11.2, 0.7, 15.3, 15.3),
+    ]
+    if water_height is not None:
+        elements.append(water_plane(1 + wall, 1 + wall,
+                                    15 - wall, 15 - wall, water_height))
+    write(ASSETS / "models" / "block" / f"{name}.json", {
+        "parent": "minecraft:block/block",
+        "textures": {
+            "particle": "herbalis:block/tank_wood",
+            "wood": "herbalis:block/tank_wood",
+            "copper": "herbalis:block/pipe_copper",
+            "water": "herbalis:block/drip_water",
+        },
+        "elements": elements,
+    })
+
+
+def tank_gauges(wall: float, y0: float, y1: float,
+                fill: float | None) -> list[dict]:
+    """Jauge verticale au centre des quatre faces d'un caisson ferme.
+
+    wall : coordonnee de la paroi nord. fill : hauteur d'eau, None a vide.
+    """
+    elements = []
+    hw = 1.15
+    slot_uv = [2, 7.55, 4, 7.95]  # bande sombre des joints de tole
+    for axis in ("z", "x"):
+        for positive in (False, True):
+            if positive:
+                n0, n1 = 16 - wall - 0.2, 16 - wall + 0.55
+                w0, w1 = 16 - wall - 0.1, 16 - wall + 0.7
+            else:
+                n0, n1 = wall - 0.55, wall + 0.2
+                w0, w1 = wall - 0.7, wall + 0.1
+
+            def nbox(a, b, lo, hi, y_from, y_to, texture, uv):
+                if axis == "z":
+                    return box([a, y_from, lo], [b, y_to, hi], texture, uv=uv)
+                return box([lo, y_from, a], [hi, y_to, b], texture, uv=uv)
+
+            elements.append(nbox(8 - hw, 8 + hw, n0, n1, y0, y1,
+                                 "#iron", slot_uv))
+            if fill is not None:
+                water = nbox(8 - hw + 0.3, 8 + hw - 0.3, w0, w1,
+                             y0 + 0.35, fill, "#water", [2, 2, 14, 14])
+                water["shade"] = False
+                elements.append(water)
+    return elements
+
+
+TANK_METAL_TEXTURES = {
+    "particle": "herbalis:block/tank_iron",
+    "iron": "herbalis:block/tank_iron",
+    "copper": "herbalis:block/pipe_copper",
+    "water": "herbalis:block/drip_water",
+}
+
+
+def tank_citerne_model(name: str, fill: float | None) -> None:
+    """Citerne rivetee fermee, trappe sur le dessus, jauges en facade."""
+    elements = [
+        box([1, 0, 1], [15, 15, 15], "#iron"),
+        box([5.6, 15, 5.6], [10.4, 16.4, 10.4], "#iron"),
+        box([6.8, 16.4, 6.8], [9.2, 17.2, 9.2], "#copper"),
+        *tank_gauges(1, 2, 13, fill),
+    ]
+    write(ASSETS / "models" / "block" / f"{name}.json", {
+        "parent": "minecraft:block/block",
+        "textures": TANK_METAL_TEXTURES,
+        "elements": elements,
+    })
+
+
+def tank_reservoir_model(name: str, fill: float | None) -> None:
+    """Reservoir industriel : plus haut qu'un bloc, montants de cuivre."""
+    elements = [
+        box([0.5, 0, 0.5], [15.5, 20, 15.5], "#iron"),
+        # Montants d'angle.
+        box([-0.2, 0, -0.2], [1.8, 20.8, 1.8], "#copper"),
+        box([14.2, 0, -0.2], [16.2, 20.8, 1.8], "#copper"),
+        box([-0.2, 0, 14.2], [1.8, 20.8, 16.2], "#copper"),
+        box([14.2, 0, 14.2], [16.2, 20.8, 16.2], "#copper"),
+        # Event sur le toit.
+        box([6.6, 20, 6.6], [9.4, 22.4, 9.4], "#copper"),
+        box([5.9, 22.4, 5.9], [10.1, 23.4, 10.1], "#copper"),
+        *tank_gauges(0.5, 2.5, 17.5, fill),
+    ]
+    write(ASSETS / "models" / "block" / f"{name}.json", {
+        "parent": "minecraft:block/block",
+        "textures": TANK_METAL_TEXTURES,
+        "elements": elements,
+    })
+
+
+# ------------------------------------------------------------------
+# Silo d'engrais (tremie en bois sur pieds)
+# ------------------------------------------------------------------
+
+def silo_model(name: str, content_height: float | None) -> None:
+    wall = 1.4
+    elements = [
+        # Pieds.
+        box([1.2, 0, 1.2], [2.8, 9.2, 2.8], "#wood"),
+        box([13.2, 0, 1.2], [14.8, 9.2, 2.8], "#wood"),
+        box([1.2, 0, 13.2], [2.8, 9.2, 14.8], "#wood"),
+        box([13.2, 0, 13.2], [14.8, 9.2, 14.8], "#wood"),
+        # Tremie qui s'affine vers la goulotte.
+        box([6.6, 2.4, 6.6], [9.4, 4.6, 9.4], "#wood"),
+        box([4.8, 4.6, 4.8], [11.2, 6.8, 11.2], "#wood"),
+        box([3.0, 6.8, 3.0], [13.0, 9.2, 13.0], "#wood"),
+        # Bac ouvert.
+        box([1.6, 9.2, 1.6], [14.4, 15.6, 1.6 + wall], "#wood"),
+        box([1.6, 9.2, 14.4 - wall], [14.4, 15.6, 14.4], "#wood"),
+        box([1.6, 9.2, 1.6 + wall], [1.6 + wall, 15.6, 14.4 - wall], "#wood"),
+        box([14.4 - wall, 9.2, 1.6 + wall], [14.4, 15.6, 14.4 - wall], "#wood"),
+        box([1.6 + wall, 9.2, 1.6 + wall],
+            [14.4 - wall, 10.2, 14.4 - wall], "#wood"),
+        *copper_rim(1.3, 15.2, 1.3, 14.7, 14.7, thickness=1.0, width=1.5),
+    ]
+    if content_height is not None:
+        content = box([1.6 + wall, content_height - 0.6, 1.6 + wall],
+                      [14.4 - wall, content_height, 14.4 - wall],
+                      "#compost", uv=[1, 1, 15, 15])
+        elements.append(content)
+    write(ASSETS / "models" / "block" / f"{name}.json", {
+        "parent": "minecraft:block/block",
+        "textures": {
+            "particle": "herbalis:block/rack_wood",
+            "wood": "herbalis:block/rack_wood",
+            "copper": "herbalis:block/pipe_copper",
+            "compost": "herbalis:block/silo_compost",
+        },
+        "elements": elements,
+    })
+
+
+# ------------------------------------------------------------------
+# Lampe horticole UV
+# ------------------------------------------------------------------
+
+def uv_lamp_model() -> None:
+    """Lampadaire de culture : socle, mat a col de cuivre, boitier et
+    panneau violet debordant qui eclaire vers le bas. Le display est
+    rendu fullbright en jeu, le panneau parait allume meme de nuit."""
+    # Panneau lumineux plus large que le boitier : le violet se voit
+    # de dessous, de cote et en lisere depuis le dessus.
+    glow = box([3.2, 11.8, 3.2], [12.8, 13.2, 12.8], "#glow", uv=FULL_UV)
+    glow["shade"] = False
+    elements = [
+        box([4.6, 0, 4.6], [11.4, 1.4, 11.4], "#metal"),
+        box([7.2, 1.4, 7.2], [8.8, 11.8, 8.8], "#metal"),
+        # Col de cuivre sous le panneau.
+        box([6.7, 10.2, 6.7], [9.3, 11.8, 9.3], "#copper"),
+        glow,
+        # Capot au-dessus du panneau lumineux.
+        box([3.8, 13.2, 3.8], [12.2, 14.8, 12.2], "#metal"),
+    ]
+    write(ASSETS / "models" / "block" / "uv_lamp.json", {
+        "parent": "minecraft:block/block",
+        "textures": {
+            "particle": "herbalis:block/lamp_metal",
+            "metal": "herbalis:block/lamp_metal",
+            "copper": "herbalis:block/pipe_copper",
+            "glow": "herbalis:block/lamp_glow",
+        },
+        "elements": elements,
+    })
+
+
+# ------------------------------------------------------------------
 # Models 3D en main (arrosoir, joint)
 #
 # En inventaire (gui/fixed), l'item definition bascule sur le sprite 2D
@@ -678,6 +944,41 @@ def main() -> None:
     for name, (elements, texture) in stages.items():
         plant_model(name, elements, texture)
         item_definition(name, f"herbalis:block/{name}")
+
+    # Tuyaux auto-connectes : un model par masque de connexions.
+    for mask in range(64):
+        pipe_model(mask)
+        item_definition(f"pipe_{mask}", f"herbalis:block/pipe_{mask}")
+    # L'item en inventaire : un segment droit est-ouest.
+    item_definition("pipe", "herbalis:block/pipe_48")
+
+    # Caissons : trois tailles, quatre niveaux d'eau chacun.
+    cuve_levels = {"": None, "_low": 4.2, "_mid": 7.2, "_full": 10.8}
+    citerne_levels = {"": None, "_low": 4.8, "_mid": 8.2, "_full": 12.6}
+    reservoir_levels = {"": None, "_low": 6.0, "_mid": 10.5, "_full": 17.0}
+    for suffix, level in cuve_levels.items():
+        tank_cuve_model(f"tank_cuve{suffix}", level)
+        item_definition(f"tank_cuve{suffix}",
+                        f"herbalis:block/tank_cuve{suffix}")
+    for suffix, level in citerne_levels.items():
+        tank_citerne_model(f"tank_citerne{suffix}", level)
+        item_definition(f"tank_citerne{suffix}",
+                        f"herbalis:block/tank_citerne{suffix}")
+    for suffix, level in reservoir_levels.items():
+        tank_reservoir_model(f"tank_reservoir{suffix}", level)
+        item_definition(f"tank_reservoir{suffix}",
+                        f"herbalis:block/tank_reservoir{suffix}")
+
+    # Silo d'engrais : vide, entame, plein.
+    silo_model("silo", None)
+    silo_model("silo_mid", 12.4)
+    silo_model("silo_full", 15.2)
+    for key in ("silo", "silo_mid", "silo_full"):
+        item_definition(key, f"herbalis:block/{key}")
+
+    # Lampe horticole UV.
+    uv_lamp_model()
+    item_definition("uv_lamp", "herbalis:block/uv_lamp")
 
     font_json()
     print("OK")

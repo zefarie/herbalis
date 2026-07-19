@@ -497,6 +497,128 @@ def jar_weed(kind: str) -> Image.Image:
     return img
 
 
+def pipe_copper() -> Image.Image:
+    """Cuivre des tuyaux : chaud, sillons sombres, pointes d'oxydation."""
+    base = (188, 108, 74, 255)
+    dark = (156, 86, 58, 255)
+    light = (212, 130, 90, 255)
+    img = noisy(16, base, [dark, light], 0.18, seed=51)
+    # Sillons d'assemblage tous les 4 px.
+    for y in range(3, 16, 4):
+        for x in range(16):
+            if (x + y) % 7 != 0:
+                img.putpixel((x, y), dark)
+    # Vert-de-gris discret.
+    rng = random.Random(52)
+    for _ in range(5):
+        x, y = rng.randint(0, 15), rng.randint(0, 15)
+        img.putpixel((x, y), (94, 160, 132, 255))
+    return img
+
+
+def tank_wood() -> Image.Image:
+    """Douves verticales de la cuve, cerclees de deux bandes de cuivre."""
+    base = (128, 92, 55, 255)
+    grain = (102, 72, 42, 255)
+    light = (148, 110, 68, 255)
+    img = noisy(32, base, [light], 0.1, seed=53)
+    rng = random.Random(54)
+    # Joints de douves verticaux, ondulation legere.
+    for plank in range(5):
+        x = plank * 7 + rng.randint(1, 3)
+        for y in range(32):
+            xx = x + (1 if (y // 9 + plank) % 2 else 0)
+            if rng.random() < 0.9:
+                put(img, xx % 32, y, grain)
+    # Deux cercles de cuivre, riveted.
+    for band_y in (5, 24):
+        for y in (band_y, band_y + 1, band_y + 2):
+            for x in range(32):
+                copper = (188, 108, 74, 255) if y != band_y + 1 \
+                    else (156, 86, 58, 255)
+                img.putpixel((x, y), copper)
+        for x in range(2, 32, 6):
+            img.putpixel((x, band_y + 1), (222, 146, 102, 255))
+    return img
+
+
+def tank_iron() -> Image.Image:
+    """Tole rivetee des citernes : panneaux gris, rivets aux joints."""
+    img = Image.new("RGBA", (32, 32), (118, 126, 134, 255))
+    rng = random.Random(55)
+    for y in range(32):
+        shade = rng.choice((-1, 0, 0, 1))
+        for x in range(32):
+            base = 118 + shade * 6 + rng.choice((-4, 0, 4))
+            img.putpixel((x, y), (clamp(base), clamp(base + 8),
+                                  clamp(base + 16), 255))
+    seam = (86, 94, 102, 255)
+    rivet = (168, 178, 188, 255)
+    # Joints de panneaux : une croix centrale.
+    for i in range(32):
+        img.putpixel((i, 15), seam)
+        img.putpixel((i, 16), seam)
+        img.putpixel((15, i), seam)
+        img.putpixel((16, i), seam)
+        img.putpixel((i, 0), (146, 156, 166, 255))
+        img.putpixel((i, 31), (74, 82, 90, 255))
+    # Rivets le long des joints.
+    for pos in range(3, 32, 7):
+        for x, y in ((pos, 14), (pos, 17), (14, pos), (17, pos)):
+            put(img, x, y, rivet)
+    return img
+
+
+def silo_compost() -> Image.Image:
+    """Engrais en vrac dans le silo : humus riche, granules clairs."""
+    img = noisy(16, (58, 44, 28, 255),
+                [(78, 60, 38, 255), (44, 32, 20, 255)], 0.5, seed=57)
+    rng = random.Random(58)
+    for _ in range(12):
+        x, y = rng.randint(0, 15), rng.randint(0, 15)
+        img.putpixel((x, y), rng.choice(
+            [(112, 172, 82, 255), (232, 224, 198, 255)]))
+    return img
+
+
+def lamp_metal() -> Image.Image:
+    """Acier anthracite du pied de lampe, brosse et lisible."""
+    img = Image.new("RGBA", (16, 16), (74, 78, 90, 255))
+    rng = random.Random(59)
+    for y in range(16):
+        for x in range(16):
+            if rng.random() < 0.18:
+                img.putpixel((x, y), rng.choice(
+                    [(90, 94, 108, 255), (60, 64, 74, 255)]))
+    for x in range(16):
+        img.putpixel((x, 0), (108, 112, 128, 255))
+        img.putpixel((x, 15), (48, 52, 60, 255))
+    return img
+
+
+def lamp_glow() -> Image.Image:
+    """Panneau UV allume : coeur presque blanc, bords violets satures."""
+    img = new(16)
+    center = (244, 224, 255)
+    edge = (168, 85, 247)
+    deep = (126, 58, 214)
+    for y in range(16):
+        for x in range(16):
+            d = max(abs(x - 7.5), abs(y - 7.5)) / 7.5
+            if d > 0.92:
+                color = deep
+            else:
+                t = min(1.0, d * 1.15)
+                color = tuple(clamp(center[i] + (edge[i] - center[i]) * t)
+                              for i in range(3))
+            img.putpixel((x, y), (*color, 255))
+    # Grille de diodes discrete.
+    for y in range(2, 16, 4):
+        for x in range(2, 16, 4):
+            img.putpixel((x, y), (255, 246, 255, 255))
+    return img
+
+
 def rack_bud(dry: bool) -> Image.Image:
     img = new(8)
     if dry:
@@ -1005,6 +1127,14 @@ def main() -> None:
     save(jar_weed("curing"), "block/jar_weed_curing.png")
     save(jar_weed("ready"), "block/jar_weed_ready.png")
     save(jar_weed("moldy"), "block/jar_weed_moldy.png")
+
+    # Reseau d'irrigation et lampe UV.
+    save(pipe_copper(), "block/pipe_copper.png")
+    save(tank_wood(), "block/tank_wood.png")
+    save(tank_iron(), "block/tank_iron.png")
+    save(silo_compost(), "block/silo_compost.png")
+    save(lamp_metal(), "block/lamp_metal.png")
+    save(lamp_glow(), "block/lamp_glow.png")
 
     # Glyphes de font.
     for name, rows in GLYPHS.items():
