@@ -1,5 +1,6 @@
 package io.github.zefarie.herbalis.domain.geo;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -22,5 +23,16 @@ public record BlockPos(UUID worldId, int x, int y, int z) {
 
     public BlockPos below() {
         return new BlockPos(worldId, x, y - 1, z);
+    }
+
+    /** Les six blocs adjacents, dans l'ordre bas, haut, nord, sud, ouest, est. */
+    public List<BlockPos> neighbors() {
+        return List.of(
+                below(),
+                above(),
+                new BlockPos(worldId, x, y, z - 1),
+                new BlockPos(worldId, x, y, z + 1),
+                new BlockPos(worldId, x - 1, y, z),
+                new BlockPos(worldId, x + 1, y, z));
     }
 }
