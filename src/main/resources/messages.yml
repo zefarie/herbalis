@@ -70,6 +70,54 @@ items:
       - "<!i><color:#9ca3af>tient deux fois plus longtemps.</color>"
       - "<!i><i><color:#71717a>Pour les jardiniers qui voyagent.</color></i>"
       - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  pipe:
+    nom: "<gradient:#fdba74:#c2410c>Tuyau d'irrigation</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Cuivre martelé. Se pose partout,</color>"
+      - "<!i><color:#9ca3af>relie caissons, silos et pots.</color>"
+      - "<!i><i><color:#71717a>Pas relié, pas d'eau.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  tank_cuve:
+    nom: "<gradient:#93c5fd:#1d4ed8>Cuve d'eau</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Bois et cuivre, format modeste.</color>"
+      - "<!i><color:#9ca3af>Abreuve les pots reliés en tuyaux.</color>"
+      - "<!i><i><color:#71717a>Le début de l'autonomie.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  tank_citerne:
+    nom: "<gradient:#93c5fd:#1d4ed8>Citerne d'eau</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Du fer rivé, du volume sérieux.</color>"
+      - "<!i><color:#9ca3af>Abreuve les pots reliés en tuyaux.</color>"
+      - "<!i><i><color:#71717a>De quoi voir venir.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  tank_reservoir:
+    nom: "<gradient:#93c5fd:#1d4ed8>Réservoir industriel</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Le format plantation. Des semaines</color>"
+      - "<!i><color:#9ca3af>d'eau pour toute une serre.</color>"
+      - "<!i><i><color:#71717a>Qui arrose encore à la main ?</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  silo:
+    nom: "<gradient:#a3e635:#65a30d>Silo d'engrais</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Chargé en engrais, il fertilise</color>"
+      - "<!i><color:#9ca3af>tout seul les pots reliés.</color>"
+      - "<!i><i><color:#71717a>Le terreau ne manque de rien.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+  uv_lamp:
+    nom: "<gradient:#c4b5fd:#7c3aed>Lampe horticole UV</gradient>"
+    lore:
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
+      - "<!i><color:#9ca3af>Lueur violette, lumière maximale.</color>"
+      - "<!i><color:#9ca3af>Les caves deviennent des serres.</color>"
+      - "<!i><i><color:#71717a>Le soleil des sous-sols.</color></i>"
+      - "<!i><color:#3f3f46>· · · · · · · · · · · · · · · ·</color>"
   fertilizer:
     nom: "<gradient:#a3e635:#65a30d>Engrais naturel</gradient>"
     lore:
@@ -157,6 +205,21 @@ hud:
   holo-terreau-fertilise: "<color:#a3e635>fertilisé</color>"
   holo-qualite: "<color:#9ca3af>Qualité :</color> <etoiles>"
   holo-goutte: "<color:#7dd3fc><font:herbalis:icons></font> Goutte-à-goutte actif</color>"
+  holo-irrigation: "<color:#7dd3fc><font:herbalis:icons></font> reliée au réseau d'eau</color>"
+  holo-irrigation-sec: "<color:#f87171><font:herbalis:icons></font> réseau à sec !</color>"
+  holo-fertigation: "<color:#a3e635><font:herbalis:icons></font> auto-engrais actif</color>"
+  holo-caisson-titre-cuve: "<gradient:#93c5fd:#1d4ed8><b>Cuve d'eau</b></gradient>"
+  holo-caisson-titre-citerne: "<gradient:#93c5fd:#1d4ed8><b>Citerne d'eau</b></gradient>"
+  holo-caisson-titre-reservoir: "<gradient:#93c5fd:#1d4ed8><b>Réservoir industriel</b></gradient>"
+  holo-caisson-stock: "<color:#7dd3fc><font:herbalis:icons></font> <stock>/<capacite> seaux</color>"
+  holo-caisson-vide: "<color:#f87171><font:herbalis:icons></font> à sec, verse des seaux !</color>"
+  holo-silo-titre: "<gradient:#a3e635:#65a30d><b>Silo d'engrais</b></gradient>"
+  holo-silo-doses: "<color:#a3e635><font:herbalis:icons></font> <doses>/<capacite> doses</color>"
+  holo-silo-vide: "<color:#f87171><font:herbalis:icons></font> vide, charge de l'engrais !</color>"
+  holo-lampe-titre: "<gradient:#c4b5fd:#7c3aed><b>Lampe UV</b></gradient>"
+  holo-lampe-niveau: "<color:#c4b5fd><font:herbalis:icons></font> lumière <niveau>/15</color>"
+  holo-reseau-pots: "<color:#9ca3af><pots> pot(s) relié(s)</color>"
+  holo-reseau-isole: "<color:#f87171><font:herbalis:icons></font> aucun pot relié</color>"
   holo-pot-vide: "<gradient:#e8b64c:#b45309><b>Pot de culture</b></gradient>"
   holo-pot-vide-astuce: "<color:#9ca3af>plantez une graine</color>"
   holo-rack-titre: "<gradient:#e8b64c:#92400e><b>Rack de séchage</b></gradient>"
@@ -216,6 +279,24 @@ arrosage:
 engrais:
   applique: "<color:#a3e635><font:herbalis:icons></font> L'engrais se mêle au terreau.</color>"
   deja-applique: "<color:#9ca3af>Ce stage a déjà reçu son engrais.</color>"
+
+irrigation:
+  tuyau-pose: "<color:#4ade80>Tuyau posé.</color> <color:#9ca3af>Relie caissons, silos et pots.</color>"
+  tuyau-casse: "<color:#fbbf24>Tuyau récupéré.</color>"
+  caisson-pose: "<color:#4ade80>Caisson posé.</color> <color:#9ca3af>Verse des seaux d'eau dedans.</color>"
+  caisson-casse: "<color:#fbbf24>Caisson récupéré.</color> <color:#9ca3af>L'eau restante se répand...</color>"
+  caisson-rempli: "<color:#7dd3fc><font:herbalis:icons></font> Seau versé.</color> <color:#9ca3af>Stock : <stock>/<capacite> seaux.</color>"
+  caisson-plein: "<color:#9ca3af>Le caisson est plein à ras bord.</color>"
+  caisson-info: "<color:#7dd3fc><font:herbalis:icons></font> <stock>/<capacite> seaux</color> <color:#3f3f46>·</color> <color:#9ca3af><pots> pot(s) relié(s)</color>"
+  silo-pose: "<color:#4ade80>Silo posé.</color> <color:#9ca3af>Charge-le en engrais.</color>"
+  silo-casse: "<color:#fbbf24>Silo récupéré, l'engrais restant aussi.</color>"
+  silo-rempli: "<color:#a3e635><font:herbalis:icons></font> Dose chargée.</color> <color:#9ca3af><doses>/<capacite> doses.</color>"
+  silo-plein: "<color:#9ca3af>Le silo est plein.</color>"
+  silo-info: "<color:#a3e635><font:herbalis:icons></font> <doses>/<capacite> doses</color> <color:#3f3f46>·</color> <color:#9ca3af><pots> pot(s) relié(s)</color>"
+
+lampe:
+  posee: "<color:#c4b5fd><font:herbalis:icons></font> Lampe UV allumée.</color> <color:#9ca3af>Lumière maximale pour les plantes autour.</color>"
+  cassee: "<color:#fbbf24>Lampe UV récupérée.</color>"
 
 recolte:
   optimale: "<color:#4ade80><font:herbalis:icons></font> <nombre> tête(s) au meilleur moment, +<graines> graine(s) !</color> <etoiles>"

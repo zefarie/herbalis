@@ -180,7 +180,8 @@ public final class HerbalisPlugin extends JavaPlugin {
         var effects = new EffectService(messages, fx, drugs, sessionStore, blackout);
         var withdrawal = new WithdrawalService(consumerRepo, drugs, config, messages, fx);
         var hud = new HudService(config, messages, items, renderer, plantRepo,
-                potRepo, rackRepo, jarRepo, drugs, environment);
+                potRepo, rackRepo, jarRepo, tankRepo, siloRepo, lampRepo,
+                irrigation, drugs, environment);
         holograms = new HologramService(this, config, hud);
 
         // Reprise apres redemarrage : sessions et visuels.

@@ -1,10 +1,14 @@
 package io.github.zefarie.herbalis.infrastructure.hud;
 
 import io.github.zefarie.herbalis.application.port.JarRepository;
+import io.github.zefarie.herbalis.application.port.LampRepository;
 import io.github.zefarie.herbalis.application.port.PlantEnvironment;
 import io.github.zefarie.herbalis.application.port.PlantRepository;
 import io.github.zefarie.herbalis.application.port.PotRepository;
 import io.github.zefarie.herbalis.application.port.RackRepository;
+import io.github.zefarie.herbalis.application.port.SiloRepository;
+import io.github.zefarie.herbalis.application.port.TankRepository;
+import io.github.zefarie.herbalis.application.service.IrrigationService;
 import io.github.zefarie.herbalis.domain.curing.CuringJar;
 import io.github.zefarie.herbalis.domain.curing.JarVisualState;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
@@ -12,6 +16,8 @@ import io.github.zefarie.herbalis.domain.drug.DrugType;
 import io.github.zefarie.herbalis.domain.drying.DryingRack;
 import io.github.zefarie.herbalis.domain.drying.RackVisualState;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
+import io.github.zefarie.herbalis.domain.irrigation.FertilizerSilo;
+import io.github.zefarie.herbalis.domain.irrigation.WaterTank;
 import io.github.zefarie.herbalis.domain.plant.GrowthEngine;
 import io.github.zefarie.herbalis.domain.plant.Plant;
 import io.github.zefarie.herbalis.domain.plant.PlantState;
@@ -51,12 +57,18 @@ public final class HudService {
     private final PotRepository pots;
     private final RackRepository racks;
     private final JarRepository jars;
+    private final TankRepository tanks;
+    private final SiloRepository silos;
+    private final LampRepository lamps;
+    private final IrrigationService irrigation;
     private final DrugRegistry drugs;
     private final PlantEnvironment environment;
 
     public HudService(HerbalisConfig config, Messages messages, ItemFactory items,
                       DisplayRenderer renderer, PlantRepository plants,
                       PotRepository pots, RackRepository racks, JarRepository jars,
+                      TankRepository tanks, SiloRepository silos,
+                      LampRepository lamps, IrrigationService irrigation,
                       DrugRegistry drugs, PlantEnvironment environment) {
         this.config = config;
         this.messages = messages;
@@ -66,6 +78,10 @@ public final class HudService {
         this.pots = pots;
         this.racks = racks;
         this.jars = jars;
+        this.tanks = tanks;
+        this.silos = silos;
+        this.lamps = lamps;
+        this.irrigation = irrigation;
         this.drugs = drugs;
         this.environment = environment;
     }
@@ -130,6 +146,17 @@ public final class HudService {
         if (jar.isPresent()) {
             return Optional.of(jarHologram(jar.get(), now));
         }
+        Optional<WaterTank> tank = tanks.at(pos);
+        if (tank.isPresent()) {
+            return Optional.of(tankHologram(pos, tank.get()));
+        }
+        Optional<FertilizerSilo> silo = silos.at(pos);
+        if (silo.isPresent()) {
+            return Optional.of(siloHologram(pos, silo.get()));
+        }
+        if (lamps.has(pos)) {
+            return Optional.of(lampHologram());
+        }
         return Optional.empty();
     }
 
@@ -160,11 +187,75 @@ public final class HudService {
         if (pots.hasDripper(pos)) {
             lines.add(messages.msg("hud.holo-goutte"));
         }
+        // Reseau d'irrigation : branchee (et alimentee ?), auto-engrais.
+        IrrigationService.Hookup hookup = irrigation.hookupFor(pos);
+        if (hookup.hasTank()) {
+            lines.add(messages.msg(irrigation.availableWater(hookup) > 0.0
+                    ? "hud.holo-irrigation" : "hud.holo-irrigation-sec"));
+        }
+        if (hookup.hasSilo() && irrigation.hasFertilizerDose(hookup)) {
+            lines.add(messages.msg("hud.holo-fertigation"));
+        }
         String alert = alert(plant, drug);
         if (!alert.isEmpty()) {
             lines.add(messages.msg(alert));
         }
         return Optional.of(new Hologram(join(lines), height));
+    }
+
+    private Hologram tankHologram(BlockPos pos, WaterTank tank) {
+        List<Component> lines = new ArrayList<>(3);
+        lines.add(messages.msg("hud.holo-caisson-titre-" + tank.size().id()));
+        lines.add(tank.isEmpty()
+                ? messages.msg("hud.holo-caisson-vide")
+                : messages.msg("hud.holo-caisson-stock",
+                        Messages.ph("stock", bucketsOf(tank.stock())),
+                        Messages.ph("capacite", String.valueOf(
+                                config.tankCapacityBuckets(tank.size())))));
+        lines.add(networkLine(pos));
+        float height = switch (tank.size()) {
+            case CUVE -> 1.3f;
+            case CITERNE -> 1.5f;
+            case RESERVOIR -> 1.9f;
+        };
+        return new Hologram(join(lines), height);
+    }
+
+    private Hologram siloHologram(BlockPos pos, FertilizerSilo silo) {
+        List<Component> lines = new ArrayList<>(3);
+        lines.add(messages.msg("hud.holo-silo-titre"));
+        lines.add(silo.isEmpty()
+                ? messages.msg("hud.holo-silo-vide")
+                : messages.msg("hud.holo-silo-doses",
+                        Messages.ph("doses", String.valueOf(silo.doses())),
+                        Messages.ph("capacite", String.valueOf(
+                                config.siloCapacityDoses()))));
+        lines.add(networkLine(pos));
+        return new Hologram(join(lines), 1.5f);
+    }
+
+    private Hologram lampHologram() {
+        return new Hologram(join(List.of(
+                messages.msg("hud.holo-lampe-titre"),
+                messages.msg("hud.holo-lampe-niveau",
+                        Messages.ph("niveau", String.valueOf(
+                                config.lampLightLevel()))))), 1.35f);
+    }
+
+    private Component networkLine(BlockPos pos) {
+        int connected = irrigation.connectedPots(pos);
+        return connected > 0
+                ? messages.msg("hud.holo-reseau-pots",
+                        Messages.ph("pots", String.valueOf(connected)))
+                : messages.msg("hud.holo-reseau-isole");
+    }
+
+    /** Stock en seaux, une decimale utile au plus. */
+    private String bucketsOf(double stock) {
+        double buckets = Math.round(stock / config.waterPerBucket() * 10.0) / 10.0;
+        return buckets == Math.floor(buckets)
+                ? String.valueOf((long) buckets)
+                : String.valueOf(buckets);
     }
 
     private Hologram rackHologram(DryingRack rack, long now) {
