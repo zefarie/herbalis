@@ -312,6 +312,22 @@ def noisy(size: int, base: tuple, variants: list[tuple], density: float,
     return img
 
 
+def vgrade(img: Image.Image, top: float = 1.06, bottom: float = 0.88,
+           y0: int = 0, y1: int | None = None) -> Image.Image:
+    """Degrade vertical bake dans la texture : haut eclairci, bas
+    assombri. Donne du volume aux parois sans toucher aux models."""
+    if y1 is None:
+        y1 = img.height - 1
+    for y in range(y0, y1 + 1):
+        f = top + (bottom - top) * ((y - y0) / max(1, y1 - y0))
+        for x in range(img.width):
+            r, g, b, a = img.getpixel((x, y))
+            if a:
+                img.putpixel((x, y), (clamp(r * f), clamp(g * f),
+                                      clamp(b * f), a))
+    return img
+
+
 def pot_side() -> Image.Image:
     base = (181, 112, 70, 255)
     dark = (163, 99, 61, 255)
@@ -322,6 +338,21 @@ def pot_side() -> Image.Image:
         for x in range(32):
             if (x + y) % 5 != 0:
                 img.putpixel((x, y), dark)
+    # Les parois du pot n'echantillonnent que le bas de la texture
+    # (px 20-32, voir pot_model) : le degrade se bake sur cette bande.
+    vgrade(img, top=1.08, bottom=0.86, y0=18, y1=31)
+    # Frise peinte a l'engobe sur l'etage haut (px 21-23) : fond creme,
+    # pointes de terre cuite.
+    cream = (228, 192, 144, 255)
+    cream_dark = (206, 168, 120, 255)
+    accent = (172, 96, 58, 255)
+    for y in (21, 22, 23):
+        for x in range(32):
+            img.putpixel((x, y), cream if (x * 5 + y) % 9 else cream_dark)
+    for x in range(32):
+        img.putpixel((x, 21 if (x // 2) % 2 else 23, ), accent)
+        if x % 4 == 1:
+            img.putpixel((x, 22), accent)
     for x in range(32):
         img.putpixel((x, 0), light)
         img.putpixel((x, 31), (140, 84, 52, 255))
@@ -399,7 +430,7 @@ def rack_wood() -> Image.Image:
         img.putpixel((cx, cy), (78, 54, 32, 255))
         img.putpixel((cx + 1, cy), grain)
         img.putpixel((cx, cy + 1), grain)
-    return img
+    return vgrade(img, top=1.05, bottom=0.9)
 
 
 def rack_rope() -> Image.Image:
@@ -446,17 +477,55 @@ def joint_wrap() -> Image.Image:
 
 
 def jar_glass() -> Image.Image:
-    """Verre de la jarre : cadre visible, interieur transparent."""
+    """Verre de la jarre : cadre net, coins renforces, reflet diagonal."""
     img = new(32)
-    frame = (214, 230, 236, 255)
-    frame_dark = (168, 190, 200, 255)
+    frame = (228, 240, 246, 255)
+    frame_dark = (176, 198, 208, 255)
     for i in range(32):
         for edge in (0, 1, 30, 31):
             put(img, i, edge, frame if edge in (0, 31) else frame_dark)
             put(img, edge, i, frame if edge in (0, 31) else frame_dark)
-    # Reflets discrets dans le vide.
-    for x, y in ((6, 5), (7, 6), (8, 7), (24, 20), (25, 21)):
-        put(img, x, y, (235, 245, 248, 90))
+    # Coins renforces, comme une monture.
+    for cx, cy in ((0, 0), (0, 28), (28, 0), (28, 28)):
+        for dx in range(4):
+            for dy in range(4):
+                if dx + dy < 6:
+                    put(img, cx + dx, cy + dy, frame)
+    # Reflet diagonal du verre.
+    for i in range(5, 15):
+        put(img, i, i - 2, (238, 248, 252, 120))
+        put(img, i + 1, i - 2, (238, 248, 252, 70))
+    for i in range(20, 27):
+        put(img, i, i - 3, (238, 248, 252, 90))
+    return img
+
+
+def jar_label() -> Image.Image:
+    """Etiquette kraft collee sur la jarre : bord, feuille, griffonnage."""
+    img = new(16)
+    paper = (226, 208, 168, 255)
+    paper_dark = (206, 186, 144, 255)
+    border = (170, 146, 104, 255)
+    rng = random.Random(61)
+    for y in range(16):
+        for x in range(16):
+            color = paper if rng.random() < 0.85 else paper_dark
+            if x in (0, 15) or y in (0, 15):
+                color = border
+            img.putpixel((x, y), color)
+    green = (88, 132, 62, 255)
+    for gy, row in enumerate(GLYPHS["leaf"]):
+        for gx, char in enumerate(row):
+            if char == "X":
+                put(img, 4 + gx, 1 + gy, green)
+    # Deux lignes d'ecriture manuscrite.
+    ink = (124, 102, 72, 255)
+    for x in range(3, 13):
+        if x % 3 != 0:
+            put(img, x, 11, ink)
+    for x in range(4, 11):
+        if x % 2:
+            put(img, x, 13, ink)
     return img
 
 
@@ -530,6 +599,7 @@ def tank_wood() -> Image.Image:
             xx = x + (1 if (y // 9 + plank) % 2 else 0)
             if rng.random() < 0.9:
                 put(img, xx % 32, y, grain)
+    vgrade(img, top=1.06, bottom=0.88)
     # Deux cercles de cuivre, riveted.
     for band_y in (5, 24):
         for y in (band_y, band_y + 1, band_y + 2):
@@ -543,29 +613,38 @@ def tank_wood() -> Image.Image:
 
 
 def tank_iron() -> Image.Image:
-    """Tole rivetee des citernes : panneaux gris, rivets aux joints."""
-    img = Image.new("RGBA", (32, 32), (118, 126, 134, 255))
+    """Tole rivetee des citernes : panneaux chauds, joints biseautes,
+    degrade vertical et rivets en relief."""
+    img = Image.new("RGBA", (32, 32), (126, 130, 136, 255))
     rng = random.Random(55)
     for y in range(32):
         shade = rng.choice((-1, 0, 0, 1))
         for x in range(32):
-            base = 118 + shade * 6 + rng.choice((-4, 0, 4))
-            img.putpixel((x, y), (clamp(base), clamp(base + 8),
-                                  clamp(base + 16), 255))
-    seam = (86, 94, 102, 255)
-    rivet = (168, 178, 188, 255)
-    # Joints de panneaux : une croix centrale.
+            base = 126 + shade * 6 + rng.choice((-5, 0, 5))
+            img.putpixel((x, y), (clamp(base), clamp(base + 4),
+                                  clamp(base + 9), 255))
+    vgrade(img, top=1.10, bottom=0.82)
+    seam = (80, 86, 94, 255)
+    seam_light = (152, 158, 166, 255)
+    rivet = (182, 190, 200, 255)
+    rivet_shadow = (94, 100, 108, 255)
+    # Joints de panneaux biseautes : ombre puis reflet, une croix.
     for i in range(32):
         img.putpixel((i, 15), seam)
         img.putpixel((i, 16), seam)
+        img.putpixel((i, 17), seam_light)
         img.putpixel((15, i), seam)
         img.putpixel((16, i), seam)
-        img.putpixel((i, 0), (146, 156, 166, 255))
-        img.putpixel((i, 31), (74, 82, 90, 255))
-    # Rivets le long des joints.
+        put(img, 17, i, seam_light)
+        img.putpixel((i, 0), (176, 182, 190, 255))
+        img.putpixel((i, 1), (152, 158, 166, 255))
+        img.putpixel((i, 30), (82, 88, 96, 255))
+        img.putpixel((i, 31), (64, 70, 78, 255))
+    # Rivets le long des joints, avec ombre portee.
     for pos in range(3, 32, 7):
-        for x, y in ((pos, 14), (pos, 17), (14, pos), (17, pos)):
+        for x, y in ((pos, 13), (pos, 18), (13, pos), (18, pos)):
             put(img, x, y, rivet)
+            put(img, x, y + 1, rivet_shadow)
     return img
 
 
@@ -590,9 +669,10 @@ def lamp_metal() -> Image.Image:
             if rng.random() < 0.18:
                 img.putpixel((x, y), rng.choice(
                     [(90, 94, 108, 255), (60, 64, 74, 255)]))
+    vgrade(img, top=1.08, bottom=0.86)
     for x in range(16):
-        img.putpixel((x, 0), (108, 112, 128, 255))
-        img.putpixel((x, 15), (48, 52, 60, 255))
+        img.putpixel((x, 0), (112, 116, 132, 255))
+        img.putpixel((x, 15), (46, 50, 58, 255))
     return img
 
 
@@ -1121,8 +1201,9 @@ def main() -> None:
     save(rack_bud(dry=False), "block/rack_bud_fresh.png")
     save(rack_bud(dry=True), "block/rack_bud_dry.png")
 
-    # Jarre de curing : verre, contenus (affinage, pret, moisi).
+    # Jarre de curing : verre, etiquette, contenus (affinage, pret, moisi).
     save(jar_glass(), "block/jar_glass.png")
+    save(jar_label(), "block/jar_label.png")
     save(drip_water(), "block/drip_water.png")
     save(jar_weed("curing"), "block/jar_weed_curing.png")
     save(jar_weed("ready"), "block/jar_weed_ready.png")

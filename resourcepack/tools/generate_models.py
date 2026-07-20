@@ -408,8 +408,16 @@ def rack_model(name: str, buds_texture: str | None,
         box([1, 0, 6.9], [2.8, 15.2, 9.1], "#wood"),
         box([13.2, 0, 6.9], [15, 15.2, 9.1], "#wood"),
         box([0, 13.6, 7.1], [16, 15, 8.9], "#wood"),
+        # Traverse basse et corbeaux sous la barre : le rack se tient.
+        box([2.8, 1.8, 7.4], [13.2, 3.0, 8.6], "#wood"),
+        box([2.8, 12.6, 7.5], [4.4, 13.6, 8.5], "#wood"),
+        box([11.6, 12.6, 7.5], [13.2, 13.6, 8.5], "#wood"),
     ]
     bunches = ((4.6, 0.0), (8.0, -0.9), (11.4, 0.5))
+    # Crochets de cuivre au point d'attache des cordes.
+    for x, _ in bunches:
+        elements.append(box([x - 0.45, 13.3, 7.75], [x + 0.45, 13.8, 8.25],
+                            "#copper", uv=[5, 5, 8, 8]))
     if buds_texture is None:
         # Rack vide : trois bouts de corde qui pendent.
         for x, drop in bunches:
@@ -433,6 +441,7 @@ def rack_model(name: str, buds_texture: str | None,
         "particle": "herbalis:block/rack_wood",
         "wood": "herbalis:block/rack_wood",
         "rope": "herbalis:block/rack_rope",
+        "copper": "herbalis:block/pipe_copper",
     }
     if buds_texture:
         textures["buds"] = f"herbalis:block/{buds_texture}"
@@ -449,15 +458,22 @@ def rack_model(name: str, buds_texture: str | None,
 
 def jar_model(name: str, weed_texture: str | None,
               content_height: float = 5.4) -> None:
-    """Le contenu se voit a travers le verre et change avec l'etat."""
+    """Le contenu se voit a travers le verre et change avec l'etat.
+    Collier de cuivre sous le couvercle, etiquette kraft en facade."""
     glass = box([5, 0, 5], [11, 7, 11], "#glass", uv=FULL_UV)
-    lid = box([4.5, 7, 4.5], [11.5, 8.3, 11.5], "#lid")
-    knob = box([7.3, 8.3, 7.3], [8.7, 9.1, 8.7], "#lid")
-    elements = [glass, lid, knob]
+    # uv force dans la bande claire du cuivre (hors sillons sombres).
+    collar = box([4.7, 6.0, 4.7], [11.3, 7.0, 11.3], "#copper",
+                 uv=[2, 0.5, 14, 2.5])
+    lid = box([4.4, 7, 4.4], [11.6, 8.4, 11.6], "#lid")
+    knob = box([7.2, 8.4, 7.2], [8.8, 9.2, 8.8], "#copper")
+    label = box([6.2, 1.6, 4.85], [9.8, 5.0, 5.05], "#label", uv=FULL_UV)
+    elements = [glass, collar, lid, knob, label]
     textures = {
         "particle": "herbalis:block/jar_glass",
         "glass": "herbalis:block/jar_glass",
         "lid": "herbalis:block/rack_wood",
+        "copper": "herbalis:block/pipe_copper",
+        "label": "herbalis:block/jar_label",
     }
     if weed_texture is not None:
         elements.insert(0, box([5.5, 0.5, 5.5],
@@ -587,13 +603,15 @@ def tank_cuve_model(name: str, water_height: float | None) -> None:
 
 def tank_gauges(wall: float, y0: float, y1: float,
                 fill: float | None) -> list[dict]:
-    """Jauge verticale au centre des quatre faces d'un caisson ferme.
+    """Jauge verticale au centre des quatre faces d'un caisson ferme,
+    encadree de deux rails de cuivre.
 
     wall : coordonnee de la paroi nord. fill : hauteur d'eau, None a vide.
     """
     elements = []
     hw = 1.15
     slot_uv = [2, 7.55, 4, 7.95]  # bande sombre des joints de tole
+    rail_uv = [6, 2, 8, 14]
     for axis in ("z", "x"):
         for positive in (False, True):
             if positive:
@@ -610,6 +628,10 @@ def tank_gauges(wall: float, y0: float, y1: float,
 
             elements.append(nbox(8 - hw, 8 + hw, n0, n1, y0, y1,
                                  "#iron", slot_uv))
+            for rail_a, rail_b in ((8 - hw - 0.8, 8 - hw - 0.1),
+                                   (8 + hw + 0.1, 8 + hw + 0.8)):
+                elements.append(nbox(rail_a, rail_b, n0, n1,
+                                     y0 - 0.5, y1 + 0.5, "#copper", rail_uv))
             if fill is not None:
                 water = nbox(8 - hw + 0.3, 8 + hw - 0.3, w0, w1,
                              y0 + 0.35, fill, "#water", [2, 2, 14, 14])
@@ -627,12 +649,15 @@ TANK_METAL_TEXTURES = {
 
 
 def tank_citerne_model(name: str, fill: float | None) -> None:
-    """Citerne rivetee fermee, trappe sur le dessus, jauges en facade."""
+    """Citerne rivetee fermee, cerclee de cuivre en jupe et en couronne,
+    trappe sur le dessus, jauges en facade."""
     elements = [
         box([1, 0, 1], [15, 15, 15], "#iron"),
+        *copper_rim(0.7, 0, 0.7, 15.3, 15.3, thickness=1.5, width=1.1),
+        *copper_rim(0.7, 13.7, 0.7, 15.3, 15.3, thickness=1.3, width=1.1),
         box([5.6, 15, 5.6], [10.4, 16.4, 10.4], "#iron"),
         box([6.8, 16.4, 6.8], [9.2, 17.2, 9.2], "#copper"),
-        *tank_gauges(1, 2, 13, fill),
+        *tank_gauges(1, 2.4, 13.2, fill),
     ]
     write(ASSETS / "models" / "block" / f"{name}.json", {
         "parent": "minecraft:block/block",
@@ -674,8 +699,14 @@ def silo_model(name: str, content_height: float | None) -> None:
         box([13.2, 0, 1.2], [14.8, 9.2, 2.8], "#wood"),
         box([1.2, 0, 13.2], [2.8, 9.2, 14.8], "#wood"),
         box([13.2, 0, 13.2], [14.8, 9.2, 14.8], "#wood"),
-        # Tremie qui s'affine vers la goulotte.
+        # Entretoises basses entre les pieds.
+        box([2.8, 1.2, 1.6], [13.2, 2.2, 2.4], "#wood"),
+        box([2.8, 1.2, 13.6], [13.2, 2.2, 14.4], "#wood"),
+        box([1.6, 1.2, 2.8], [2.4, 2.2, 13.2], "#wood"),
+        box([13.6, 1.2, 2.8], [14.4, 2.2, 13.2], "#wood"),
+        # Tremie qui s'affine vers la goulotte, collier de cuivre au bec.
         box([6.6, 2.4, 6.6], [9.4, 4.6, 9.4], "#wood"),
+        box([6.2, 2.2, 6.2], [9.8, 3.4, 9.8], "#copper"),
         box([4.8, 4.6, 4.8], [11.2, 6.8, 11.2], "#wood"),
         box([3.0, 6.8, 3.0], [13.0, 9.2, 13.0], "#wood"),
         # Bac ouvert.
@@ -709,21 +740,32 @@ def silo_model(name: str, content_height: float | None) -> None:
 # ------------------------------------------------------------------
 
 def uv_lamp_model() -> None:
-    """Lampadaire de culture : socle, mat a col de cuivre, boitier et
-    panneau violet debordant qui eclaire vers le bas. Le display est
-    rendu fullbright en jeu, le panneau parait allume meme de nuit."""
+    """Lampadaire de culture : platine au sol, mat en deux futs joints
+    de cuivre, panneau violet debordant, capot a ailettes. Le display
+    est rendu fullbright en jeu, le panneau parait allume meme de nuit."""
     # Panneau lumineux plus large que le boitier : le violet se voit
     # de dessous, de cote et en lisere depuis le dessus.
-    glow = box([3.2, 11.8, 3.2], [12.8, 13.2, 12.8], "#glow", uv=FULL_UV)
+    glow = box([3.0, 12.0, 3.0], [13.0, 13.4, 13.0], "#glow", uv=FULL_UV)
     glow["shade"] = False
     elements = [
-        box([4.6, 0, 4.6], [11.4, 1.4, 11.4], "#metal"),
-        box([7.2, 1.4, 7.2], [8.8, 11.8, 8.8], "#metal"),
+        # Socle : platine large et fine, rehausse centrale.
+        box([3.9, 0, 3.9], [12.1, 1.0, 12.1], "#metal"),
+        box([6.4, 1.0, 6.4], [9.6, 2.0, 9.6], "#metal"),
+        # Mat : fut epais, joint de cuivre, fut fin. uv des cuivres
+        # force dans la bande claire (hors sillons sombres).
+        box([7.1, 2.0, 7.1], [8.9, 8.4, 8.9], "#metal"),
+        box([6.85, 8.0, 6.85], [9.15, 8.9, 9.15], "#copper",
+            uv=[2, 0.5, 14, 2.5]),
+        box([7.35, 8.9, 7.35], [8.65, 12.0, 8.65], "#metal"),
         # Col de cuivre sous le panneau.
-        box([6.7, 10.2, 6.7], [9.3, 11.8, 9.3], "#copper"),
+        box([6.6, 10.9, 6.6], [9.4, 12.0, 9.4], "#copper",
+            uv=[2, 0.5, 14, 2.5]),
         glow,
-        # Capot au-dessus du panneau lumineux.
-        box([3.8, 13.2, 3.8], [12.2, 14.8, 12.2], "#metal"),
+        # Capot et ailettes de refroidissement.
+        box([3.6, 13.4, 3.6], [12.4, 15.0, 12.4], "#metal"),
+        box([4.6, 15.0, 4.9], [11.4, 15.8, 6.1], "#metal"),
+        box([4.6, 15.0, 7.4], [11.4, 15.8, 8.6], "#metal"),
+        box([4.6, 15.0, 9.9], [11.4, 15.8, 11.1], "#metal"),
     ]
     write(ASSETS / "models" / "block" / "uv_lamp.json", {
         "parent": "minecraft:block/block",
