@@ -468,6 +468,10 @@ public final class DisplayRenderer {
     }
 
     private ItemDisplay spawnDisplayAt(Location loc, String model, String marker, BlockPos pos) {
+        // Les Item Display rendent les modeles d'item tournes de 180 degres
+        // autour de Y par rapport aux modeles de bloc : on compense pour que
+        // le nord du modele (z-) pointe vers le vrai nord (tuyaux connectes).
+        loc.setYaw(loc.getYaw() + 180f);
         return loc.getWorld().spawn(loc, ItemDisplay.class, display -> {
             display.setItemStack(ItemFactory.displayItem(model));
             display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
