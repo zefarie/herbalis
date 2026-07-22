@@ -9,6 +9,7 @@ import io.github.zefarie.herbalis.domain.irrigation.TankVisualState;
 import io.github.zefarie.herbalis.domain.plant.Plant;
 import io.github.zefarie.herbalis.infrastructure.item.ItemFactory;
 import io.github.zefarie.herbalis.infrastructure.item.ItemKeys;
+import io.github.zefarie.herbalis.infrastructure.world.CollisionBlocks;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.entity.Display;
@@ -217,6 +218,7 @@ public final class DisplayRenderer {
         }
         ItemDisplay display = spawnDisplay(center.get(), rackModel(state), MARKER_RACK, pos);
         Interaction interaction = spawnInteraction(pos, MARKER_RACK, 1.0f, 0.95f);
+        CollisionBlocks.place(pos);
         racks.put(pos, new Spawned(display.getUniqueId(), null,
                 interaction == null ? null : interaction.getUniqueId()));
     }
@@ -232,6 +234,7 @@ public final class DisplayRenderer {
     }
 
     public void removeRackVisual(BlockPos pos) {
+        CollisionBlocks.remove(pos);
         Spawned current = racks.remove(pos);
         if (current != null) {
             removeEntity(current.potDisplay());
@@ -251,6 +254,7 @@ public final class DisplayRenderer {
         }
         ItemDisplay display = spawnDisplay(center.get(), jarModel(state), MARKER_JAR, pos);
         Interaction interaction = spawnInteraction(pos, MARKER_JAR, 0.75f, 0.7f);
+        CollisionBlocks.place(pos);
         jars.put(pos, new Spawned(display.getUniqueId(), null,
                 interaction == null ? null : interaction.getUniqueId()));
     }
@@ -266,6 +270,7 @@ public final class DisplayRenderer {
     }
 
     public void removeJarVisual(BlockPos pos) {
+        CollisionBlocks.remove(pos);
         Spawned current = jars.remove(pos);
         if (current != null) {
             removeEntity(current.potDisplay());
@@ -288,6 +293,7 @@ public final class DisplayRenderer {
         ItemDisplay display = spawnDisplay(center.get(), model, MARKER_PIPE, pos);
         networkModels.put(pos, model);
         Interaction interaction = spawnInteraction(pos, MARKER_PIPE, 0.7f, 0.55f);
+        CollisionBlocks.place(pos);
         pipes.put(pos, new Spawned(display.getUniqueId(), null,
                 interaction == null ? null : interaction.getUniqueId()));
     }
@@ -297,6 +303,7 @@ public final class DisplayRenderer {
     }
 
     public void removePipeVisual(BlockPos pos) {
+        CollisionBlocks.remove(pos);
         removeSimple(pipes, pos);
     }
 
@@ -311,6 +318,7 @@ public final class DisplayRenderer {
         networkModels.put(pos, model);
         Interaction interaction = spawnInteraction(pos, MARKER_TANK,
                 tankHeight(size), 0.95f);
+        CollisionBlocks.place(pos);
         tanks.put(pos, new Spawned(display.getUniqueId(), null,
                 interaction == null ? null : interaction.getUniqueId()));
     }
@@ -321,6 +329,7 @@ public final class DisplayRenderer {
     }
 
     public void removeTankVisual(BlockPos pos) {
+        CollisionBlocks.remove(pos);
         removeSimple(tanks, pos);
     }
 
@@ -334,6 +343,7 @@ public final class DisplayRenderer {
         ItemDisplay display = spawnDisplay(center.get(), model, MARKER_SILO, pos);
         networkModels.put(pos, model);
         Interaction interaction = spawnInteraction(pos, MARKER_SILO, 1.0f, 0.9f);
+        CollisionBlocks.place(pos);
         silos.put(pos, new Spawned(display.getUniqueId(), null,
                 interaction == null ? null : interaction.getUniqueId()));
     }
@@ -343,6 +353,7 @@ public final class DisplayRenderer {
     }
 
     public void removeSiloVisual(BlockPos pos) {
+        CollisionBlocks.remove(pos);
         removeSimple(silos, pos);
     }
 
