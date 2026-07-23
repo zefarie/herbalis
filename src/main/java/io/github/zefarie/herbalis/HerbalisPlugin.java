@@ -25,6 +25,7 @@ import io.github.zefarie.herbalis.application.usecase.PlaceSiloUseCase;
 import io.github.zefarie.herbalis.application.usecase.PlaceTankUseCase;
 import io.github.zefarie.herbalis.application.usecase.PlantSeedUseCase;
 import io.github.zefarie.herbalis.application.usecase.PrunePlantUseCase;
+import io.github.zefarie.herbalis.application.usecase.ToggleLampUseCase;
 import io.github.zefarie.herbalis.application.usecase.TreatPlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.WaterPlantUseCase;
 import io.github.zefarie.herbalis.application.service.IrrigationService;
@@ -173,6 +174,7 @@ public final class HerbalisPlugin extends JavaPlugin {
         var breakSilo = new BreakSiloUseCase(siloRepo);
         var placeLamp = new PlaceLampUseCase(lampRepo);
         var breakLamp = new BreakLampUseCase(lampRepo);
+        var toggleLamp = new ToggleLampUseCase(lampRepo);
         var consume = new ConsumeUseCase(consumerRepo, drugs);
 
         // Services.
@@ -196,12 +198,12 @@ public final class HerbalisPlugin extends JavaPlugin {
                 config, occupancy, irrigation, layout, placePot, placeRack,
                 placeJar, placePipe, placeTank, placeSilo, placeLamp), this);
         pm.registerEvents(new PlantInteractListener(messages, fx, items, renderer,
-                drugs, config, hud, plantRepo, potRepo, rackRepo, jarRepo,
-                tankRepo, siloRepo, irrigation, layout,
+                drugs, config, hud, plantRepo, potRepo, rackRepo, pipeRepo,
+                jarRepo, tankRepo, siloRepo, irrigation, layout,
                 plantSeed, waterPlant, fertilizePlant, prunePlant, treatPlant,
                 harvestPlant, breakPlant, breakPot, addBud, collectRack,
                 breakRack, addToJar, collectJar, breakJar, breakPipe,
-                breakTank, breakSilo, breakLamp), this);
+                breakTank, breakSilo, breakLamp, toggleLamp), this);
         pm.registerEvents(new ProtectionListener(config, messages, fx, items,
                 renderer, drugs, potRepo, plantRepo, rackRepo, jarRepo,
                 tankRepo, siloRepo, lampRepo, occupancy, irrigation, layout,

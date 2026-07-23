@@ -3,6 +3,7 @@ package io.github.zefarie.herbalis.infrastructure.listener;
 import io.github.zefarie.herbalis.application.port.JarRepository;
 import io.github.zefarie.herbalis.application.port.PlantRepository;
 import io.github.zefarie.herbalis.application.port.PotRepository;
+import io.github.zefarie.herbalis.application.port.PipeRepository;
 import io.github.zefarie.herbalis.application.port.RackRepository;
 import io.github.zefarie.herbalis.application.port.SiloRepository;
 import io.github.zefarie.herbalis.application.port.TankRepository;
@@ -23,6 +24,7 @@ import io.github.zefarie.herbalis.application.usecase.FertilizePlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.HarvestPlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.PlantSeedUseCase;
 import io.github.zefarie.herbalis.application.usecase.PrunePlantUseCase;
+import io.github.zefarie.herbalis.application.usecase.ToggleLampUseCase;
 import io.github.zefarie.herbalis.application.usecase.TreatPlantUseCase;
 import io.github.zefarie.herbalis.application.usecase.WaterPlantUseCase;
 import io.github.zefarie.herbalis.domain.curing.JarVisualState;
@@ -54,12 +56,16 @@ import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
@@ -82,6 +88,7 @@ public final class PlantInteractListener implements Listener {
     private final PlantRepository plants;
     private final PotRepository pots;
     private final RackRepository racks;
+    private final PipeRepository pipes;
     private final JarRepository jars;
     private final TankRepository tanks;
     private final SiloRepository silos;
@@ -105,12 +112,14 @@ public final class PlantInteractListener implements Listener {
     private final BreakTankUseCase breakTank;
     private final BreakSiloUseCase breakSilo;
     private final BreakLampUseCase breakLamp;
+    private final ToggleLampUseCase toggleLamp;
 
     public PlantInteractListener(Messages messages, Fx fx, ItemFactory items,
                                  DisplayRenderer renderer, DrugRegistry drugs,
                                  HerbalisConfig config, HudService hud,
                                  PlantRepository plants, PotRepository pots,
-                                 RackRepository racks, JarRepository jars,
+                                 RackRepository racks, PipeRepository pipes,
+                                 JarRepository jars,
                                  TankRepository tanks, SiloRepository silos,
                                  IrrigationService irrigation, PipeLayout layout,
                                  PlantSeedUseCase plantSeed, WaterPlantUseCase waterPlant,
@@ -123,7 +132,8 @@ public final class PlantInteractListener implements Listener {
                                  BreakRackUseCase breakRack, AddToJarUseCase addToJar,
                                  CollectJarUseCase collectJar, BreakJarUseCase breakJar,
                                  BreakPipeUseCase breakPipe, BreakTankUseCase breakTank,
-                                 BreakSiloUseCase breakSilo, BreakLampUseCase breakLamp) {
+                                 BreakSiloUseCase breakSilo, BreakLampUseCase breakLamp,
+                                 ToggleLampUseCase toggleLamp) {
         this.messages = messages;
         this.fx = fx;
         this.items = items;
@@ -134,6 +144,7 @@ public final class PlantInteractListener implements Listener {
         this.plants = plants;
         this.pots = pots;
         this.racks = racks;
+        this.pipes = pipes;
         this.jars = jars;
         this.tanks = tanks;
         this.silos = silos;
@@ -157,6 +168,7 @@ public final class PlantInteractListener implements Listener {
         this.breakTank = breakTank;
         this.breakSilo = breakSilo;
         this.breakLamp = breakLamp;
+        this.toggleLamp = toggleLamp;
     }
 
     // ----------------------------------------------------------------
@@ -178,12 +190,18 @@ public final class PlantInteractListener implements Listener {
         Player player = event.getPlayer();
         long now = System.currentTimeMillis();
 
-        switch (marker.get()) {
-            case "pot" -> potRightClick(player, pos.get(), now);
-            case "rack" -> rackRightClick(player, pos.get(), now);
-            case "jar" -> jarRightClick(player, pos.get(), now);
-            case "tank" -> tankRightClick(player, pos.get());
-            case "silo" -> siloRightClick(player, pos.get());
+        routeRightClick(player, marker.get(), pos.get(), now);
+    }
+
+    private void routeRightClick(Player player, String marker, BlockPos pos,
+                                 long now) {
+        switch (marker) {
+            case "pot" -> potRightClick(player, pos, now);
+            case "rack" -> rackRightClick(player, pos, now);
+            case "jar" -> jarRightClick(player, pos, now);
+            case "tank" -> tankRightClick(player, pos);
+            case "silo" -> siloRightClick(player, pos);
+            case "lamp" -> lampRightClick(player, pos);
             default -> {
             }
         }
@@ -699,17 +717,112 @@ public final class PlantInteractListener implements Listener {
             return;
         }
 
-        switch (marker.get()) {
-            case "pot" -> potLeftClick(player, pos.get());
-            case "rack" -> rackLeftClick(player, pos.get());
-            case "jar" -> jarLeftClick(player, pos.get());
-            case "pipe" -> pipeLeftClick(player, pos.get());
-            case "tank" -> tankLeftClick(player, pos.get());
-            case "silo" -> siloLeftClick(player, pos.get());
-            case "lamp" -> lampLeftClick(player, pos.get());
+        routeLeftClick(player, marker.get(), pos.get());
+    }
+
+    private void routeLeftClick(Player player, String marker, BlockPos pos) {
+        switch (marker) {
+            case "pot" -> potLeftClick(player, pos);
+            case "rack" -> rackLeftClick(player, pos);
+            case "jar" -> jarLeftClick(player, pos);
+            case "pipe" -> pipeLeftClick(player, pos);
+            case "tank" -> tankLeftClick(player, pos);
+            case "silo" -> siloLeftClick(player, pos);
+            case "lamp" -> lampLeftClick(player, pos);
             default -> {
             }
         }
+    }
+
+    // ----------------------------------------------------------------
+    // Clics sur le bloc de collision : le client vise le barrier avant
+    // l'entite Interaction (surtout en creatif, ou il le casserait
+    // instantanement). On route donc les clics du bloc vers la meme
+    // logique que l'entite.
+    // ----------------------------------------------------------------
+
+    @EventHandler
+    public void onBarrierBreak(BlockBreakEvent event) {
+        if (event.getBlock().getType() != Material.BARRIER) {
+            return;
+        }
+        BlockPos pos = PosCodec.of(event.getBlock());
+        String marker = structureAt(pos).orElse(null);
+        if (marker == null) {
+            return;
+        }
+        event.setCancelled(true);
+        if (checkPlantPermission(event.getPlayer())) {
+            routeLeftClick(event.getPlayer(), marker, pos);
+        }
+    }
+
+    @EventHandler
+    public void onBarrierClick(PlayerInteractEvent event) {
+        Block block = event.getClickedBlock();
+        if (block == null || block.getType() != Material.BARRIER) {
+            return;
+        }
+        BlockPos pos = PosCodec.of(block);
+        String marker = structureAt(pos).orElse(null);
+        if (marker == null) {
+            return;
+        }
+        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+            event.setCancelled(true);
+            if (event.getHand() == EquipmentSlot.HAND
+                    && checkPlantPermission(event.getPlayer())) {
+                routeLeftClick(event.getPlayer(), marker, pos);
+            }
+        } else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            // Item posable en main : ItemUseListener gere la pose contre
+            // la face du barrier, on ne confisque pas le clic.
+            if (ItemKeys.typeOf(event.getItem())
+                    .filter(PlantInteractListener::placeable).isPresent()) {
+                return;
+            }
+            event.setCancelled(true);
+            if (event.getHand() == EquipmentSlot.HAND) {
+                routeRightClick(event.getPlayer(), marker, pos,
+                        System.currentTimeMillis());
+            }
+        }
+    }
+
+    /** Type de la structure Herbalis presente a cette position. */
+    private Optional<String> structureAt(BlockPos pos) {
+        if (pipes.has(pos)) {
+            return Optional.of("pipe");
+        }
+        if (racks.at(pos).isPresent()) {
+            return Optional.of("rack");
+        }
+        if (jars.at(pos).isPresent()) {
+            return Optional.of("jar");
+        }
+        if (tanks.at(pos).isPresent()) {
+            return Optional.of("tank");
+        }
+        if (silos.at(pos).isPresent()) {
+            return Optional.of("silo");
+        }
+        return Optional.empty();
+    }
+
+    private static boolean placeable(HerbalisItemType type) {
+        return switch (type) {
+            case POT, DRYING_RACK, CURING_JAR, TANK_CUVE, TANK_CITERNE,
+                 TANK_RESERVOIR, SILO, UV_LAMP, PIPE -> true;
+            default -> false;
+        };
+    }
+
+    private boolean checkPlantPermission(Player player) {
+        if (player.hasPermission("herbalis.plant")) {
+            return true;
+        }
+        player.sendMessage(messages.msg("erreurs.permission"));
+        return false;
     }
 
     private void potLeftClick(Player player, BlockPos pos) {
@@ -856,6 +969,29 @@ public final class PlantInteractListener implements Listener {
         loc.getWorld().dropItemNaturally(dropAt, items.silo());
         dropFertilizer(loc.getWorld(), dropAt, silo.doses());
         player.sendActionBar(messages.msg("irrigation.silo-casse"));
+    }
+
+    /** Clic droit main vide sur une lampe : on l'allume ou on l'eteint. */
+    private void lampRightClick(Player player, BlockPos pos) {
+        ItemStack held = player.getInventory().getItemInMainHand();
+        if (!held.getType().isAir()) {
+            return;
+        }
+        Location loc = PosCodec.corner(pos).orElse(null);
+        if (loc == null) {
+            return;
+        }
+        toggleLamp.execute(pos).ifPresent(enabled -> {
+            renderer.setLampLit(pos, enabled);
+            if (enabled) {
+                LampBlocks.place(pos, config.lampLightLevel());
+            } else {
+                LampBlocks.remove(pos);
+            }
+            fx.lampToggled(loc, enabled);
+            player.sendActionBar(messages.msg(
+                    enabled ? "lampe.allumee" : "lampe.eteinte"));
+        });
     }
 
     private void lampLeftClick(Player player, BlockPos pos) {
