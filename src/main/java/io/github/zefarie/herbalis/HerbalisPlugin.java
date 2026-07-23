@@ -103,8 +103,7 @@ public final class HerbalisPlugin extends JavaPlugin {
         saveResourceIfMissing("drugs/weed.yml");
 
         config = HerbalisConfig.from(getConfig());
-        messages = new Messages(YamlConfiguration.loadConfiguration(
-                new File(getDataFolder(), "messages.yml")));
+        messages = new Messages(loadMessagesYaml());
         drugLoader = new DrugConfigLoader(getLogger());
         drugs = new DrugRegistry();
         drugLoader.loadAll(new File(getDataFolder(), "drugs"))
@@ -281,14 +280,30 @@ public final class HerbalisPlugin extends JavaPlugin {
     private void reloadEverything() {
         reloadConfig();
         config.reload(getConfig());
-        messages.reload(YamlConfiguration.loadConfiguration(
-                new File(getDataFolder(), "messages.yml")));
+        messages.reload(loadMessagesYaml());
         drugs.clear();
         drugLoader.loadAll(new File(getDataFolder(), "drugs"))
                 .forEach(drugs::register);
         craftListener.registerRecipes(this);
         getLogger().info("Configuration rechargee (" + drugs.all().size()
                 + " drogue(s)).");
+    }
+
+    /**
+     * Charge messages.yml du dossier de donnees avec les textes embarques
+     * dans le jar en secours : les cles ajoutees par une mise a jour du
+     * plugin fonctionnent sans avoir a regenerer le fichier.
+     */
+    private YamlConfiguration loadMessagesYaml() {
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(
+                new File(getDataFolder(), "messages.yml"));
+        java.io.InputStream bundled = getResource("messages.yml");
+        if (bundled != null) {
+            yaml.setDefaults(YamlConfiguration.loadConfiguration(
+                    new java.io.InputStreamReader(bundled,
+                            java.nio.charset.StandardCharsets.UTF_8)));
+        }
+        return yaml;
     }
 
     private void saveResourceIfMissing(String path) {
