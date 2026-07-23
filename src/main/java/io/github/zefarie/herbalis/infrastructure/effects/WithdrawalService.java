@@ -83,7 +83,7 @@ public final class WithdrawalService {
             }
         }
         fx.withdrawalShiver(player);
-        player.sendActionBar(messages.random("manque.ambiance"));
+        fx.actionBar(player, messages.random("manque.ambiance"));
     }
 
     public void forget(UUID playerId) {

@@ -222,7 +222,7 @@ public final class PlantInteractListener implements Listener {
             renderer.removePlantVisual(pos);
             renderer.updatePotModel(pos, emptyPotModel(pos));
             fx.died(loc);
-            player.sendActionBar(messages.msg("culture.plante-morte-arrachee"));
+            fx.actionBar(player, messages.msg("culture.plante-morte-arrachee"));
             return;
         }
 
@@ -277,11 +277,11 @@ public final class PlantInteractListener implements Listener {
                         PlantVisuals.plantModel(success.plant(), drug),
                         PlantVisuals.scaleOf(success.plant(), drug));
                 fx.planted(loc);
-                player.sendActionBar(messages.msg("culture.graine-plantee",
+                fx.actionBar(player, messages.msg("culture.graine-plantee",
                         Messages.ph("drogue", drug.displayName())));
             }
             case PlantSeedUseCase.Result.AlreadyPlanted ignored ->
-                    player.sendActionBar(messages.msg("culture.deja-plante"));
+                    fx.actionBar(player, messages.msg("culture.deja-plante"));
             default -> {
             }
         }
@@ -291,7 +291,7 @@ public final class PlantInteractListener implements Listener {
         Integer damage = can.getData(DataComponentTypes.DAMAGE);
         Integer maxDamage = can.getData(DataComponentTypes.MAX_DAMAGE);
         if (damage != null && maxDamage != null && damage >= maxDamage) {
-            player.sendActionBar(messages.msg("arrosage.arrosoir-vide"));
+            fx.actionBar(player, messages.msg("arrosage.arrosoir-vide"));
             return;
         }
         switch (waterPlant.execute(pos)) {
@@ -306,14 +306,14 @@ public final class PlantInteractListener implements Listener {
                         drugs.byId(success.plant().drugId()),
                         pots.hasDripper(pos)));
                 fx.watered(loc);
-                player.sendActionBar(messages.msg("arrosage.arrosee"));
+                fx.actionBar(player, messages.msg("arrosage.arrosee"));
             }
             case WaterPlantUseCase.Result.AlreadyMoist ignored ->
-                    player.sendActionBar(messages.msg("arrosage.deja-humide"));
+                    fx.actionBar(player, messages.msg("arrosage.deja-humide"));
             case WaterPlantUseCase.Result.NoPlant ignored ->
-                    player.sendActionBar(messages.msg("culture.pot-vide-info"));
+                    fx.actionBar(player, messages.msg("culture.pot-vide-info"));
             case WaterPlantUseCase.Result.PlantDead ignored ->
-                    player.sendActionBar(messages.msg("culture.plante-morte-info"));
+                    fx.actionBar(player, messages.msg("culture.plante-morte-info"));
         }
     }
 
@@ -328,14 +328,14 @@ public final class PlantInteractListener implements Listener {
                         drugs.byId(success.plant().drugId()),
                         pots.hasDripper(pos)));
                 fx.fertilized(loc);
-                player.sendActionBar(messages.msg("engrais.applique"));
+                fx.actionBar(player, messages.msg("engrais.applique"));
             }
             case FertilizePlantUseCase.Result.AlreadyFertilized ignored ->
-                    player.sendActionBar(messages.msg("engrais.deja-applique"));
+                    fx.actionBar(player, messages.msg("engrais.deja-applique"));
             case FertilizePlantUseCase.Result.NoPlant ignored ->
-                    player.sendActionBar(messages.msg("culture.pot-vide-info"));
+                    fx.actionBar(player, messages.msg("culture.pot-vide-info"));
             case FertilizePlantUseCase.Result.PlantDead ignored ->
-                    player.sendActionBar(messages.msg("culture.plante-morte-info"));
+                    fx.actionBar(player, messages.msg("culture.plante-morte-info"));
         }
     }
 
@@ -360,7 +360,7 @@ public final class PlantInteractListener implements Listener {
         for (Quality seedQuality : success.seeds()) {
             loc.getWorld().dropItemNaturally(dropAt, items.seed(drug, seedQuality));
         }
-        player.sendActionBar(messages.msg(
+        fx.actionBar(player, messages.msg(
                 success.optimal() ? "recolte.optimale" : "recolte.tardive",
                 Messages.ph("nombre", String.valueOf(success.yield())),
                 Messages.ph("graines", String.valueOf(success.seeds().size())),
@@ -376,7 +376,7 @@ public final class PlantInteractListener implements Listener {
             return;
         }
         if (pots.hasDripper(pos)) {
-            player.sendActionBar(messages.msg("culture.goutte-deja"));
+            fx.actionBar(player, messages.msg("culture.goutte-deja"));
             return;
         }
         pots.setDripper(pos, true);
@@ -384,7 +384,7 @@ public final class PlantInteractListener implements Listener {
         renderer.updatePotModel(pos, PlantVisuals.potModel(
                 plant, plant.flatMap(p -> drugs.byId(p.drugId())), true));
         fx.dripperInstalled(loc);
-        player.sendActionBar(messages.msg("culture.goutte-installee"));
+        fx.actionBar(player, messages.msg("culture.goutte-installee"));
     }
 
     private void sprayAction(Player player, BlockPos pos, ItemStack sprayer,
@@ -392,7 +392,7 @@ public final class PlantInteractListener implements Listener {
         Integer damage = sprayer.getData(DataComponentTypes.DAMAGE);
         Integer maxDamage = sprayer.getData(DataComponentTypes.MAX_DAMAGE);
         if (damage != null && maxDamage != null && damage >= maxDamage) {
-            player.sendActionBar(messages.msg("nuisibles.pulverisateur-vide"));
+            fx.actionBar(player, messages.msg("nuisibles.pulverisateur-vide"));
             return;
         }
         switch (treatPlant.execute(pos)) {
@@ -402,14 +402,14 @@ public final class PlantInteractListener implements Listener {
                 }
                 renderer.pulsePlant(pos);
                 fx.sprayed(loc);
-                player.sendActionBar(messages.msg("nuisibles.traitee"));
+                fx.actionBar(player, messages.msg("nuisibles.traitee"));
             }
             case TreatPlantUseCase.Result.NotInfested ignored ->
-                    player.sendActionBar(messages.msg("nuisibles.plante-saine"));
+                    fx.actionBar(player, messages.msg("nuisibles.plante-saine"));
             case TreatPlantUseCase.Result.NoPlant ignored ->
-                    player.sendActionBar(messages.msg("culture.pot-vide-info"));
+                    fx.actionBar(player, messages.msg("culture.pot-vide-info"));
             case TreatPlantUseCase.Result.PlantDead ignored ->
-                    player.sendActionBar(messages.msg("culture.plante-morte-info"));
+                    fx.actionBar(player, messages.msg("culture.plante-morte-info"));
         }
     }
 
@@ -443,19 +443,19 @@ public final class PlantInteractListener implements Listener {
                             PlantVisuals.scaleOf(success.plant(), drug));
                 }
                 fx.pruned(loc);
-                player.sendActionBar(messages.msg("taille.reussie"));
+                fx.actionBar(player, messages.msg("taille.reussie"));
             }
             case PrunePlantUseCase.Result.Missed ignored -> {
                 wearShears(player, shears);
                 fx.pruneMissed(loc);
-                player.sendActionBar(messages.msg("taille.ratee"));
+                fx.actionBar(player, messages.msg("taille.ratee"));
             }
             case PrunePlantUseCase.Result.AlreadyTopped ignored ->
-                    player.sendActionBar(messages.msg("taille.deja-taillee"));
+                    fx.actionBar(player, messages.msg("taille.deja-taillee"));
             case PrunePlantUseCase.Result.PlantDead ignored ->
-                    player.sendActionBar(messages.msg("culture.plante-morte-info"));
+                    fx.actionBar(player, messages.msg("culture.plante-morte-info"));
             case PrunePlantUseCase.Result.NoPlant ignored ->
-                    player.sendActionBar(messages.msg("culture.pot-vide-info"));
+                    fx.actionBar(player, messages.msg("culture.pot-vide-info"));
         }
     }
 
@@ -488,15 +488,15 @@ public final class PlantInteractListener implements Listener {
                     renderer.updateRack(pos, RackVisualState.DRYING);
                     fx.rackAdd(loc);
                     DrugType drug = drugs.byId(drugId).orElseThrow();
-                    player.sendActionBar(messages.msg("sechage.tete-deposee",
+                    fx.actionBar(player, messages.msg("sechage.tete-deposee",
                             Messages.ph("nombre", String.valueOf(success.rack().slots().size())),
                             Messages.ph("capacite",
                                     String.valueOf(drug.drying().capacity()))));
                 }
                 case AddBudToRackUseCase.Result.RackFull ignored ->
-                        player.sendActionBar(messages.msg("sechage.rack-plein"));
+                        fx.actionBar(player, messages.msg("sechage.rack-plein"));
                 case AddBudToRackUseCase.Result.MixedDrugs ignored ->
-                        player.sendActionBar(messages.msg("sechage.melange-interdit"));
+                        fx.actionBar(player, messages.msg("sechage.melange-interdit"));
                 case AddBudToRackUseCase.Result.NoRack ignored -> {
                 }
             }
@@ -505,14 +505,14 @@ public final class PlantInteractListener implements Listener {
 
         var rack = racks.at(pos).orElse(null);
         if (rack == null || rack.isEmpty()) {
-            player.sendActionBar(messages.msg("hud.rack-vide"));
+            fx.actionBar(player, messages.msg("hud.rack-vide"));
             return;
         }
         DrugType drug = drugs.byId(rack.drugId()).orElse(null);
         boolean ready = drug != null && rack.isReady(now, drug.drying().duration());
         if (!ready && !player.isSneaking()) {
             // Pas encore sec : on montre la progression, sneak pour forcer.
-            hud.buildLine(pos, now).ifPresent(player::sendActionBar);
+            hud.buildLine(pos, now).ifPresent(line -> fx.actionBar(player, line));
             return;
         }
         if (!player.hasPermission("herbalis.harvest")) {
@@ -529,7 +529,7 @@ public final class PlantInteractListener implements Listener {
         }
         renderer.updateRack(pos, RackVisualState.EMPTY);
         fx.rackCollect(loc, success.anyEarly());
-        player.sendActionBar(messages.msg(success.anyEarly()
+        fx.actionBar(player, messages.msg(success.anyEarly()
                 ? "sechage.recupere-trop-tot" : "sechage.recupere"));
     }
 
@@ -554,18 +554,18 @@ public final class PlantInteractListener implements Listener {
                     renderer.updateJar(pos, JarVisualState.CURING);
                     fx.jarAdd(loc);
                     DrugType drug = drugs.byId(drugId).orElseThrow();
-                    player.sendActionBar(messages.msg("curing.tete-deposee",
+                    fx.actionBar(player, messages.msg("curing.tete-deposee",
                             Messages.ph("nombre",
                                     String.valueOf(success.jar().slots().size())),
                             Messages.ph("capacite",
                                     String.valueOf(drug.curing().capacity()))));
                 }
                 case AddToJarUseCase.Result.JarFull ignored ->
-                        player.sendActionBar(messages.msg("curing.jarre-pleine"));
+                        fx.actionBar(player, messages.msg("curing.jarre-pleine"));
                 case AddToJarUseCase.Result.MixedDrugs ignored ->
-                        player.sendActionBar(messages.msg("sechage.melange-interdit"));
+                        fx.actionBar(player, messages.msg("sechage.melange-interdit"));
                 case AddToJarUseCase.Result.Moldy ignored ->
-                        player.sendActionBar(messages.msg("curing.jarre-moisie-info"));
+                        fx.actionBar(player, messages.msg("curing.jarre-moisie-info"));
                 case AddToJarUseCase.Result.NoJar ignored -> {
                 }
             }
@@ -574,7 +574,7 @@ public final class PlantInteractListener implements Listener {
 
         var jar = jars.at(pos).orElse(null);
         if (jar == null || jar.isEmpty()) {
-            player.sendActionBar(messages.msg("hud.jarre-vide"));
+            fx.actionBar(player, messages.msg("hud.jarre-vide"));
             return;
         }
         DrugType drug = drugs.byId(jar.drugId()).orElse(null);
@@ -582,7 +582,7 @@ public final class PlantInteractListener implements Listener {
         boolean moldy = drug != null && jar.isMoldy(now, drug.curing());
         if (!ready && !moldy && !player.isSneaking()) {
             // Affinage en cours : progression, sneak pour forcer.
-            hud.buildLine(pos, now).ifPresent(player::sendActionBar);
+            hud.buildLine(pos, now).ifPresent(line -> fx.actionBar(player, line));
             return;
         }
         if (!player.hasPermission("herbalis.harvest")) {
@@ -601,7 +601,7 @@ public final class PlantInteractListener implements Listener {
         fx.jarCollect(loc, success.moldy());
         String key = success.moldy() ? "curing.recupere-moisi"
                 : success.anyEarly() ? "curing.recupere-trop-tot" : "curing.recupere";
-        player.sendActionBar(messages.msg(key));
+        fx.actionBar(player, messages.msg(key));
     }
 
     // ----------------------------------------------------------------
@@ -624,7 +624,7 @@ public final class PlantInteractListener implements Listener {
                 return;
             }
             if (tank.stock() >= capacity - 0.001) {
-                player.sendActionBar(messages.msg("irrigation.caisson-plein"));
+                fx.actionBar(player, messages.msg("irrigation.caisson-plein"));
                 return;
             }
             WaterTank filled = tank.filled(config.waterPerBucket(), capacity);
@@ -636,14 +636,14 @@ public final class PlantInteractListener implements Listener {
             renderer.updateTank(pos, filled.size(),
                     TankVisualState.of(filled.fillRatio(capacity)));
             fx.tankFilled(loc);
-            player.sendActionBar(messages.msg("irrigation.caisson-rempli",
+            fx.actionBar(player, messages.msg("irrigation.caisson-rempli",
                     Messages.ph("stock", bucketsOf(filled.stock())),
                     Messages.ph("capacite", String.valueOf(
                             config.tankCapacityBuckets(filled.size())))));
             player.swingMainHand();
             return;
         }
-        player.sendActionBar(messages.msg("irrigation.caisson-info",
+        fx.actionBar(player, messages.msg("irrigation.caisson-info",
                 Messages.ph("stock", bucketsOf(tank.stock())),
                 Messages.ph("capacite", String.valueOf(
                         config.tankCapacityBuckets(tank.size()))),
@@ -667,7 +667,7 @@ public final class PlantInteractListener implements Listener {
                 return;
             }
             if (silo.doses() >= capacity) {
-                player.sendActionBar(messages.msg("irrigation.silo-plein"));
+                fx.actionBar(player, messages.msg("irrigation.silo-plein"));
                 return;
             }
             held.subtract();
@@ -675,13 +675,13 @@ public final class PlantInteractListener implements Listener {
             silos.put(filled);
             renderer.updateSilo(pos, SiloVisualState.of(filled.doses(), capacity));
             fx.siloFilled(loc);
-            player.sendActionBar(messages.msg("irrigation.silo-rempli",
+            fx.actionBar(player, messages.msg("irrigation.silo-rempli",
                     Messages.ph("doses", String.valueOf(filled.doses())),
                     Messages.ph("capacite", String.valueOf(capacity))));
             player.swingMainHand();
             return;
         }
-        player.sendActionBar(messages.msg("irrigation.silo-info",
+        fx.actionBar(player, messages.msg("irrigation.silo-info",
                 Messages.ph("doses", String.valueOf(silo.doses())),
                 Messages.ph("capacite", String.valueOf(capacity)),
                 Messages.ph("pots", String.valueOf(irrigation.connectedPots(pos)))));
@@ -844,7 +844,7 @@ public final class PlantInteractListener implements Listener {
                                 items.seed(drug,
                                         Quality.of(plant.get().seedQuality()))));
             }
-            player.sendActionBar(messages.msg("culture.plante-arrachee"));
+            fx.actionBar(player, messages.msg("culture.plante-arrachee"));
             return;
         }
         boolean hadDripper = pots.hasDripper(pos);
@@ -859,7 +859,7 @@ public final class PlantInteractListener implements Listener {
         if (hadDripper) {
             loc.getWorld().dropItemNaturally(potDrop, items.dripper());
         }
-        player.sendActionBar(messages.msg("culture.pot-casse"));
+        fx.actionBar(player, messages.msg("culture.pot-casse"));
     }
 
     private void rackLeftClick(Player player, BlockPos pos) {
@@ -881,14 +881,14 @@ public final class PlantInteractListener implements Listener {
             racks.put(emptied);
             renderer.updateRack(pos, RackVisualState.EMPTY);
             fx.rackCollect(loc, true);
-            player.sendActionBar(messages.msg("sechage.contenu-rendu"));
+            fx.actionBar(player, messages.msg("sechage.contenu-rendu"));
             return;
         }
         breakRack.execute(pos);
         renderer.removeRackVisual(pos);
         fx.rackBroken(loc);
         loc.getWorld().dropItemNaturally(dropAt, items.dryingRack());
-        player.sendActionBar(messages.msg("sechage.rack-casse"));
+        fx.actionBar(player, messages.msg("sechage.rack-casse"));
     }
 
     private void jarLeftClick(Player player, BlockPos pos) {
@@ -909,14 +909,14 @@ public final class PlantInteractListener implements Listener {
             jars.put(jar.emptied());
             renderer.updateJar(pos, JarVisualState.EMPTY);
             fx.jarCollect(loc, false);
-            player.sendActionBar(messages.msg("curing.contenu-rendu"));
+            fx.actionBar(player, messages.msg("curing.contenu-rendu"));
             return;
         }
         breakJar.execute(pos);
         renderer.removeJarVisual(pos);
         fx.jarBroken(loc);
         loc.getWorld().dropItemNaturally(dropAt, items.curingJar());
-        player.sendActionBar(messages.msg("curing.jarre-cassee"));
+        fx.actionBar(player, messages.msg("curing.jarre-cassee"));
     }
 
     private void pipeLeftClick(Player player, BlockPos pos) {
@@ -930,7 +930,7 @@ public final class PlantInteractListener implements Listener {
         fx.pipeBroken(loc);
         loc.getWorld().dropItemNaturally(
                 loc.clone().add(0.5, 0.4, 0.5), items.pipe());
-        player.sendActionBar(messages.msg("irrigation.tuyau-casse"));
+        fx.actionBar(player, messages.msg("irrigation.tuyau-casse"));
     }
 
     private void tankLeftClick(Player player, BlockPos pos) {
@@ -949,7 +949,7 @@ public final class PlantInteractListener implements Listener {
         fx.tankBroken(loc, !tank.isEmpty());
         loc.getWorld().dropItemNaturally(
                 loc.clone().add(0.5, 0.4, 0.5), items.tank(tank.size()));
-        player.sendActionBar(messages.msg("irrigation.caisson-casse"));
+        fx.actionBar(player, messages.msg("irrigation.caisson-casse"));
     }
 
     private void siloLeftClick(Player player, BlockPos pos) {
@@ -968,7 +968,7 @@ public final class PlantInteractListener implements Listener {
         Location dropAt = loc.clone().add(0.5, 0.4, 0.5);
         loc.getWorld().dropItemNaturally(dropAt, items.silo());
         dropFertilizer(loc.getWorld(), dropAt, silo.doses());
-        player.sendActionBar(messages.msg("irrigation.silo-casse"));
+        fx.actionBar(player, messages.msg("irrigation.silo-casse"));
     }
 
     /** Clic droit main vide sur une lampe : on l'allume ou on l'eteint. */
@@ -989,7 +989,7 @@ public final class PlantInteractListener implements Listener {
                 LampBlocks.remove(pos);
             }
             fx.lampToggled(loc, enabled);
-            player.sendActionBar(messages.msg(
+            fx.actionBar(player, messages.msg(
                     enabled ? "lampe.allumee" : "lampe.eteinte"));
         });
     }
@@ -1004,7 +1004,7 @@ public final class PlantInteractListener implements Listener {
         fx.lampBroken(loc);
         loc.getWorld().dropItemNaturally(
                 loc.clone().add(0.5, 0.4, 0.5), items.uvLamp());
-        player.sendActionBar(messages.msg("lampe.cassee"));
+        fx.actionBar(player, messages.msg("lampe.cassee"));
     }
 
     /** Les doses restantes sont rendues en items d'engrais. */

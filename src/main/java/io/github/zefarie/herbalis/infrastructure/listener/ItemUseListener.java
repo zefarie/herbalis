@@ -156,17 +156,17 @@ public final class ItemUseListener implements Listener {
             return;
         }
         if (face != BlockFace.UP || !clicked.isSolid()) {
-            player.sendActionBar(messages.msg("culture.pose-surface-invalide"));
+            fx.actionBar(player, messages.msg("culture.pose-surface-invalide"));
             return;
         }
         Block target = clicked.getRelative(BlockFace.UP);
         if (!target.getType().isAir()) {
-            player.sendActionBar(messages.msg("culture.pose-place-occupee"));
+            fx.actionBar(player, messages.msg("culture.pose-place-occupee"));
             return;
         }
         BlockPos pos = PosCodec.of(target);
         if (occupancy.occupied(pos)) {
-            player.sendActionBar(messages.msg("culture.pose-place-occupee"));
+            fx.actionBar(player, messages.msg("culture.pose-place-occupee"));
             return;
         }
 
@@ -182,7 +182,7 @@ public final class ItemUseListener implements Listener {
             default -> false;
         };
         if (!placed) {
-            player.sendActionBar(messages.msg("culture.pose-place-occupee"));
+            fx.actionBar(player, messages.msg("culture.pose-place-occupee"));
             return;
         }
 
@@ -195,17 +195,17 @@ public final class ItemUseListener implements Listener {
                     layout.refreshAround(pos);
                     irrigation.invalidate();
                     fx.potPlaced(loc);
-                    player.sendActionBar(messages.msg("culture.pot-pose"));
+                    fx.actionBar(player, messages.msg("culture.pot-pose"));
                 }
                 case DRYING_RACK -> {
                     renderer.showRack(pos, RackVisualState.EMPTY);
                     fx.rackPlaced(loc);
-                    player.sendActionBar(messages.msg("sechage.rack-pose"));
+                    fx.actionBar(player, messages.msg("sechage.rack-pose"));
                 }
                 case CURING_JAR -> {
                     renderer.showJar(pos, JarVisualState.EMPTY);
                     fx.jarPlaced(loc);
-                    player.sendActionBar(messages.msg("curing.jarre-posee"));
+                    fx.actionBar(player, messages.msg("curing.jarre-posee"));
                 }
                 case TANK_CUVE, TANK_CITERNE, TANK_RESERVOIR -> {
                     TankSize size = ItemFactory.tankSizeOf(type).orElseThrow();
@@ -213,20 +213,20 @@ public final class ItemUseListener implements Listener {
                     layout.refreshAround(pos);
                     irrigation.invalidate();
                     fx.tankPlaced(loc);
-                    player.sendActionBar(messages.msg("irrigation.caisson-pose"));
+                    fx.actionBar(player, messages.msg("irrigation.caisson-pose"));
                 }
                 case SILO -> {
                     renderer.showSilo(pos, SiloVisualState.EMPTY);
                     layout.refreshAround(pos);
                     irrigation.invalidate();
                     fx.siloPlaced(loc);
-                    player.sendActionBar(messages.msg("irrigation.silo-pose"));
+                    fx.actionBar(player, messages.msg("irrigation.silo-pose"));
                 }
                 case UV_LAMP -> {
                     renderer.showLamp(pos, true);
                     LampBlocks.place(pos, config.lampLightLevel());
                     fx.lampPlaced(loc);
-                    player.sendActionBar(messages.msg("lampe.posee"));
+                    fx.actionBar(player, messages.msg("lampe.posee"));
                 }
                 default -> {
                 }
@@ -244,12 +244,12 @@ public final class ItemUseListener implements Listener {
         }
         Block target = clicked.getRelative(face);
         if (!target.getType().isAir()) {
-            player.sendActionBar(messages.msg("culture.pose-place-occupee"));
+            fx.actionBar(player, messages.msg("culture.pose-place-occupee"));
             return;
         }
         BlockPos pos = PosCodec.of(target);
         if (occupancy.occupied(pos) || !placePipe.execute(pos)) {
-            player.sendActionBar(messages.msg("culture.pose-place-occupee"));
+            fx.actionBar(player, messages.msg("culture.pose-place-occupee"));
             return;
         }
         held.subtract();
@@ -257,7 +257,7 @@ public final class ItemUseListener implements Listener {
         layout.refreshAround(pos);
         irrigation.invalidate();
         PosCodec.corner(pos).ifPresent(fx::pipePlaced);
-        player.sendActionBar(messages.msg("irrigation.tuyau-pose"));
+        fx.actionBar(player, messages.msg("irrigation.tuyau-pose"));
         player.swingMainHand();
     }
 
@@ -265,12 +265,12 @@ public final class ItemUseListener implements Listener {
     private void refill(Player player, ItemStack tool) {
         Integer damage = tool.getData(DataComponentTypes.DAMAGE);
         if (damage == null || damage == 0) {
-            player.sendActionBar(messages.msg("arrosage.deja-plein"));
+            fx.actionBar(player, messages.msg("arrosage.deja-plein"));
             return;
         }
         tool.setData(DataComponentTypes.DAMAGE, 0);
         fx.canRefilled(player.getLocation());
-        player.sendActionBar(messages.msg("arrosage.rempli"));
+        fx.actionBar(player, messages.msg("arrosage.rempli"));
         player.swingMainHand();
     }
 
@@ -297,7 +297,7 @@ public final class ItemUseListener implements Listener {
             }
         }
         if (best == null) {
-            player.sendActionBar(messages.msg("conditionnement.rien-a-emballer"));
+            fx.actionBar(player, messages.msg("conditionnement.rien-a-emballer"));
             return;
         }
         var drug = ItemKeys.drugOf(best).flatMap(drugs::byId).orElse(null);
@@ -310,7 +310,7 @@ public final class ItemUseListener implements Listener {
         player.getInventory().addItem(filled).values().forEach(rest ->
                 player.getWorld().dropItemNaturally(player.getLocation(), rest));
         fx.pouchFilled(player);
-        player.sendActionBar(messages.msg("conditionnement.pochon-rempli",
+        fx.actionBar(player, messages.msg("conditionnement.pochon-rempli",
                 Messages.ph("etoiles", messages.deserialize(items.starsMarkup(bestQuality)))));
     }
 

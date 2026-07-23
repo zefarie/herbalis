@@ -317,6 +317,17 @@ public final class Fx {
         sound(loc, "minecraft:block.respawn_anchor.charge", 0.4f, 1.6f);
     }
 
+    /**
+     * Retour d'action dans l'actionbar : coupe si l'interface
+     * minimaliste est activee (effets-visuels.actionbar: false).
+     */
+    public void actionBar(org.bukkit.entity.Player player,
+                          net.kyori.adventure.text.Component message) {
+        if (config.actionbarEnabled()) {
+            player.sendActionBar(message);
+        }
+    }
+
     public void lampToggled(Location loc, boolean enabled) {
         if (enabled) {
             particles(loc, w -> lampGlow(w, loc, 5));

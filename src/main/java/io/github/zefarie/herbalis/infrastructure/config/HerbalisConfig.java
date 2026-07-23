@@ -17,6 +17,7 @@ public final class HerbalisConfig {
             boolean particlesEnabled,
             boolean soundsEnabled,
             boolean plantSwayEnabled,
+            boolean actionbarEnabled,
             boolean hudEnabled,
             double hudRange,
             int wateringCanCharges,
@@ -58,6 +59,7 @@ public final class HerbalisConfig {
                 config.getBoolean("effets-visuels.particules", true),
                 config.getBoolean("effets-visuels.sons", true),
                 config.getBoolean("effets-visuels.animation-plantes", true),
+                config.getBoolean("effets-visuels.actionbar", false),
                 config.getBoolean("hud.actif", true),
                 config.getDouble("hud.portee", 5.0),
                 Math.max(1, config.getInt("arrosoir.charges", 8)),
@@ -97,6 +99,10 @@ public final class HerbalisConfig {
 
     public boolean plantSwayEnabled() {
         return data.plantSwayEnabled();
+    }
+
+    public boolean actionbarEnabled() {
+        return data.actionbarEnabled();
     }
 
     public boolean hudEnabled() {

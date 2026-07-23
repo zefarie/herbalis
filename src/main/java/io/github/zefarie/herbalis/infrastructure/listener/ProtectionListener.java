@@ -121,7 +121,7 @@ public final class ProtectionListener implements Listener {
     public void onBlockPlace(BlockPlaceEvent event) {
         if (occupied(PosCodec.of(event.getBlock()))) {
             event.setCancelled(true);
-            event.getPlayer().sendActionBar(
+            fx.actionBar(event.getPlayer(), 
                     messages.msg("culture.pose-place-occupee"));
         }
     }

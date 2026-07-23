@@ -70,7 +70,7 @@ public final class EffectService {
                 new SqliteSessionStore.StoredSession(drug.id(), outcome.timeline(), now));
 
         fx.jointLit(player);
-        player.sendActionBar(messages.msg("consommation.allumage"));
+        fx.actionBar(player, messages.msg("consommation.allumage"));
     }
 
     /** Reprend les sessions persistees (demarrage, reconnexion). */
@@ -119,11 +119,11 @@ public final class EffectService {
                 fx.smokePuff(player);
                 if (progress >= 0.35 && session.riseStep < 1) {
                     session.riseStep = 1;
-                    player.sendActionBar(messages.msg("consommation.montee-1"));
+                    fx.actionBar(player, messages.msg("consommation.montee-1"));
                 }
                 if (progress >= 0.7 && session.riseStep < 2) {
                     session.riseStep = 2;
-                    player.sendActionBar(messages.msg("consommation.montee-2"));
+                    fx.actionBar(player, messages.msg("consommation.montee-2"));
                     // Premiers effets, encore timides.
                     PotionEffects.applyPersistent(player, drug.effects().highEffects(), 1, 100);
                 }
@@ -142,7 +142,7 @@ public final class EffectService {
                 fx.highAura(player, timeline.intensity());
                 if (now >= session.nextAmbientAt) {
                     session.nextAmbientAt = now + ambientDelay();
-                    player.sendActionBar(messages.random("consommation.ambiance-high"));
+                    fx.actionBar(player, messages.random("consommation.ambiance-high"));
                 }
             }
             case COMEDOWN -> {
@@ -151,13 +151,13 @@ public final class EffectService {
                     PotionEffects.remove(player, drug.effects().highEffects());
                     PotionEffects.applyOneShots(player,
                             drug.effects().comedownEffects(), stars, 160);
-                    player.sendActionBar(messages.msg("consommation.descente"));
+                    fx.actionBar(player, messages.msg("consommation.descente"));
                     fx.comedownStart(player);
                 }
                 PotionEffects.applyPersistent(player, drug.effects().comedownEffects(), stars, 90);
                 if (now >= session.nextAmbientAt) {
                     session.nextAmbientAt = now + ambientDelay();
-                    player.sendActionBar(messages.random("consommation.ambiance-descente"));
+                    fx.actionBar(player, messages.random("consommation.ambiance-descente"));
                 }
             }
             case DONE -> end(player, session, true);
@@ -178,7 +178,7 @@ public final class EffectService {
             PotionEffects.remove(player, drug.effects().comedownEffects());
         }
         if (gracefully) {
-            player.sendActionBar(messages.msg("consommation.fin"));
+            fx.actionBar(player, messages.msg("consommation.fin"));
         }
     }
 

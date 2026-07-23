@@ -28,6 +28,9 @@ effets-visuels:
   sons: true
   # Animation continue des plantes : balancement doux et respiration.
   animation-plantes: true
+  # Retours d'action dans l'actionbar (pose, casse, recolte, effets...).
+  # Desactive par defaut : les particules et les sons suffisent.
+  actionbar: false
 
 hud:
   # Action bar d'etat quand on regarde une plante, un pot ou un rack.

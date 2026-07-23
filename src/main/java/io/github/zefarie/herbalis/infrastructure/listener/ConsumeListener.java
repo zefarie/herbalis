@@ -102,9 +102,9 @@ public final class ConsumeListener implements Listener {
                     target.getWorld().dropItemNaturally(target.getLocation(), rest));
         }
         fx.jointPassed(giver, target);
-        giver.sendActionBar(messages.msg("consommation.joint-passe",
+        fx.actionBar(giver, messages.msg("consommation.joint-passe",
                 Messages.ph("joueur", target.getName())));
-        target.sendActionBar(messages.msg("consommation.joint-recu",
+        fx.actionBar(target, messages.msg("consommation.joint-recu",
                 Messages.ph("joueur", giver.getName())));
     }
 }
