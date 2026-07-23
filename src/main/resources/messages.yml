@@ -297,6 +297,8 @@ irrigation:
 lampe:
   posee: "<color:#c4b5fd><font:herbalis:icons></font> Lampe UV allumée.</color> <color:#9ca3af>Lumière maximale pour les plantes autour.</color>"
   cassee: "<color:#fbbf24>Lampe UV récupérée.</color>"
+  allumee: "<color:#c4b5fd><font:herbalis:icons></font> Lampe UV allumée.</color>"
+  eteinte: "<color:#9ca3af><font:herbalis:icons></font> Lampe UV éteinte.</color>"
 
 recolte:
   optimale: "<color:#4ade80><font:herbalis:icons></font> <nombre> tête(s) au meilleur moment, +<graines> graine(s) !</color> <etoiles>"

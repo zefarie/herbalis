@@ -223,7 +223,7 @@ public final class ItemUseListener implements Listener {
                     player.sendActionBar(messages.msg("irrigation.silo-pose"));
                 }
                 case UV_LAMP -> {
-                    renderer.showLamp(pos);
+                    renderer.showLamp(pos, true);
                     LampBlocks.place(pos, config.lampLightLevel());
                     fx.lampPlaced(loc);
                     player.sendActionBar(messages.msg("lampe.posee"));

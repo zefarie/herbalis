@@ -123,10 +123,15 @@ public final class WorldSync {
         }
         for (BlockPos pos : lamps.all()) {
             if (inChunk(pos, worldId, chunk.getX(), chunk.getZ())) {
-                renderer.showLamp(pos);
-                // Le bloc lumineux est persistant, mais on le repose au cas
-                // ou il aurait ete efface (WorldEdit, /fill, reset partiel).
-                LampBlocks.place(pos, config.lampLightLevel());
+                boolean enabled = lamps.isEnabled(pos);
+                renderer.showLamp(pos, enabled);
+                // Le bloc lumineux est persistant, mais on le resynchronise
+                // au cas ou (WorldEdit, /fill, reset partiel, etat bascule).
+                if (enabled) {
+                    LampBlocks.place(pos, config.lampLightLevel());
+                } else {
+                    LampBlocks.remove(pos);
+                }
             }
         }
     }

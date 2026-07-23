@@ -172,8 +172,11 @@ public final class Database implements AutoCloseable {
                         x INTEGER NOT NULL,
                         y INTEGER NOT NULL,
                         z INTEGER NOT NULL,
+                        enabled INTEGER NOT NULL DEFAULT 1,
                         PRIMARY KEY (world, x, y, z)
                     )""");
+            addColumnIfMissing(statement, "lamps", "enabled",
+                    "INTEGER NOT NULL DEFAULT 1");
             statement.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS players (
                         uuid TEXT PRIMARY KEY,

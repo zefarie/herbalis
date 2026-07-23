@@ -58,6 +58,7 @@ public final class DisplayRenderer {
     private final Map<BlockPos, Spawned> tanks = new HashMap<>();
     private final Map<BlockPos, Spawned> silos = new HashMap<>();
     private final Map<BlockPos, Spawned> lamps = new HashMap<>();
+    private final Map<BlockPos, Boolean> lampsLit = new HashMap<>();
     private final Map<BlockPos, String> potModels = new HashMap<>();
     private final Map<BlockPos, String> plantModels = new HashMap<>();
     private final Map<BlockPos, String> networkModels = new HashMap<>();
@@ -358,32 +359,50 @@ public final class DisplayRenderer {
         removeSimple(silos, pos);
     }
 
-    /** Lampe UV : le display est fullbright, elle parait allumee de loin. */
-    public void showLamp(BlockPos pos) {
+    /** Lampe UV : le display allume est fullbright, il parait actif de loin. */
+    public void showLamp(BlockPos pos, boolean lit) {
         removeLampVisual(pos);
         Optional<Location> center = PosCodec.center(pos);
         if (center.isEmpty()) {
             return;
         }
         ItemDisplay display = spawnDisplay(center.get(), "uv_lamp", MARKER_LAMP, pos);
-        display.setBrightness(new Display.Brightness(15, 15));
+        display.setBrightness(lampBrightness(lit));
         Interaction interaction = spawnInteraction(pos, MARKER_LAMP, 1.0f, 0.6f);
+        lampsLit.put(pos, lit);
         lamps.put(pos, new Spawned(display.getUniqueId(), null,
                 interaction == null ? null : interaction.getUniqueId()));
     }
 
+    /** Bascule le visuel allume/eteint sans respawn. */
+    public void setLampLit(BlockPos pos, boolean lit) {
+        lampsLit.put(pos, lit);
+        Spawned current = lamps.get(pos);
+        if (current != null
+                && entity(current.potDisplay()) instanceof ItemDisplay display) {
+            display.setBrightness(lampBrightness(lit));
+        }
+    }
+
     public void removeLampVisual(BlockPos pos) {
+        lampsLit.remove(pos);
         removeSimple(lamps, pos);
     }
 
-    /** Parcourt les lampes vivantes (halo violet ambiant). */
+    /** Parcourt les lampes allumees vivantes (halo violet ambiant). */
     public void forEachLampDisplay(java.util.function.BiConsumer<BlockPos, ItemDisplay> consumer) {
         lamps.forEach((pos, spawned) -> {
-            if (entity(spawned.potDisplay()) instanceof ItemDisplay display
+            if (lampsLit.getOrDefault(pos, true)
+                    && entity(spawned.potDisplay()) instanceof ItemDisplay display
                     && display.isValid()) {
                 consumer.accept(pos, display);
             }
         });
+    }
+
+    private static Display.Brightness lampBrightness(boolean lit) {
+        return lit ? new Display.Brightness(15, 15)
+                : new Display.Brightness(0, 0);
     }
 
     private void updateNetworkModel(Spawned current, BlockPos pos, String model) {
@@ -418,6 +437,7 @@ public final class DisplayRenderer {
         tanks.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         silos.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         lamps.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
+        lampsLit.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         potModels.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         plantModels.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));
         networkModels.keySet().removeIf(pos -> inChunk(pos, worldId, chunkX, chunkZ));

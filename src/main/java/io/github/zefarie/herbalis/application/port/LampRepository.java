@@ -15,5 +15,10 @@ public interface LampRepository {
 
     void remove(BlockPos pos);
 
+    /** Une lampe posee est allumee par defaut. */
+    boolean isEnabled(BlockPos pos);
+
+    void setEnabled(BlockPos pos, boolean enabled);
+
     Collection<BlockPos> all();
 }

@@ -317,6 +317,16 @@ public final class Fx {
         sound(loc, "minecraft:block.respawn_anchor.charge", 0.4f, 1.6f);
     }
 
+    public void lampToggled(Location loc, boolean enabled) {
+        if (enabled) {
+            particles(loc, w -> lampGlow(w, loc, 5));
+            sound(loc, "minecraft:block.respawn_anchor.charge", 0.5f, 1.7f);
+        } else {
+            sound(loc, "minecraft:block.respawn_anchor.deplete", 0.5f, 1.4f);
+        }
+        sound(loc, "minecraft:block.lever.click", 0.6f, 1.2f);
+    }
+
     public void lampBroken(Location loc) {
         particles(loc, w -> w.spawnParticle(Particle.BLOCK, center(loc), 12,
                 0.2, 0.2, 0.2, 0.0, Material.AMETHYST_BLOCK.createBlockData()));
