@@ -217,7 +217,8 @@ public final class DisplayRenderer {
             return;
         }
         ItemDisplay display = spawnDisplay(center.get(), rackModel(state), MARKER_RACK, pos);
-        Interaction interaction = spawnInteraction(pos, MARKER_RACK, 1.0f, 0.95f);
+        // Le rack s'etend sur deux blocs de large : hitbox de clic elargie.
+        Interaction interaction = spawnInteraction(pos, MARKER_RACK, 1.0f, 1.9f);
         CollisionBlocks.place(pos);
         racks.put(pos, new Spawned(display.getUniqueId(), null,
                 interaction == null ? null : interaction.getUniqueId()));

@@ -401,19 +401,22 @@ def pot_model(name: str, soil_texture: str, dripper: bool = False) -> None:
 
 def rack_model(name: str, buds_texture: str | None,
                shrink: float = 1.0) -> None:
-    """shrink < 1 : les bouquets se resserrent en sechant (etat pret)."""
+    """Etendoir sur deux blocs de large : le modele deborde du bloc
+    central (-8..24, le format autorise -16..32). Les uv sont explicites
+    car les coordonnees sortent de la plage 0..16.
+    shrink < 1 : les bouquets se resserrent en sechant (etat pret)."""
     elements = [
-        box([0.4, 0, 6.3], [3.4, 1.4, 9.7], "#wood"),
-        box([12.6, 0, 6.3], [15.6, 1.4, 9.7], "#wood"),
-        box([1, 0, 6.9], [2.8, 15.2, 9.1], "#wood"),
-        box([13.2, 0, 6.9], [15, 15.2, 9.1], "#wood"),
-        box([0, 13.6, 7.1], [16, 15, 8.9], "#wood"),
+        box([-7.6, 0, 6.3], [-4.6, 1.4, 9.7], "#wood", uv=[0, 0, 3, 3.4]),
+        box([20.6, 0, 6.3], [23.6, 1.4, 9.7], "#wood", uv=[0, 0, 3, 3.4]),
+        box([-7, 0, 6.9], [-5.2, 15.2, 9.1], "#wood", uv=[0, 0.8, 1.8, 16]),
+        box([21.2, 0, 6.9], [23, 15.2, 9.1], "#wood", uv=[0, 0.8, 1.8, 16]),
+        box([-8, 13.6, 7.1], [24, 15, 8.9], "#wood", uv=[0, 1, 16, 2.4]),
         # Traverse basse et corbeaux sous la barre : le rack se tient.
-        box([2.8, 1.8, 7.4], [13.2, 3.0, 8.6], "#wood"),
-        box([2.8, 12.6, 7.5], [4.4, 13.6, 8.5], "#wood"),
-        box([11.6, 12.6, 7.5], [13.2, 13.6, 8.5], "#wood"),
+        box([-5.2, 1.8, 7.4], [21.2, 3.0, 8.6], "#wood", uv=[0, 13, 16, 14.2]),
+        box([-5.2, 12.6, 7.5], [-3.6, 13.6, 8.5], "#wood", uv=[0, 2.4, 1.6, 3.4]),
+        box([19.6, 12.6, 7.5], [21.2, 13.6, 8.5], "#wood", uv=[0, 2.4, 1.6, 3.4]),
     ]
-    bunches = ((4.6, 0.0), (8.0, -0.9), (11.4, 0.5))
+    bunches = ((-2.4, 0.0), (2.8, -0.9), (8.0, 0.5), (13.2, -0.6), (18.4, 0.2))
     # Crochets de cuivre au point d'attache des cordes.
     for x, _ in bunches:
         elements.append(box([x - 0.45, 13.3, 7.75], [x + 0.45, 13.8, 8.25],
@@ -445,10 +448,25 @@ def rack_model(name: str, buds_texture: str | None,
     }
     if buds_texture:
         textures["buds"] = f"herbalis:block/{buds_texture}"
+    # Le modele fait deux blocs de large : scales de block/block divises
+    # par deux pour la main, le sol et l'inventaire (le rendu monde des
+    # Item Display utilise le contexte NONE et n'est pas affecte).
+    half = [0.31, 0.31, 0.31]
+    display = {
+        "gui": {"rotation": [30, 225, 0], "scale": half},
+        "ground": {"translation": [0, 3, 0], "scale": [0.125, 0.125, 0.125]},
+        "fixed": {"scale": [0.25, 0.25, 0.25]},
+        "thirdperson_righthand": {"rotation": [75, 45, 0],
+                                  "translation": [0, 2.5, 0],
+                                  "scale": [0.19, 0.19, 0.19]},
+        "firstperson_righthand": {"rotation": [0, 45, 0], "scale": [0.2, 0.2, 0.2]},
+        "firstperson_lefthand": {"rotation": [0, 225, 0], "scale": [0.2, 0.2, 0.2]},
+    }
     write(ASSETS / "models" / "block" / f"{name}.json", {
         "parent": "minecraft:block/block",
         "textures": textures,
         "elements": elements,
+        "display": display,
     })
 
 
