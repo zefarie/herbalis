@@ -120,6 +120,12 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "items").mkdir(exist_ok=True)
 
+    print("Logo...")
+    logo = Image.open(ROOT / "resourcepack" / "pack.png").convert("RGBA")
+    logo = logo.resize((logo.width * 4, logo.height * 4), Image.NEAREST)
+    logo.save(OUT / "logo.png")
+    print("  docs/img/logo.png")
+
     print("Rendus...")
     stages = [merge_pot_plant("pot", f"plant_weed_stage_{n}")
               for n in (1, 2, 3, 4)]
