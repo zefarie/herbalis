@@ -1,9 +1,21 @@
-# Herbalis
+<h1 align="center">Herbalis</h1>
 
-Plugin de culture et de consommation de substances pour serveur roleplay
-Purpur/Paper 1.21.11, avec son resource pack. Scope v1 : la weed, sur une
-architecture multi-drogue (ajouter une drogue = un fichier de config et
-des assets, zéro refonte).
+<p align="center"><em>Culture, séchage et consommation de substances pour serveur roleplay<br>
+Paper/Purpur 1.21.11 — plantes 3D vivantes, réseau d'irrigation, qualité en étoiles.</em></p>
+
+<p align="center">
+  <img alt="Paper/Purpur 1.21.11" src="https://img.shields.io/badge/Paper%2FPurpur-1.21.11-2f6f4f?style=flat-square">
+  <img alt="Java 21" src="https://img.shields.io/badge/Java-21-b07219?style=flat-square">
+  <img alt="78 tests" src="https://img.shields.io/badge/tests-78-4c72b0?style=flat-square">
+  <img alt="Resource pack inclus" src="https://img.shields.io/badge/resource%20pack-inclus-8a6d3b?style=flat-square">
+</p>
+
+<p align="center"><img src="docs/img/banniere.png" width="880" alt="Plante en fleur, citerne, lampe UV, silo, rack de séchage et jarre de curing"></p>
+
+<img align="right" width="230" src="docs/img/croissance.gif" alt="Croissance d'un plant, de la pousse à la floraison">
+
+Scope v1 : la weed, sur une architecture multi-drogue (ajouter une
+drogue = un fichier de config et des assets, zéro refonte).
 
 Le plugin mise tout sur l'immersion : plantes sculptées en volumes 3D
 (vraies feuilles de cannabis dentelées à 5-7 folioles, branches
@@ -15,21 +27,23 @@ scintillent en fenêtre de récolte optimale, une feuille se détache
 parfois des plants matures, des gouttes perlent après l'arrosage.
 Arrosoir et joint en vrais models 3D en main, particules et sons sur
 chaque action (fumée de joint en spirale), hologrammes d'état privés
-au-dessus de ce que le joueur regarde (eau, terreau, qualité,
-alertes) avec une font d'icônes dessinée pour le pack, effets de
-consommation cinématiques (montée, plateau, descente, blackout),
-tolérance et manque persistants. Et de la profondeur de jeu : une
-culture au rythme d'une vraie plante (environ une semaine réelle de
-la graine au joint, la croissance continue chunk déchargé et serveur
-éteint), taille aux cisailles dans une fenêtre précise, nuisibles à
-traiter au pulvérisateur, goutte-à-goutte pour les cultivateurs peu
-présents, réseau d'irrigation en tuyaux de cuivre (caissons d'eau en
-trois tailles, silo d'engrais qui fertilise tout seul, tuyaux
-auto-connectés : pas relié, pas d'eau), lampe horticole UV fullbright
-qui éclaire vraiment les cultures d'intérieur, affinage en jarre de
-curing (avec moisissure punitive), génétique des graines sur
-plusieurs générations, joints à taffes qui se passent de main en
-main, toute la pipeline craftable.
+au-dessus de ce que le joueur regarde (eau, terreau, qualité, alertes)
+avec une font d'icônes dessinée pour le pack, effets de consommation
+cinématiques (montée, plateau, descente, blackout), tolérance et
+manque persistants.
+
+Et de la profondeur de jeu : une culture au rythme d'une vraie plante
+(environ une semaine réelle de la graine au joint, la croissance
+continue chunk déchargé et serveur éteint), taille aux cisailles dans
+une fenêtre précise, nuisibles à traiter au pulvérisateur,
+goutte-à-goutte pour les cultivateurs peu présents, réseau
+d'irrigation en tuyaux de cuivre (caissons d'eau en trois tailles,
+silo d'engrais qui fertilise tout seul, tuyaux auto-connectés : pas
+relié, pas d'eau), lampe horticole UV fullbright qui éclaire vraiment
+les cultures d'intérieur, affinage en jarre de curing (avec
+moisissure punitive), génétique des graines sur plusieurs
+générations, joints à taffes qui se passent de main en main, toute la
+pipeline craftable.
 
 ## Installation
 
@@ -62,59 +76,17 @@ Aucune dépendance externe : pas d'ItemsAdder, Oraxen ou Nexo. Le driver
 SQLite est déclaré dans `plugin.yml` (section `libraries`) et téléchargé
 par le serveur au premier démarrage.
 
-## Cycle de jeu : de la graine au joint
+## De la graine au joint
+
+<p align="center"><img src="docs/img/croissance.png" width="880" alt="Les quatre stages de croissance puis la fenêtre de récolte optimale"></p>
+<p align="center"><sub>Les 4 stages de croissance, puis la variante givrée de la fenêtre de récolte optimale.</sub></p>
 
 1. **Poser un pot de culture** : clic droit avec le pot sur une surface
    solide. Le pot est une entité 3D, pas un bloc vanilla détourné.
 2. **Planter une graine** : clic droit sur le pot avec une graine de
    weed. La pousse apparaît avec une petite animation de scale.
-3. **Entretenir** :
-   - **Lumière** : niveau 12 minimum (configurable), sinon la
-     croissance est figée et le HUD l'indique. Une serre éclairée
-     pousse la nuit.
-   - **Arrosage** : l'hydratation baisse avec le temps (la jauge
-     pleine tient environ une journée : comme une vraie plante, elle
-     s'arrose une à deux fois par jour). Arrosoir en main, clic droit
-     sur la plante. L'arrosoir a 8 charges et se recharge d'un clic
-     droit sur un bloc d'eau. Une plante à sec arrête de pousser,
-     jaunit (6 h), puis meurt (24 h de plus, le pot reste) : environ
-     deux jours de négligence lui sont fatals.
-   - **Engrais** : un par stage, accélère le stage en cours et
-     améliore la qualité potentielle.
-   - **Goutte-à-goutte (craftable)** : installé sur le pot (petit
-     réservoir sur piquet, visible), il divise la perte d'eau par
-     deux. Rendu en cassant le pot.
-   - **Réseau d'irrigation** : des caissons d'eau (cuve 16 seaux,
-     citerne 64, réservoir industriel 256, configurables) se
-     remplissent au seau et abreuvent automatiquement les pots qui
-     leur sont **reliés par des tuyaux de cuivre**. Pas relié, pas
-     d'eau. Les tuyaux se posent sur n'importe quelle face (même en
-     l'air), se connectent visuellement entre eux et aux caissons,
-     silos et pots, et le niveau d'eau se lit sur le caisson (cuve
-     ouverte, jauges des citernes). Un pot relié ne demande plus
-     d'arrosoir tant que le réseau a du stock : environ un seau par
-     plante et par jour, deux fois moins avec un goutte-à-goutte.
-     L'hologramme de la plante affiche « reliée au réseau » ou
-     « réseau à sec », celui du caisson son stock et ses pots reliés.
-   - **Silo d'engrais** : chargé en doses d'engrais (16 par défaut),
-     il fertilise tout seul chaque nouveau stage des plantes reliées
-     au réseau. Cassé, il rend ses doses.
-   - **Lampe horticole UV** : lueur violette (halo de particules,
-     panneau LED fullbright visible de nuit) et vraie lumière niveau
-     15 : les caves deviennent des serres, croissance nocturne et
-     rattrapage compris.
-   - **Nuisibles** : une plante établie peut s'infester (moucherons
-     visibles, alerte à l'hologramme). Infestée, elle pousse deux
-     fois moins vite ; ignorée 12 h, elle est abîmée (-1 étoile à la
-     récolte, définitif). Le pulvérisateur craftable la traite en un
-     clic et se recharge sur l'eau.
-   - **Taille (topping)** : un coup de cisailles (l'outil vanilla)
-     aux stages 2 ou 3, dans la fenêtre du milieu de stage (le HUD
-     affiche des ciseaux quand c'est le moment) : +1 à 2 têtes à la
-     récolte, mais la plante encaisse la coupe et perd quelques
-     heures de progression. Hors fenêtre, la coupe abîme la plante
-     (-1 étoile). Une seule taille par plante, et les cisailles
-     s'usent (durabilité vanilla, configurable).
+3. **Entretenir** : lumière, eau, engrais, nuisibles, taille — tout le
+   détail dans [L'entretien](#lentretien) ci-dessous.
 4. **Croissance** : 4 stages (pousse, jeune plant, plant mature, plant
    en fleur), environ 4 jours réels jusqu'à la floraison par défaut,
    transitions animées par interpolation. La croissance suit le temps
@@ -123,44 +95,114 @@ par le serveur au premier démarrage.
    l'arroser). Une plante en extérieur pousse au rythme du soleil,
    rattrapage compris ; une serre éclairée pousse en continu.
    Regarder la plante fait flotter un hologramme d'état au-dessus
-   d'elle, visible de vous seul : nom et stage, eau, terreau
-   (humide, sec, fertilisé), qualité potentielle en étoiles et
-   alertes contextuelles. Pots vides, racks et jarres ont le leur.
+   d'elle, visible de vous seul : nom et stage, eau, terreau (humide,
+   sec, fertilisé), qualité potentielle en étoiles et alertes
+   contextuelles. Pots vides, racks et jarres ont le leur.
 5. **Récolter** : au stade final, clic droit main vide (ou aux
-   cisailles). Une fenêtre
-   optimale de 12 heures s'ouvre à la floraison : les buds givrent de
-   trichomes blancs et la plante scintille. Récolter dedans maximise
-   la qualité, après elle décline. La qualité (1 à 5 étoiles) combine
-   hydratation moyenne, engrais, timing de récolte et génétique de la
-   graine. La récolte rend aussi **2 ou 3 graines héritées** : la
-   plupart gardent les étoiles de la plante mère, certaines dérivent
-   d'une étoile. On sélectionne sa lignée au fil des générations.
-6. **Sécher** : poser un rack de séchage, y suspendre jusqu'à 6 têtes
-   fraîches (clic droit). Un jour en temps réel, le séchage continue
-   serveur éteint. Le modèle du rack change selon son état et des
-   particules discrètes signalent de loin qu'il est prêt. Retirer trop
-   tôt (sneak + clic droit) coûte de la qualité.
-7. **Affiner (curing, optionnel)** : déposer la weed séchée dans une
-   jarre de curing (jusqu'à 6 têtes, contenu visible à travers le
-   verre). Deux jours en temps réel (continue serveur éteint) :
-   +1 étoile. Mais une jarre oubliée moisit deux jours après la fin
-   d'affinage : tout le contenu est ruiné (1 étoile), et une seule
-   tête moisie contamine la jarre entière.
-8. **Conditionner** : pochon vide en main, clic droit : la meilleure
+   cisailles). Une fenêtre optimale de 12 heures s'ouvre à la
+   floraison : les buds givrent de trichomes blancs et la plante
+   scintille. Récolter dedans maximise la qualité, après elle décline.
+   La qualité (1 à 5 étoiles) combine hydratation moyenne, engrais,
+   timing de récolte et génétique de la graine. La récolte rend aussi
+   **2 ou 3 graines héritées** : la plupart gardent les étoiles de la
+   plante mère, certaines dérivent d'une étoile. On sélectionne sa
+   lignée au fil des générations.
+6. **Sécher, affiner** : rack de séchage puis jarre de curing — voir
+   [Séchage et curing](#séchage-et-curing).
+7. **Conditionner** : pochon vide en main, clic droit : la meilleure
    weed séchée de l'inventaire est emballée, qualité héritée.
-9. **Rouler** : pochon + feuille à rouler dans une grille de craft
+8. **Rouler** : pochon + feuille à rouler dans une grille de craft
    (établi ou inventaire) = joint, qualité héritée.
-10. **Fumer et partager** : un joint contient 3 taffes (configurable).
-    Maintenir clic droit fume une taffe : braise à l'allumage, fumée
-    visible par tous, montée en 15 secondes par paliers avec messages
-    d'ambiance, plateau avec buffs (durée et intensité selon la
-    qualité : 2 minutes à 1 étoile, 6 minutes à 5 étoiles), descente
-    systématique (lenteur, faim, courte nausée). Le joint entamé
-    revient en main avec ses taffes restantes au lore. Clic droit sur
-    un joueur : on lui **passe le joint**, directement dans sa main
-    libre, messages des deux côtés. Tolérance, addiction et blackout
-    se comptent par taffe : un joint entier fumé seul et vite, c'est
-    déjà flirter avec le blackout.
+9. **Fumer et partager** : un joint contient 3 taffes (configurable).
+   Maintenir clic droit fume une taffe : braise à l'allumage, fumée
+   visible par tous, montée en 15 secondes par paliers avec messages
+   d'ambiance, plateau avec buffs (durée et intensité selon la
+   qualité : 2 minutes à 1 étoile, 6 minutes à 5 étoiles), descente
+   systématique (lenteur, faim, courte nausée). Le joint entamé
+   revient en main avec ses taffes restantes au lore. Clic droit sur
+   un joueur : on lui **passe le joint**, directement dans sa main
+   libre, messages des deux côtés. Tolérance, addiction et blackout
+   se comptent par taffe : un joint entier fumé seul et vite, c'est
+   déjà flirter avec le blackout.
+
+### L'entretien
+
+<p align="center"><img src="docs/img/etats.png" width="880" alt="Plante sur terreau fertilisé, goutte-à-goutte, plante assoiffée, plante morte"></p>
+<p align="center"><sub>Terreau fertilisé, goutte-à-goutte installé, plante à sec qui jaunit, plante morte.</sub></p>
+
+- **Lumière** : niveau 12 minimum (configurable), sinon la croissance
+  est figée et le HUD l'indique. Une serre éclairée pousse la nuit.
+- **Arrosage** : l'hydratation baisse avec le temps (la jauge pleine
+  tient environ une journée : comme une vraie plante, elle s'arrose
+  une à deux fois par jour). Arrosoir en main, clic droit sur la
+  plante. L'arrosoir a 8 charges et se recharge d'un clic droit sur
+  un bloc d'eau. Une plante à sec arrête de pousser, jaunit (6 h),
+  puis meurt (24 h de plus, le pot reste) : environ deux jours de
+  négligence lui sont fatals.
+- **Engrais** : un par stage, accélère le stage en cours et améliore
+  la qualité potentielle.
+- **Goutte-à-goutte (craftable)** : installé sur le pot (petit
+  réservoir sur piquet, visible), il divise la perte d'eau par deux.
+  Rendu en cassant le pot.
+- **Nuisibles** : une plante établie peut s'infester (moucherons
+  visibles, alerte à l'hologramme). Infestée, elle pousse deux fois
+  moins vite ; ignorée 12 h, elle est abîmée (-1 étoile à la récolte,
+  définitif). Le pulvérisateur craftable la traite en un clic et se
+  recharge sur l'eau.
+- **Taille (topping)** : un coup de cisailles (l'outil vanilla) aux
+  stages 2 ou 3, dans la fenêtre du milieu de stage (le HUD affiche
+  des ciseaux quand c'est le moment) : +1 à 2 têtes à la récolte,
+  mais la plante encaisse la coupe et perd quelques heures de
+  progression. Hors fenêtre, la coupe abîme la plante (-1 étoile).
+  Une seule taille par plante, et les cisailles s'usent (durabilité
+  vanilla, configurable).
+
+### Le réseau d'irrigation
+
+<p align="center"><img src="docs/img/irrigation.png" width="880" alt="Cuve, citerne, réservoir industriel, tuyaux de cuivre, silo d'engrais et lampe UV"></p>
+<p align="center"><sub>Cuve (16 seaux), citerne (64), réservoir industriel (256), tuyaux de cuivre, silo d'engrais, lampe horticole UV.</sub></p>
+
+- **Caissons d'eau** : cuve, citerne et réservoir (16, 64 et
+  256 seaux, configurables) se remplissent au seau et abreuvent
+  automatiquement les pots qui leur sont **reliés par des tuyaux de
+  cuivre**. Pas relié, pas d'eau. Le niveau d'eau se lit sur le
+  caisson (cuve ouverte, jauges des citernes). Un pot relié ne
+  demande plus d'arrosoir tant que le réseau a du stock : environ un
+  seau par plante et par jour, deux fois moins avec un
+  goutte-à-goutte. L'hologramme de la plante affiche « reliée au
+  réseau » ou « réseau à sec », celui du caisson son stock et ses
+  pots reliés.
+- **Tuyaux** : se posent sur n'importe quelle face (même en l'air) et
+  se connectent visuellement entre eux et aux caissons, silos et pots
+  (64 models générés, un par combinaison de voisins).
+- **Silo d'engrais** : chargé en doses d'engrais (16 par défaut), il
+  fertilise tout seul chaque nouveau stage des plantes reliées au
+  réseau. Cassé, il rend ses doses.
+- **Lampe horticole UV** : lueur violette (halo de particules,
+  panneau LED fullbright visible de nuit) et vraie lumière niveau
+  15 : les caves deviennent des serres, croissance nocturne et
+  rattrapage compris.
+
+### Séchage et curing
+
+<p align="center"><img src="docs/img/sechage.png" width="760" alt="Rack de séchage vide, chargé de têtes fraîches, puis têtes sèches"></p>
+<p align="center"><sub>Rack vide, chargé de têtes fraîches, têtes sèches prêtes.</sub></p>
+
+- **Sécher** : poser un rack de séchage, y suspendre jusqu'à 6 têtes
+  fraîches (clic droit). Un jour en temps réel, le séchage continue
+  serveur éteint. Le modèle du rack change selon son état et des
+  particules discrètes signalent de loin qu'il est prêt. Retirer trop
+  tôt (sneak + clic droit) coûte de la qualité.
+
+<p align="center"><img src="docs/img/curing.png" width="760" alt="Jarre vide, affinage en cours, weed affinée, jarre moisie"></p>
+<p align="center"><sub>Jarre vide, affinage en cours, weed affinée (+1 étoile), jarre moisie.</sub></p>
+
+- **Affiner (curing, optionnel)** : déposer la weed séchée dans une
+  jarre de curing (jusqu'à 6 têtes, contenu visible à travers le
+  verre). Deux jours en temps réel (continue serveur éteint) :
+  +1 étoile. Mais une jarre oubliée moisit deux jours après la fin
+  d'affinage : tout le contenu est ruiné (1 étoile), et une seule
+  tête moisie contamine la jarre entière.
 
 ### Abus, tolérance, manque
 
@@ -179,29 +221,29 @@ par le serveur au premier démarrage.
 Toute la pipeline se craft avec des matériaux vanilla, sauf les
 graines (récolte, casse de plante ou `/herbalis give` uniquement).
 
-| Item | Craft | Usage |
-| --- | --- | --- |
-| Pot de culture | 7 briques (forme pot) | Se pose au sol, socle de la plante |
-| Graine de weed | Pas de craft : récolte ou give | Clic droit sur un pot, porte sa lignée (étoiles) |
-| Arrosoir | 1 pépite (bec) + 4 lingots de fer | Arrose (8 charges), se recharge sur l'eau |
-| Cisailles | Craft vanilla (2 lingots de fer) | Taille aux stages 2-3, usure vanilla configurable |
-| Pulvérisateur | 1 pépite + 1 lingot + 1 fiole (colonne) | Traite les nuisibles (6 charges), se recharge sur l'eau |
-| Goutte-à-goutte | 3 verres + 1 bâton + 1 ficelle | S'installe sur un pot, perte d'eau divisée par deux |
-| Tuyau d'irrigation | 3 lingots de cuivre (x4) | Relie caissons, silos et pots ; se pose partout |
-| Cuve d'eau | 4 lingots de cuivre + 5 planches | Caisson de 16 seaux, niveau d'eau visible |
-| Citerne d'eau | 8 lingots de fer + 1 seau | Caisson de 64 seaux, jauges en façade |
-| Réservoir industriel | 4 blocs de fer + 4 lingots + 1 seau | Caisson de 256 seaux, plus haut qu'un bloc |
-| Silo d'engrais | 7 planches + 1 entonnoir | Fertilise tout seul les pots reliés (16 doses) |
-| Lampe horticole UV | 3 améthystes + 2 verres + 1 redstone + 1 lingot | Vraie lumière niveau 15, panneau violet fullbright |
-| Engrais naturel | 2 poudres d'os + 1 terre (x2) | Un par stage, boost vitesse et qualité |
-| Tête fraîche | Récolte | Se suspend au rack de séchage |
-| Rack de séchage | 3 bâtons + 3 ficelles + 2 bâtons | Sèche jusqu'à 6 têtes |
-| Weed séchée | Rack | Se conditionne en pochon, ou s'affine en jarre |
-| Jarre de curing | 5 verres + 1 dalle de chêne | Affine la weed séchée (+1 étoile, gare à la moisissure) |
-| Pochon vide | 1 cuir + 1 ficelle (x2) | Clic droit pour emballer la weed séchée |
-| Pochon de weed | Conditionnement | Ingrédient du joint |
-| Feuille à rouler | 1 papier + 1 canne à sucre (x3) | Ingrédient du joint |
-| Joint | Pochon + feuille à rouler | 3 taffes : se fume, se passe (clic droit sur un joueur) |
+| | Item | Craft | Usage |
+| :---: | --- | --- | --- |
+| <img src="docs/img/items/pot.png" width="32"> | Pot de culture | 7 briques (forme pot) | Se pose au sol, socle de la plante |
+| <img src="docs/img/items/weed_seed.png" width="32"> | Graine de weed | Pas de craft : récolte ou give | Clic droit sur un pot, porte sa lignée (étoiles) |
+| <img src="docs/img/items/watering_can.png" width="32"> | Arrosoir | 1 pépite (bec) + 4 lingots de fer | Arrose (8 charges), se recharge sur l'eau |
+| <img src="docs/img/items/shears.png" width="32"> | Cisailles | Craft vanilla (2 lingots de fer) | Taille aux stages 2-3, usure vanilla configurable |
+| <img src="docs/img/items/sprayer.png" width="32"> | Pulvérisateur | 1 pépite + 1 lingot + 1 fiole (colonne) | Traite les nuisibles (6 charges), se recharge sur l'eau |
+| <img src="docs/img/items/dripper.png" width="32"> | Goutte-à-goutte | 3 verres + 1 bâton + 1 ficelle | S'installe sur un pot, perte d'eau divisée par deux |
+| <img src="docs/img/items/pipe_63.png" width="32"> | Tuyau d'irrigation | 3 lingots de cuivre (x4) | Relie caissons, silos et pots ; se pose partout |
+| <img src="docs/img/items/tank_cuve_full.png" width="32"> | Cuve d'eau | 4 lingots de cuivre + 5 planches | Caisson de 16 seaux, niveau d'eau visible |
+| <img src="docs/img/items/tank_citerne_full.png" width="32"> | Citerne d'eau | 8 lingots de fer + 1 seau | Caisson de 64 seaux, jauges en façade |
+| <img src="docs/img/items/tank_reservoir_full.png" width="32"> | Réservoir industriel | 4 blocs de fer + 4 lingots + 1 seau | Caisson de 256 seaux, plus haut qu'un bloc |
+| <img src="docs/img/items/silo_full.png" width="32"> | Silo d'engrais | 7 planches + 1 entonnoir | Fertilise tout seul les pots reliés (16 doses) |
+| <img src="docs/img/items/uv_lamp.png" width="32"> | Lampe horticole UV | 3 améthystes + 2 verres + 1 redstone + 1 lingot | Vraie lumière niveau 15, panneau violet fullbright |
+| <img src="docs/img/items/fertilizer.png" width="32"> | Engrais naturel | 2 poudres d'os + 1 terre (x2) | Un par stage, boost vitesse et qualité |
+| <img src="docs/img/items/weed_bud_fresh.png" width="32"> | Tête fraîche | Récolte | Se suspend au rack de séchage |
+| <img src="docs/img/items/drying_rack_full.png" width="32"> | Rack de séchage | 3 bâtons + 3 ficelles + 2 bâtons | Sèche jusqu'à 6 têtes |
+| <img src="docs/img/items/weed_dried.png" width="32"> | Weed séchée | Rack | Se conditionne en pochon, ou s'affine en jarre |
+| <img src="docs/img/items/curing_jar_full.png" width="32"> | Jarre de curing | 5 verres + 1 dalle de chêne | Affine la weed séchée (+1 étoile, gare à la moisissure) |
+| <img src="docs/img/items/pouch_empty.png" width="32"> | Pochon vide | 1 cuir + 1 ficelle (x2) | Clic droit pour emballer la weed séchée |
+| <img src="docs/img/items/weed_pouch.png" width="32"> | Pochon de weed | Conditionnement | Ingrédient du joint |
+| <img src="docs/img/items/rolling_paper.png" width="32"> | Feuille à rouler | 1 papier + 1 canne à sucre (x3) | Ingrédient du joint |
+| <img src="docs/img/items/weed_joint.png" width="32"> | Joint | Pochon + feuille à rouler | 3 taffes : se fume, se passe (clic droit sur un joueur) |
 
 Casser une plante (clic gauche) rend une graine de sa lignée
 (configurable). Casser un pot, un rack ou une jarre (clic gauche) rend
@@ -319,10 +361,10 @@ Structure dans `resourcepack/`, format 75 (1.21.11).
   inclinées asymétriques portant bouquets de feuilles et colas à
   pistils, cola apical segmenté au stade final, variante givrée de
   trichomes pendant la fenêtre de récolte optimale. Pot conique par
-  étages
-  avec trois terreaux (humide, sec, fertilisé), rack avec bouquets
-  suspendus en volume qui se resserrent en séchant. Textures 32x pour
-  les blocs, 16x pour les items (cohérence vanilla en inventaire).
+  étages avec trois terreaux (humide, sec, fertilisé), rack avec
+  bouquets suspendus en volume qui se resserrent en séchant. Textures
+  32x pour les blocs, 16x pour les items (cohérence vanilla en
+  inventaire).
 - Arrosoir et joint : models 3D en main et au sol, sprite 2D en
   inventaire (select sur le contexte d'affichage, 1.21.4+).
 - Goutte-à-goutte en vrai volume sur le pot (piquet, réservoir en
@@ -346,7 +388,9 @@ Structure dans `resourcepack/`, format 75 (1.21.11).
   PNG sans toucher aux models.
 - `preview_render.py` rend n'importe quel model en isométrique sans
   lancer le jeu (z-buffer, ombrage par face, conventions de rotation du
-  jeu) : idéal pour itérer sur les models.
+  jeu) : idéal pour itérer sur les models. `readme_shots.py` s'appuie
+  dessus pour générer toutes les images de ce README (`docs/img/`),
+  planches et icônes comprises.
 
 ```bash
 cd resourcepack/tools
@@ -354,6 +398,7 @@ python3 -m venv .venv && .venv/bin/pip install pillow
 .venv/bin/python generate_textures.py
 .venv/bin/python generate_models.py
 .venv/bin/python preview_render.py --all -o /tmp/previews
+.venv/bin/python readme_shots.py
 ```
 
 `./gradlew packResourcePack` zippe le pack et écrit son SHA-1.
