@@ -137,6 +137,16 @@ effets:
       amplificateur: 0
       augmente-avec-qualite: false
       une-seule-fois: true
+  # Chat deforme sous effet : les messages du joueur s'etirent et
+  # trainent (voyelles allongees, pauses, petits rires — tics dans
+  # messages.yml). Styles : defonce, ivre (begaiement, hoquets),
+  # aucun. Intensite par phase de 0 a 1 ; la tolerance du joueur la
+  # reduit d'elle-meme, et un blackout deforme a fond.
+  chat:
+    style: defonce
+    intensite-montee: 0.3
+    intensite-high: 1.0
+    intensite-descente: 0.35
 
 consommation:
   # Un joint se fume taffe par taffe, et se passe de main en main

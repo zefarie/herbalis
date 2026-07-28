@@ -12,6 +12,7 @@ import java.util.List;
  * @param comedownRatio    duree de la descente en fraction du high
  * @param highEffects      effets appliques pendant le high
  * @param comedownEffects  effets appliques pendant la descente
+ * @param chatSlur         deformation du chat pendant la session
  */
 public record EffectProfile(
         Duration riseDuration,
@@ -19,7 +20,8 @@ public record EffectProfile(
         Duration highDurationMax,
         double comedownRatio,
         List<EffectSpec> highEffects,
-        List<EffectSpec> comedownEffects
+        List<EffectSpec> comedownEffects,
+        SlurProfile chatSlur
 ) {
 
     public EffectProfile {

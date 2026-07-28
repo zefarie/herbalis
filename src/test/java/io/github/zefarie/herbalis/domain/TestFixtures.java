@@ -10,6 +10,7 @@ import io.github.zefarie.herbalis.domain.drug.FertilizerProfile;
 import io.github.zefarie.herbalis.domain.drug.GrowthProfile;
 import io.github.zefarie.herbalis.domain.drug.HarvestWindow;
 import io.github.zefarie.herbalis.domain.drug.HydrationProfile;
+import io.github.zefarie.herbalis.domain.drug.SlurProfile;
 import io.github.zefarie.herbalis.domain.drug.PestProfile;
 import io.github.zefarie.herbalis.domain.drug.ToppingProfile;
 import io.github.zefarie.herbalis.domain.geo.BlockPos;
@@ -58,7 +59,8 @@ public final class TestFixtures {
                         Duration.ofMinutes(2), Duration.ofMinutes(6), 0.35,
                         List.of(new EffectSpec("minecraft:regeneration", 0, true, false)),
                         List.of(new EffectSpec("minecraft:slowness", 0, false, false),
-                                new EffectSpec("minecraft:nausea", 0, false, true))),
+                                new EffectSpec("minecraft:nausea", 0, false, true)),
+                        SlurProfile.DEFAULT),
                 new ConsumptionRules(3, 3, Duration.ofMinutes(5), Duration.ofSeconds(30),
                         12.0, 4.0, 0.6,
                         8.0, 1.5, 50.0, Duration.ofMinutes(45)),

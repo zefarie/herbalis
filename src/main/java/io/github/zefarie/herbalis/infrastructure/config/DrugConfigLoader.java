@@ -12,6 +12,8 @@ import io.github.zefarie.herbalis.domain.drug.GrowthProfile;
 import io.github.zefarie.herbalis.domain.drug.HarvestWindow;
 import io.github.zefarie.herbalis.domain.drug.HydrationProfile;
 import io.github.zefarie.herbalis.domain.drug.PestProfile;
+import io.github.zefarie.herbalis.domain.drug.SlurProfile;
+import io.github.zefarie.herbalis.domain.drug.SlurStyle;
 import io.github.zefarie.herbalis.domain.quality.QualityWeights;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -129,13 +131,25 @@ public final class DrugConfigLoader {
         }
 
         ConfigurationSection effects = section(yaml, "effets");
+        // Chat deforme actif par defaut (style defonce), comme le reste
+        // des valeurs de la section effets.
+        SlurProfile slurProfile = SlurProfile.DEFAULT;
+        ConfigurationSection chat = effects.getConfigurationSection("chat");
+        if (chat != null) {
+            slurProfile = new SlurProfile(
+                    SlurStyle.fromConfig(chat.getString("style", "defonce")),
+                    chat.getDouble("intensite-montee", SlurProfile.DEFAULT.riseIntensity()),
+                    chat.getDouble("intensite-high", SlurProfile.DEFAULT.highIntensity()),
+                    chat.getDouble("intensite-descente", SlurProfile.DEFAULT.comedownIntensity()));
+        }
         EffectProfile effectProfile = new EffectProfile(
                 DurationParser.parse(effects.getString("montee", "15s")),
                 DurationParser.parse(effects.getString("high-min", "2m")),
                 DurationParser.parse(effects.getString("high-max", "6m")),
                 effects.getDouble("ratio-descente", 0.35),
                 effectSpecs(effects.getMapList("effets-high")),
-                effectSpecs(effects.getMapList("effets-descente")));
+                effectSpecs(effects.getMapList("effets-descente")),
+                slurProfile);
 
         ConfigurationSection consumption = section(yaml, "consommation");
         ConsumptionRules rules = new ConsumptionRules(
