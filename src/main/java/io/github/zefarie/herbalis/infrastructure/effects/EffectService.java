@@ -1,10 +1,13 @@
 package io.github.zefarie.herbalis.infrastructure.effects;
 
+import io.github.zefarie.herbalis.domain.consumption.ChatSlur;
 import io.github.zefarie.herbalis.domain.consumption.ConsumptionEngine;
 import io.github.zefarie.herbalis.domain.consumption.EffectPhase;
 import io.github.zefarie.herbalis.domain.consumption.EffectTimeline;
 import io.github.zefarie.herbalis.domain.drug.DrugRegistry;
 import io.github.zefarie.herbalis.domain.drug.DrugType;
+import io.github.zefarie.herbalis.domain.drug.SlurProfile;
+import io.github.zefarie.herbalis.domain.drug.SlurStyle;
 import io.github.zefarie.herbalis.infrastructure.config.Messages;
 import io.github.zefarie.herbalis.infrastructure.fx.Fx;
 import io.github.zefarie.herbalis.infrastructure.persistence.SqliteSessionStore;
@@ -13,6 +16,7 @@ import org.bukkit.entity.Player;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
@@ -93,6 +97,44 @@ public final class EffectService {
 
     public boolean hasSession(UUID playerId) {
         return sessions.containsKey(playerId);
+    }
+
+    /**
+     * Deformation de chat a appliquer a un joueur, si une session ou un
+     * blackout le justifie. Thread-safe : appele depuis l'evenement de
+     * chat asynchrone, ne lit que des etats concurrents.
+     */
+    public Optional<ChatSlur.Params> chatSlurFor(UUID playerId, long now) {
+        // Blackout : deformation maximale, on ne s'exprime plus.
+        SlurStyle blackoutStyle = blackout.slurStyle(playerId);
+        if (blackoutStyle != SlurStyle.NONE) {
+            return Optional.of(new ChatSlur.Params(blackoutStyle, 1.0));
+        }
+        Session session = sessions.get(playerId);
+        if (session == null) {
+            return Optional.empty();
+        }
+        DrugType drug = drugs.byId(session.drugId).orElse(null);
+        if (drug == null) {
+            return Optional.empty();
+        }
+        SlurProfile profile = drug.effects().chatSlur();
+        if (!profile.enabled()) {
+            return Optional.empty();
+        }
+        long elapsed = now - session.startedAt;
+        EffectTimeline timeline = session.timeline;
+        double base = switch (timeline.phaseAt(elapsed)) {
+            case RISE -> profile.riseIntensity() * timeline.riseProgress(elapsed);
+            case HIGH -> profile.highIntensity();
+            case COMEDOWN -> profile.comedownIntensity();
+            case DONE -> 0.0;
+        };
+        double intensity = base * timeline.intensity();
+        if (intensity <= 0.02) {
+            return Optional.empty();
+        }
+        return Optional.of(new ChatSlur.Params(profile.style(), intensity));
     }
 
     /** Tick d'une seconde pour un joueur en ligne. */
