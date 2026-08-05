@@ -18,7 +18,7 @@
 - **Real plant care** — water, light, fertilizer, pruning, pests; the soil and a private status hologram tell the whole story.
 - **An irrigation network** — water tanks, self-connecting copper pipes, a fertilizer silo, a UV grow lamp. Not connected, no water.
 - **Star-based quality** — average hydration, fertilizer, harvest timing, curing and seed genetics selected over generations.
-- **Cinematic consumption** — onset, plateau, comedown, blackout; persistent tolerance and withdrawal; joints get passed from hand to hand.
+- **Cinematic consumption** — onset, plateau, comedown, blackout; persistent tolerance and withdrawal; joints get passed from hand to hand; chat slurs and drawls while high.
 - **Zero dependencies** — no ItemsAdder, Oraxen or Nexo; the resource pack ships with the plugin, fully script-generated.
 - **Multi-drug by design** — adding a drug is one config file plus assets, zero code. v1 scope: weed.
 
