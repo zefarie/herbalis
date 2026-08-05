@@ -1,6 +1,7 @@
 package io.github.zefarie.herbalis.infrastructure.effects;
 
 import io.github.zefarie.herbalis.domain.drug.DrugType;
+import io.github.zefarie.herbalis.domain.drug.SlurStyle;
 import io.github.zefarie.herbalis.infrastructure.config.Messages;
 import io.github.zefarie.herbalis.infrastructure.fx.Fx;
 import net.kyori.adventure.title.Title;
@@ -18,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class BlackoutService {
 
-    private record Blackout(long until, long nextPulseAt) {
+    private record Blackout(long until, long nextPulseAt, SlurStyle slurStyle) {
     }
 
     private final Messages messages;
@@ -34,9 +35,16 @@ public final class BlackoutService {
         return active.containsKey(playerId);
     }
 
+    /** Style de chat deforme du blackout en cours, sinon {@link SlurStyle#NONE}. */
+    public SlurStyle slurStyle(UUID playerId) {
+        Blackout blackout = active.get(playerId);
+        return blackout == null ? SlurStyle.NONE : blackout.slurStyle();
+    }
+
     public void start(Player player, DrugType drug, long now) {
         long durationMillis = drug.consumption().blackoutDuration().toMillis();
-        active.put(player.getUniqueId(), new Blackout(now + durationMillis, now));
+        active.put(player.getUniqueId(), new Blackout(now + durationMillis, now,
+                drug.effects().chatSlur().style()));
 
         int ticks = (int) (durationMillis / 50) + 60;
         PotionEffects.one(player, "minecraft:blindness", ticks, 0);
@@ -66,7 +74,7 @@ public final class BlackoutService {
             PotionEffects.one(player, "minecraft:nausea", 120, 0);
             fx.heartbeat(player);
             active.put(player.getUniqueId(),
-                    new Blackout(blackout.until(), now + 4_000));
+                    new Blackout(blackout.until(), now + 4_000, blackout.slurStyle()));
         }
     }
 
