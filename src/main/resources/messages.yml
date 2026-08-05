@@ -367,6 +367,16 @@ consommation:
     - "<i><color:#9ca3af>Une petite faim s'installe...</color></i>"
     - "<i><color:#9ca3af>Tes paupières pèsent une tonne...</color></i>"
   fin: "<i><color:#9ca3af>Les brumes se dissipent, tu reprends pied.</color></i>"
+  # Tics inseres dans les messages de chat d'un joueur sous effet.
+  # Texte brut (pas de MiniMessage), un tic est choisi au hasard.
+  tics-defonce:
+    - "héhé"
+    - "pfff"
+    - "hmm"
+    - "enfin bref"
+  tics-ivre:
+    - "*hips*"
+    - "hé hé"
 
 blackout:
   title: "<color:#3f3f46><font:herbalis:icons></font></color>"

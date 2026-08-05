@@ -42,6 +42,7 @@ import io.github.zefarie.herbalis.infrastructure.fx.Fx;
 import io.github.zefarie.herbalis.infrastructure.hud.HologramService;
 import io.github.zefarie.herbalis.infrastructure.hud.HudService;
 import io.github.zefarie.herbalis.infrastructure.item.ItemFactory;
+import io.github.zefarie.herbalis.infrastructure.listener.ChatListener;
 import io.github.zefarie.herbalis.infrastructure.listener.ChunkListener;
 import io.github.zefarie.herbalis.infrastructure.listener.ConnectionListener;
 import io.github.zefarie.herbalis.infrastructure.listener.ConsumeListener;
@@ -214,6 +215,7 @@ public final class HerbalisPlugin extends JavaPlugin {
         pm.registerEvents(new ConnectionListener(blackout, withdrawal,
                 holograms), this);
         pm.registerEvents(new MoveListener(blackout), this);
+        pm.registerEvents(new ChatListener(effects, messages), this);
         pm.registerEvents(craftListener, this);
 
         // Commande.

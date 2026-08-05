@@ -56,6 +56,11 @@ public final class Messages {
         return yaml.getString(key, fallback);
     }
 
+    /** Liste brute de la config (tics de chat, textes non MiniMessage). */
+    public List<String> rawList(String key) {
+        return yaml.getStringList(key);
+    }
+
     /** Deserialise une chaine MiniMessage arbitraire avec le prefixe dispo. */
     public Component deserialize(String raw, TagResolver... resolvers) {
         TagResolver all = TagResolver.resolver(
